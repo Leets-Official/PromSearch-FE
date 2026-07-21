@@ -1,0 +1,119 @@
+"use client";
+
+import { Copy, Lock, Sparkles } from "lucide-react";
+import { useState } from "react";
+
+import { track } from "@/analytics/track";
+import type { UserStatus } from "@/analytics/events";
+import { Button } from "@/components/ui/button";
+import type { RecipeAccess } from "@/features/prompt-detail/types";
+import { cn } from "@/lib/utils";
+
+/** 잠금 시 블러 뒤에 깔리는 더미 필러(프론트 상수). BE 전문에 절대 의존하지 않는다. */
+export const RECIPE_BLUR_FILLER = `당신은 전문 보고서 작성 도우미입니다. 아래 조건에 맞춰 초안을 작성하세요.
+- 대상 독자와 목적을 먼저 정의합니다.
+- 핵심 메시지를 3가지로 요약합니다.
+- 근거 데이터를 표와 함께 제시합니다.
+- 결론과 다음 액션을 명확히 제안합니다.
+${"세부 지침이 이어집니다. ".repeat(30)}`;
+
+type RecipePanelProps = {
+  promptId: string;
+  recipeBody: string;
+  access: RecipeAccess;
+  userStatus: UserStatus;
+  /** 잠금 CTA 클릭 시 실제 흐름(로그인 모달·포인트 결제) — 이번엔 스텁 */
+  onUnlock?: (reason: "anonymous" | "premium") => void;
+};
+
+export function RecipePanel({
+  promptId,
+  recipeBody,
+  access,
+  userStatus,
+  onUnlock,
+}: RecipePanelProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(recipeBody);
+    setCopied(true);
+    track("prompt_copy_click", {
+      prompt_id: promptId,
+      user_status: userStatus,
+      source: "detail",
+    });
+  };
+
+  const handleUnlock = (reason: "anonymous" | "premium") => {
+    track("prompt_unlock_click", {
+      prompt_id: promptId,
+      reason,
+      user_status: userStatus,
+      source: "detail",
+    });
+    onUnlock?.(reason);
+  };
+
+  // 열람 가능 — 전문 + 복사하기
+  if (!access.locked) {
+    return (
+      <div className="flex w-full flex-1 flex-col gap-4">
+        <div className="flex justify-end">
+          <Button variant="neutral" size="sm" onClick={handleCopy}>
+            <Copy data-icon="inline-start" />
+            {copied ? "복사됨" : "복사하기"}
+          </Button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto rounded-md bg-bg-secondary px-5 py-4">
+          <p className="text-body-1 whitespace-pre-wrap text-text-secondary">{recipeBody}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 잠금 — 티저(premium) 위에 더미 필러를 블러 처리하고 중앙 CTA
+  const isPremium = access.reason === "premium";
+  const cta = isPremium
+    ? { label: "포인트로 전문 보기", icon: <Sparkles />, reason: "premium" as const }
+    : { label: "로그인하고 프롬프트 보기", icon: <Lock />, reason: "anonymous" as const };
+
+  return (
+    <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-md bg-bg-secondary px-5 py-4">
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {isPremium && recipeBody ? (
+          <p className="mb-2 text-body-1 whitespace-pre-wrap text-text-secondary">{recipeBody}</p>
+        ) : null}
+        {/* 블러 뒤 더미 — 진짜 전문은 DOM에 없다 */}
+        <p
+          aria-hidden
+          className={cn(
+            "pointer-events-none text-body-1 whitespace-pre-wrap text-text-secondary select-none",
+          )}
+        >
+          {RECIPE_BLUR_FILLER}
+        </p>
+      </div>
+
+      {/* 블러 오버레이 */}
+      <div
+        data-recipe-blur
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-x-2 bottom-2 backdrop-blur-[6px]",
+          isPremium ? "top-16" : "top-2",
+        )}
+      />
+
+      {/* 중앙 CTA */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+        <Button variant="brand" size="lg" onClick={() => handleUnlock(cta.reason)}>
+          <span data-icon="inline-start" className="contents">
+            {cta.icon}
+          </span>
+          {cta.label}
+        </Button>
+      </div>
+    </div>
+  );
+}
