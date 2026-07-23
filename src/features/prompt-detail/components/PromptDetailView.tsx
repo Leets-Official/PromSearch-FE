@@ -40,18 +40,28 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
 
   return (
     <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-start">
-      <OutputCarousel images={detail.images} title={detail.title} />
+      <OutputCarousel
+        images={detail.images}
+        title={detail.title}
+        liked={detail.liked}
+        onToggleLike={() => like.mutate()}
+        bookmarked={detail.bookmarked}
+        onToggleBookmark={() => bookmark.mutate()}
+        onReport={() => {
+          /* 신고 — 후속 범위(스텁) */
+        }}
+      />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-6 lg:h-[624px]">
-        <DetailHeader
-          detail={detail}
-          liked={detail.liked}
-          likeCount={detail.stats.likes}
-          bookmarked={detail.bookmarked}
-          onToggleLike={() => like.mutate()}
-          onToggleBookmark={() => bookmark.mutate()}
-        />
-        <DetailTabs active={tab} onSelect={setTab} />
+      {/*
+        스크롤 모델: 우측 컬럼 자체가 단일 스크롤 컨테이너.
+        내용이 짧으면 그대로, 길면 메타·태그가 위로 밀려 스크롤되고 탭(sticky)이 상단에 고정된다.
+        각 패널은 내부 스크롤 없이 내용 높이로 흐른다.
+      */}
+      <div className="flex min-w-0 flex-1 flex-col lg:h-[624px] lg:overflow-y-auto">
+        <DetailHeader detail={detail} />
+        <div className="sticky top-0 z-10 bg-bg-primary py-4">
+          <DetailTabs active={tab} onSelect={setTab} />
+        </div>
 
         {tab === "description" ? <DescriptionPanel body={detail.descriptionBody} /> : null}
         {tab === "recipe" ? (

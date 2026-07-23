@@ -1,5 +1,6 @@
 "use client";
 
+import { TextField } from "@/components/ui/text-field";
 import type { PromptComment } from "@/features/prompt-detail/types";
 import { CommentItem } from "./CommentItem";
 
@@ -8,8 +9,8 @@ import { CommentItem } from "./CommentItem";
  */
 export function CommentPanel({ comments }: { comments: PromptComment[] }) {
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-4">
-      <div className="min-h-0 flex-1 overflow-auto">
+    <div className="flex w-full flex-col gap-4">
+      <div>
         {comments.length === 0 ? (
           <p className="py-10 text-center text-body-2 text-text-disabled">
             아직 작성된 댓글이 없어요.
@@ -23,13 +24,15 @@ export function CommentPanel({ comments }: { comments: PromptComment[] }) {
         )}
       </div>
 
-      {/* 입력창 — 작성은 후속 범위라 자리만(비활성) */}
-      <input
-        type="text"
-        disabled
+      {/* 입력창 — 개정 TextField(등록 버튼 + 글자수 카운터). 작성 동작은 후속 범위(no-op). */}
+      <TextField
         aria-label="댓글 입력"
-        placeholder="댓글 작성은 곧 제공됩니다"
-        className="w-full rounded-md border border-stroke-disabled px-4 py-3 text-body-2 text-text-disabled"
+        placeholder="댓글을 입력해주세요"
+        maxLength={500}
+        submitLabel="등록"
+        onSubmit={() => {
+          /* 댓글 작성 — 후속 브랜치 */
+        }}
       />
     </div>
   );

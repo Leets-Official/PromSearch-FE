@@ -58,14 +58,14 @@ export function RecipePanel({
   // 열람 가능 — 전문 + 복사하기
   if (!access.locked) {
     return (
-      <div className="flex w-full flex-1 flex-col gap-4">
+      <div className="flex w-full flex-col gap-4">
         <div className="flex justify-end">
           <Button variant="neutral" size="sm" onClick={handleCopy}>
             <Copy data-icon="inline-start" />
             {copied ? "복사됨" : "복사하기"}
           </Button>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto rounded-md bg-bg-secondary px-5 py-4">
+        <div className="w-full rounded-md bg-bg-secondary px-5 py-4">
           <p className="text-body-1 whitespace-pre-wrap text-text-secondary">{recipeBody}</p>
         </div>
       </div>
@@ -82,8 +82,8 @@ export function RecipePanel({
     : { label: "포인트로 전문 보기", icon: <Sparkles />, reason: "premium" as const };
 
   return (
-    <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-md bg-bg-secondary px-5 py-4">
-      <div className="min-h-0 flex-1 overflow-hidden">
+    <div className="relative flex min-h-[420px] w-full flex-col overflow-hidden rounded-md bg-bg-secondary px-5 py-4">
+      <div className="overflow-hidden">
         {showTeaser && recipeBody ? (
           <p className="mb-2 text-body-1 whitespace-pre-wrap text-text-secondary">{recipeBody}</p>
         ) : null}
