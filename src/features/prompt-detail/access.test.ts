@@ -27,10 +27,11 @@ describe("resolveRecipeAccess", () => {
   });
 
   // 폴백(access 미제공): tier + 인증 상태로 계산
-  it("access 없음 + 비로그인 → anonymous 잠금", () => {
+  it("access 없음 + 비로그인 → anonymous 잠금(미리보기 previewLength)", () => {
     expect(resolveRecipeAccess(detail({ tier: "free" }), anonymous)).toEqual({
       locked: true,
       reason: "anonymous",
+      previewLength: DEFAULT_PREVIEW_LENGTH,
     });
   });
 
@@ -41,19 +42,17 @@ describe("resolveRecipeAccess", () => {
     });
   });
 
-  it("access 없음 + 로그인 + premium → premium 잠금(기본 previewLength)", () => {
+  it("access 없음 + 로그인 + premium → premium 잠금(전체 블러, previewLength 없음)", () => {
     expect(resolveRecipeAccess(detail({ tier: "premium" }), authenticated)).toEqual({
       locked: true,
       reason: "premium",
-      previewLength: DEFAULT_PREVIEW_LENGTH,
     });
   });
 
-  it("access 없음 + 로그인 + master → premium 잠금(마스터도 잠금)", () => {
+  it("access 없음 + 로그인 + master → premium 잠금(마스터도 전체 블러)", () => {
     expect(resolveRecipeAccess(detail({ tier: "master" }), authenticated)).toEqual({
       locked: true,
       reason: "premium",
-      previewLength: DEFAULT_PREVIEW_LENGTH,
     });
   });
 });

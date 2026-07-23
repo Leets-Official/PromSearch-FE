@@ -72,16 +72,19 @@ export function RecipePanel({
     );
   }
 
-  // 잠금 — 티저(premium) 위에 더미 필러를 블러 처리하고 중앙 CTA
-  const isPremium = access.reason === "premium";
-  const cta = isPremium
-    ? { label: "포인트로 전문 보기", icon: <Sparkles />, reason: "premium" as const }
-    : { label: "로그인하고 프롬프트 보기", icon: <Lock />, reason: "anonymous" as const };
+  // 잠금(2026-07-22 개정):
+  // - 비회원(anonymous) → 미리보기 살짝 노출 후 그 아래 블러 + 로그인 CTA
+  // - 프리미엄(premium, 유료 미결제) → 전체 블러 + 포인트 CTA
+  const isAnonymous = access.reason === "anonymous";
+  const showTeaser = isAnonymous; // 비회원만 프리뷰 노출
+  const cta = isAnonymous
+    ? { label: "로그인하고 프롬프트 보기", icon: <Lock />, reason: "anonymous" as const }
+    : { label: "포인트로 전문 보기", icon: <Sparkles />, reason: "premium" as const };
 
   return (
     <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-md bg-bg-secondary px-5 py-4">
       <div className="min-h-0 flex-1 overflow-hidden">
-        {isPremium && recipeBody ? (
+        {showTeaser && recipeBody ? (
           <p className="mb-2 text-body-1 whitespace-pre-wrap text-text-secondary">{recipeBody}</p>
         ) : null}
         {/* 블러 뒤 더미 — 진짜 전문은 DOM에 없다 */}
@@ -95,13 +98,13 @@ export function RecipePanel({
         </p>
       </div>
 
-      {/* 블러 오버레이 */}
+      {/* 블러 오버레이 — 비회원은 프리뷰 아래(top-16), 프리미엄은 전체(top-2) */}
       <div
         data-recipe-blur
         aria-hidden
         className={cn(
           "pointer-events-none absolute inset-x-2 bottom-2 backdrop-blur-[6px]",
-          isPremium ? "top-16" : "top-2",
+          showTeaser ? "top-16" : "top-2",
         )}
       />
 

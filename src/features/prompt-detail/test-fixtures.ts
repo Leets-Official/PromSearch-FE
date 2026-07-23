@@ -19,6 +19,7 @@ export function makeDetail(overrides: Partial<PromptDetail> = {}): PromptDetail 
     recipeBody: "레시피 전문",
     access: { locked: false, reason: null },
     liked: false,
+    bookmarked: false,
     commentCount: 2,
     ...overrides,
   };

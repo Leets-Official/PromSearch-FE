@@ -58,19 +58,22 @@ describe("RecipePanel", () => {
     });
   });
 
-  describe("비로그인 잠금(anonymous)", () => {
-    it("'로그인하고 프롬프트 보기' CTA + 블러, 복사 버튼 없음", () => {
-      const { container } = renderPanel({ locked: true, reason: "anonymous" }, "");
+  describe("비로그인 잠금(anonymous) — 미리보기 살짝 + 블러", () => {
+    it("미리보기(recipeBody)를 보여주고 '로그인하고 프롬프트 보기' CTA + 블러, 복사 없음", () => {
+      const { container } = renderPanel(
+        { locked: true, reason: "anonymous", previewLength: 10 },
+        "비회원 미리보기",
+      );
 
+      expect(screen.getByText(/비회원 미리보기/)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /로그인하고 프롬프트 보기/ })).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /복사하기/ })).toBeNull();
-      // 블러 오버레이가 존재
       expect(container.querySelector("[data-recipe-blur]")).not.toBeNull();
     });
 
     it("CTA 클릭 → prompt_unlock_click(reason=anonymous)", async () => {
       const user = userEvent.setup();
-      renderPanel({ locked: true, reason: "anonymous" }, "");
+      renderPanel({ locked: true, reason: "anonymous", previewLength: 10 }, "미리보기");
 
       await user.click(screen.getByRole("button", { name: /로그인하고 프롬프트 보기/ }));
 
@@ -83,17 +86,18 @@ describe("RecipePanel", () => {
     });
   });
 
-  describe("프리미엄 잠금(premium)", () => {
-    it("티저(recipeBody)를 보여주고 '포인트로 전문 보기' CTA", () => {
-      renderPanel({ locked: true, reason: "premium", previewLength: 5 }, "앞부분 티저");
+  describe("프리미엄 잠금(premium) — 전체 블러", () => {
+    it("'포인트로 전문 보기' CTA + 전체 블러, 티저/복사 없음", () => {
+      const { container } = renderPanel({ locked: true, reason: "premium" }, "");
 
-      expect(screen.getByText(/앞부분 티저/)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /포인트로 전문 보기/ })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /복사하기/ })).toBeNull();
+      expect(container.querySelector("[data-recipe-blur]")).not.toBeNull();
     });
 
     it("CTA 클릭 → prompt_unlock_click(reason=premium)", async () => {
       const user = userEvent.setup();
-      renderPanel({ locked: true, reason: "premium", previewLength: 5 }, "티저");
+      renderPanel({ locked: true, reason: "premium" }, "");
 
       await user.click(screen.getByRole("button", { name: /포인트로 전문 보기/ }));
 

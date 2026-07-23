@@ -6,30 +6,17 @@ import { describe, expect, it } from "vitest";
 
 import { useLikePrompt } from "@/features/prompt-detail/hooks/use-like-prompt";
 import { promptDetailKey } from "@/features/prompt-detail/hooks/use-prompt-detail";
+import { makeDetail } from "@/features/prompt-detail/test-fixtures";
 import type { PromptDetail } from "@/features/prompt-detail/types";
 import { server } from "@/mocks/server";
 
 const KEY = promptDetailKey("prompt-001", "authenticated");
 
 function seedDetail(client: QueryClient, liked = false, likes = 10) {
-  client.setQueryData<PromptDetail>(KEY, {
-    id: "prompt-001",
-    title: "제목",
-    outputType: "text",
-    model: "chatgpt",
-    tasks: ["ppt"],
-    jobCategories: ["student"],
-    tier: "free",
-    author: { name: "작성자" },
-    stats: { views: 0, copies: 0, likes },
-    createdAt: "2026-07-01T00:00:00.000Z",
-    images: ["a.png"],
-    descriptionBody: "설명",
-    recipeBody: "레시피",
-    access: { locked: false, reason: null },
-    liked,
-    commentCount: 0,
-  });
+  client.setQueryData<PromptDetail>(
+    KEY,
+    makeDetail({ liked, stats: { views: 0, copies: 0, likes } }),
+  );
 }
 
 function setup(liked = false, likes = 10) {

@@ -27,14 +27,19 @@ export function buildImages(record: PromptRecord): string[] {
   return [1, 2, 3].map((n) => `https://mock.promsearch.dev/${record.id}/output-${n}.png`);
 }
 
-/** 잠금 상태에 따라 recipeBody 를 마스킹 — 전문 DOM 노출 우회 방지 */
+/**
+ * 잠금 상태에 따라 recipeBody 를 마스킹 — 전문 DOM 노출 우회 방지(2026-07-22 개정).
+ * - 열람 → 전문
+ * - anonymous(비로그인) → previewLength 까지 미리보기만
+ * - premium(유료 미결제) → 전체 블러이므로 빈 문자열(전문 미전송)
+ */
 export function maskRecipeBody(
   full: string,
   access: { locked: boolean; reason: string | null; previewLength?: number },
 ): string {
   if (!access.locked) return full;
-  if (access.reason === "premium") return full.slice(0, access.previewLength ?? full.length);
-  return ""; // anonymous 등 — 전문 미전송
+  if (access.reason === "anonymous") return full.slice(0, access.previewLength ?? full.length);
+  return ""; // premium 등 — 전체 블러, 전문 미전송
 }
 
 /**
@@ -60,6 +65,7 @@ export function findPromptDetail(
     recipeBody: maskRecipeBody(buildRecipeBody(record), access),
     access,
     liked: false,
+    bookmarked: false,
     commentCount: countComments(buildComments(record.id)),
   };
 }

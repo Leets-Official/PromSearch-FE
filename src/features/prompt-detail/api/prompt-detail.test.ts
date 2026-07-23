@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { toggleBookmark } from "@/features/prompt-detail/api/bookmark";
 import { fetchComments } from "@/features/prompt-detail/api/comment";
 import { toggleLike } from "@/features/prompt-detail/api/like";
 import { fetchPromptDetail, PromptNotFoundError } from "@/features/prompt-detail/api/prompt-detail";
@@ -17,19 +18,22 @@ describe("fetchPromptDetail (MSW 목 연동)", () => {
     expect(detail.commentCount).toBeGreaterThan(0);
   });
 
-  it("비로그인 → anonymous 잠금 + recipeBody 미전송", async () => {
+  it("비로그인 → anonymous 잠금 + 미리보기만 제공", async () => {
     const detail = await fetchPromptDetail("prompt-001", "anonymous");
 
-    expect(detail.access).toEqual({ locked: true, reason: "anonymous" });
-    expect(detail.recipeBody).toBe("");
+    expect(detail.access!.locked).toBe(true);
+    expect(detail.access!.reason).toBe("anonymous");
+    // 미리보기: previewLength 만큼만 노출
+    expect(detail.recipeBody.length).toBe(detail.access!.previewLength);
+    expect(detail.recipeBody.length).toBeGreaterThan(0);
   });
 
-  it("로그인 + premium → premium 잠금 + 프리뷰만", async () => {
+  it("로그인 + premium → premium 잠금 + recipeBody 전체 미전송", async () => {
     const detail = await fetchPromptDetail("prompt-002", "authenticated");
 
     expect(detail.access!.locked).toBe(true);
     expect(detail.access!.reason).toBe("premium");
-    expect(detail.recipeBody.length).toBe(detail.access!.previewLength);
+    expect(detail.recipeBody).toBe("");
   });
 
   it("hidden 게시글은 404 → PromptNotFoundError", async () => {
@@ -66,5 +70,15 @@ describe("toggleLike (MSW 목 연동)", () => {
     const second = await toggleLike("prompt-010");
     expect(second.liked).toBe(false);
     expect(second.likeCount).toBe(first.likeCount - 1);
+  });
+});
+
+describe("toggleBookmark (MSW 목 연동)", () => {
+  it("연속 호출로 북마크 상태가 토글된다", async () => {
+    const first = await toggleBookmark("prompt-011");
+    expect(first.bookmarked).toBe(true);
+
+    const second = await toggleBookmark("prompt-011");
+    expect(second.bookmarked).toBe(false);
   });
 });

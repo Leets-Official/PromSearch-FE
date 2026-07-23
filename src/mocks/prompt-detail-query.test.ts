@@ -46,10 +46,16 @@ describe("findPromptDetail", () => {
     expect(typeof detail!.commentCount).toBe("number");
   });
 
-  it("비로그인 → anonymous 잠금 + recipeBody 미전송(빈 문자열)", () => {
-    const detail = findPromptDetail([record({ id: "a", tier: "free" })], "a", "anonymous");
-    expect(detail!.access).toEqual({ locked: true, reason: "anonymous" });
-    expect(detail!.recipeBody).toBe("");
+  it("비로그인 → anonymous 잠금 + 미리보기(previewLength)만 제공", () => {
+    const rec = record({ id: "a", tier: "free" });
+    const detail = findPromptDetail([rec], "a", "anonymous");
+    expect(detail!.access).toEqual({
+      locked: true,
+      reason: "anonymous",
+      previewLength: DEFAULT_PREVIEW_LENGTH,
+    });
+    expect(detail!.recipeBody).toBe(buildRecipeBody(rec).slice(0, DEFAULT_PREVIEW_LENGTH));
+    expect(detail!.recipeBody.length).toBe(DEFAULT_PREVIEW_LENGTH);
   });
 
   it("로그인 + free → 열람 + 전문 제공", () => {
@@ -59,15 +65,10 @@ describe("findPromptDetail", () => {
     expect(detail!.recipeBody).toBe(buildRecipeBody(rec));
   });
 
-  it("로그인 + premium → premium 잠금 + 프리뷰(previewLength)만", () => {
+  it("로그인 + premium → premium 잠금 + recipeBody 전체 미전송(빈 문자열)", () => {
     const rec = record({ id: "a", tier: "premium" });
     const detail = findPromptDetail([rec], "a", "authenticated");
-    expect(detail!.access).toEqual({
-      locked: true,
-      reason: "premium",
-      previewLength: DEFAULT_PREVIEW_LENGTH,
-    });
-    expect(detail!.recipeBody).toBe(buildRecipeBody(rec).slice(0, DEFAULT_PREVIEW_LENGTH));
-    expect(detail!.recipeBody.length).toBe(DEFAULT_PREVIEW_LENGTH);
+    expect(detail!.access).toEqual({ locked: true, reason: "premium" });
+    expect(detail!.recipeBody).toBe("");
   });
 });

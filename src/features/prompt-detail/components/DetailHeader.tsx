@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Heart, MoreVertical } from "lucide-react";
+import { Bookmark, MoreVertical, ThumbsUp } from "lucide-react";
 
 import { buildDetailTags } from "@/features/prompt-detail/detail-tags";
 import { formatDetailDate } from "@/features/prompt-detail/format";
@@ -12,11 +12,23 @@ type DetailHeaderProps = {
   detail: PromptDetail;
   liked: boolean;
   likeCount: number;
+  bookmarked: boolean;
   onToggleLike: () => void;
+  onToggleBookmark: () => void;
 };
 
-/** 우측 상단 정보 — 제목·작성자·메타(조회·추천 토글)·태그. 벨/⋮ 는 자리만(no-op). */
-export function DetailHeader({ detail, liked, likeCount, onToggleLike }: DetailHeaderProps) {
+/**
+ * 우측 상단 정보 — 제목·작성자·메타(작성일·조회·추천수 표시)·태그.
+ * 우상단 액션: 좋아요(=추천 토글) · 북마크 토글 · 더보기(no-op).
+ */
+export function DetailHeader({
+  detail,
+  liked,
+  likeCount,
+  bookmarked,
+  onToggleLike,
+  onToggleBookmark,
+}: DetailHeaderProps) {
   const tags = buildDetailTags(detail);
 
   return (
@@ -24,8 +36,23 @@ export function DetailHeader({ detail, liked, likeCount, onToggleLike }: DetailH
       <div className="flex items-start justify-between gap-4">
         <h1 className="text-heading-1 text-text-primary">{detail.title}</h1>
         <div className="flex shrink-0 items-center gap-2">
-          <button type="button" aria-label="구독 알림" className="p-2.5 text-text-primary">
-            <Bell className="size-6" />
+          <button
+            type="button"
+            aria-label="좋아요"
+            aria-pressed={liked}
+            onClick={onToggleLike}
+            className={cn("p-2.5", liked ? "text-text-brand" : "text-text-primary")}
+          >
+            <ThumbsUp className={cn("size-6", liked && "fill-current")} />
+          </button>
+          <button
+            type="button"
+            aria-label="북마크"
+            aria-pressed={bookmarked}
+            onClick={onToggleBookmark}
+            className={cn("p-2.5", bookmarked ? "text-text-brand" : "text-text-primary")}
+          >
+            <Bookmark className={cn("size-6", bookmarked && "fill-current")} />
           </button>
           <button type="button" aria-label="더보기" className="p-2.5 text-text-primary">
             <MoreVertical className="size-6" />
@@ -42,19 +69,8 @@ export function DetailHeader({ detail, liked, likeCount, onToggleLike }: DetailH
             <span className="text-black">・</span>
             <span>조회 {detail.stats.views}</span>
             <span className="text-black">・</span>
-            <button
-              type="button"
-              aria-label="추천"
-              aria-pressed={liked}
-              onClick={onToggleLike}
-              className={cn(
-                "inline-flex items-center gap-1",
-                liked ? "text-text-brand" : "text-text-secondary",
-              )}
-            >
-              <Heart className={cn("size-4", liked && "fill-current")} />
-              추천 {likeCount}
-            </button>
+            {/* 추천수 — 표시 전용(좋아요 아이콘으로 토글) */}
+            <span>추천 {likeCount}</span>
           </div>
         </div>
       </div>

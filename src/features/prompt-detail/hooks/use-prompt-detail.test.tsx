@@ -49,13 +49,16 @@ describe("usePromptDetail (MSW 목 연동)", () => {
     expect(result.current.data!.recipeBody.length).toBeGreaterThan(0);
   });
 
-  it("비로그인 → anonymous 잠금 상세(전문 미전송)", async () => {
+  it("비로그인 → anonymous 잠금 상세(미리보기만 제공)", async () => {
     mockStatus = "anonymous";
     const { result } = renderHook(() => usePromptDetail("prompt-001"), { wrapper: wrapper() });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data!.access).toEqual({ locked: true, reason: "anonymous" });
-    expect(result.current.data!.recipeBody).toBe("");
+    expect(result.current.data!.access!.locked).toBe(true);
+    expect(result.current.data!.access!.reason).toBe("anonymous");
+    // 미리보기: previewLength 만큼만, 비어있지 않음
+    expect(result.current.data!.recipeBody.length).toBe(result.current.data!.access!.previewLength);
+    expect(result.current.data!.recipeBody.length).toBeGreaterThan(0);
   });
 
   it("없는/비공개 id → PromptNotFoundError, 재시도 없음", async () => {

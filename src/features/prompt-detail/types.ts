@@ -38,8 +38,10 @@ export type PromptDetail = PromptSummary & {
   recipeBody: string;
   /** 잠금 판정(BE). 없으면 프론트 폴백 계산 */
   access?: RecipeAccess | null;
-  /** 현재 사용자가 추천했는지 */
+  /** 현재 사용자가 좋아요(추천)했는지 — 좋아요 토글 = 추천수 증감 */
   liked: boolean;
+  /** 현재 사용자가 북마크했는지 */
+  bookmarked: boolean;
   /** 댓글 수 */
   commentCount: number;
 };
@@ -59,8 +61,13 @@ export type PromptComment = {
   replies: PromptComment[];
 };
 
-/** 추천 토글 응답 */
+/** 좋아요(추천) 토글 응답 */
 export type LikeToggleResponse = {
   liked: boolean;
   likeCount: number;
+};
+
+/** 북마크 토글 응답 */
+export type BookmarkToggleResponse = {
+  bookmarked: boolean;
 };

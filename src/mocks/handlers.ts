@@ -52,7 +52,11 @@ export const handlers = [
     if (!detail) {
       return new HttpResponse(null, { status: 404 });
     }
-    return HttpResponse.json({ ...detail, liked: likedState.get(id) ?? false });
+    return HttpResponse.json({
+      ...detail,
+      liked: likedState.get(id) ?? false,
+      bookmarked: bookmarkedState.get(id) ?? false,
+    });
   }),
 
   // 상세 댓글 — 표시 전용
@@ -60,7 +64,7 @@ export const handlers = [
     return HttpResponse.json(buildComments(String(params.id)));
   }),
 
-  // 추천 토글 — 인메모리 상태로 liked/카운트를 뒤집어 돌려준다(낙관적 갱신 롤백 테스트용)
+  // 좋아요(추천) 토글 — 인메모리 상태로 liked/카운트를 뒤집어 돌려준다(낙관적 롤백 테스트용)
   http.post("/api/prompts/:id/like", ({ params }) => {
     const id = String(params.id);
     const base = PROMPT_SEED.find((r) => r.id === id)?.stats.likes ?? 0;
@@ -68,7 +72,16 @@ export const handlers = [
     likedState.set(id, liked);
     return HttpResponse.json({ liked, likeCount: base + (liked ? 1 : 0) });
   }),
+
+  // 북마크 토글 — 인메모리 상태로 bookmarked 를 뒤집어 돌려준다
+  http.post("/api/prompts/:id/bookmark", ({ params }) => {
+    const id = String(params.id);
+    const bookmarked = !(bookmarkedState.get(id) ?? false);
+    bookmarkedState.set(id, bookmarked);
+    return HttpResponse.json({ bookmarked });
+  }),
 ];
 
-// 추천 토글 인메모리 상태(목 전용). id → 현재 사용자가 추천했는지
+// 토글 인메모리 상태(목 전용). id → 현재 사용자의 좋아요/북마크 여부
 const likedState = new Map<string, boolean>();
+const bookmarkedState = new Map<string, boolean>();

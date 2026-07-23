@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 
 import { track } from "@/analytics/track";
 import { useAuthStatus } from "@/hooks/use-auth-status";
+import { useBookmark } from "@/features/prompt-detail/hooks/use-bookmark";
 import { useComments } from "@/features/prompt-detail/hooks/use-comments";
 import { useDetailTab } from "@/features/prompt-detail/hooks/use-detail-tab";
 import { useLikePrompt } from "@/features/prompt-detail/hooks/use-like-prompt";
@@ -21,6 +22,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const { status } = useAuthStatus();
   const { tab, setTab } = useDetailTab();
   const like = useLikePrompt(detail.id);
+  const bookmark = useBookmark(detail.id);
   const comments = useComments(detail.id);
 
   // 상세 진입 지표 — prompt id 당 1회
@@ -45,7 +47,9 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
           detail={detail}
           liked={detail.liked}
           likeCount={detail.stats.likes}
+          bookmarked={detail.bookmarked}
           onToggleLike={() => like.mutate()}
+          onToggleBookmark={() => bookmark.mutate()}
         />
         <DetailTabs active={tab} onSelect={setTab} />
 
