@@ -45,6 +45,8 @@ type PromptCardProps = useRender.ComponentProps<"div"> & {
   tags?: string[];
   /** 썸네일 이미지 URL */
   thumbnailSrc?: string;
+  /** 썸네일 우하단 배지(선택) — 결과물타입 등 */
+  badge?: React.ReactNode;
   /** 작성자 정보(선택) — 있으면 하단에 아바타+이름 노출 */
   author?: PromptAuthor;
 };
@@ -55,14 +57,18 @@ function PromptCard({
   description,
   tags,
   thumbnailSrc,
+  badge,
   author,
   render,
   ...props
 }: PromptCardProps) {
   const content = (
     <>
-      {/* 썸네일 16:9 */}
-      <Thumbnail src={thumbnailSrc} alt={title} />
+      {/* 썸네일 16:9 (+ 우하단 배지) */}
+      <div className="relative w-full">
+        <Thumbnail src={thumbnailSrc} alt={title} />
+        {badge ? <div className="absolute right-2 bottom-2">{badge}</div> : null}
+      </div>
 
       {/* 제목 + 설명 */}
       <div data-slot="prompt-card-body" className="flex w-full flex-col gap-1">

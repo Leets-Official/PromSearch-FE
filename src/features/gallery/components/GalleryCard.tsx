@@ -1,5 +1,6 @@
 "use client";
 
+import { ImageIcon, Type } from "lucide-react";
 import Link from "next/link";
 
 import { track } from "@/analytics/track";
@@ -13,7 +14,19 @@ import {
   OUTPUT_TYPE_LABEL,
   TASK_LABEL,
 } from "@/features/gallery/categories";
-import type { PromptSummary } from "@/features/gallery/types";
+import type { OutputType, PromptSummary } from "@/features/gallery/types";
+
+/** 썸네일 우하단 결과물타입 배지 — 텍스트(T) / 이미지 아이콘 */
+function OutputTypeBadge({ type }: { type: OutputType }) {
+  return (
+    <span
+      aria-label={OUTPUT_TYPE_LABEL[type]}
+      className="flex size-7 items-center justify-center rounded-md bg-interaction-brand text-text-on-brand"
+    >
+      {type === "image" ? <ImageIcon className="size-4" /> : <Type className="size-4" />}
+    </span>
+  );
+}
 
 /** 상세 경로 — 상세 페이지는 후속 브랜치지만 경로는 확정해 링크만 연결한다. */
 export function promptDetailHref(id: string): string {
@@ -63,7 +76,9 @@ export function GalleryCard({ prompt, position, userStatus }: GalleryCardProps) 
       description={prompt.description}
       tags={buildCardTags(prompt)}
       thumbnailSrc={prompt.thumbnailUrl}
-      // 시안 기준 카드에는 작성자 정보를 노출하지 않는다(썸네일+제목+태그만)
+      badge={<OutputTypeBadge type={prompt.outputType} />}
+      // 개정(309:1875): 카드에 작성자 프로필(아바타+이름) 노출
+      author={{ name: prompt.author.name, avatarSrc: prompt.author.avatarUrl }}
       render={<Link href={promptDetailHref(prompt.id)} />}
       onClick={() =>
         track("card_click", {

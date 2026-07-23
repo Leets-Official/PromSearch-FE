@@ -19,26 +19,26 @@ type HeaderAuthAreaProps = {
 };
 
 export function HeaderAuthArea({ isAuthenticated, user }: HeaderAuthAreaProps) {
-  if (!isAuthenticated || !user) {
-    return (
-      // render 로 <a>(Link) 를 쓰므로 nativeButton=false. 시안 헤더 버튼 높이 h-48(size lg)
-      <Button variant="ghost" size="lg" nativeButton={false} render={<Link href="/login" />}>
-        로그인
-      </Button>
-    );
-  }
-
+  // 개정(401:5954): 비회원/회원 모두 알림(벨) 노출. 우측만 로그인 텍스트 ↔ 프로필로 갈린다.
   return (
     <>
-      {/* 시안(340:2569): 알림은 Button/Icon 44x44(아이콘 24 + 패딩 10, 배경 없음 → plain). */}
+      {/* 알림 — Button/Icon 44x44(아이콘 24 + 패딩 10, 배경 없음 → plain) */}
       <Button variant="plain" size="icon" aria-label="알림">
         <BellIcon />
       </Button>
-      {/* 시안 Profile(223:154): 44px 원형 아바타 = Avatar 기본 size(md) */}
-      <Avatar>
-        {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name} /> : null}
-        <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-      </Avatar>
+
+      {isAuthenticated && user ? (
+        // 회원: 44px 원형 아바타(Avatar 기본 size md)
+        <Avatar>
+          {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name} /> : null}
+          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+      ) : (
+        // 비회원: 플레인 텍스트 로그인 링크(시안 401:5954 — 검은 텍스트)
+        <Button variant="plain" nativeButton={false} render={<Link href="/login" />}>
+          로그인
+        </Button>
+      )}
     </>
   );
 }

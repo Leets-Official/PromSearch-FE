@@ -43,7 +43,7 @@
   --color-red-900: #4e090e;
 
   /* Opacity */
-  --color-dim: rgb(35 35 33 / 50%); /* gray-900 / 50% */
+  --color-dim: rgb(35 35 33 / 60%); /* gray-900 / 60% (2026.07.23 수정: 50 → 60) */
 
   /* Typography — Pretendard (KR/EN)
    * text-display-1 … text-caption-1 유틸리티로 사용 (size·행간·굵기·자간 일괄 적용) */
@@ -81,7 +81,7 @@
   --text-title-3--font-weight: 600;
 
   --text-body-1: 1rem;
-  --text-body-1--line-height: 1.875rem; /* 2026.07.14 수정: 24 → 30 (본문 행간 확대) */
+  --text-body-1--line-height: 1.75rem; /* 2026.07.23 수정: 24 → 30 → 28 (본문 행간 재조정) */
   --text-body-1--font-weight: 400;
 
   --text-body-2: 1rem; /* 2026.07.14 수정: 14/20/Regular → 16/24/Medium */
