@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Logo } from "@/components/ui/logo";
+import { LogoSymbol } from "@/components/ui/logo";
 import { SocialLoginButton } from "@/components/ui/social-login-button";
 
 interface LoginModalProps {
@@ -74,7 +74,7 @@ function LoginModal({
 
           {/* 헤더: 로고 + 제목 + 설명 */}
           <div className="flex flex-col items-center gap-2 text-center">
-            <Logo variant="symbol" />
+            <LogoSymbol className="size-12 text-brand" />
             <DialogTitle className="!text-heading-1 text-text-primary">
               로그인이 필요해요
             </DialogTitle>
