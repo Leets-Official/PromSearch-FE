@@ -65,7 +65,9 @@ function KakaoIcon() {
 }
 
 type SocialLoginButtonProps = ButtonPrimitive.Props &
-  VariantProps<typeof socialLoginButtonVariants>;
+  Omit<VariantProps<typeof socialLoginButtonVariants>, "provider"> & {
+    provider?: "google" | "kakao";
+  };
 
 /** provider별 로고 + 접근성 라벨 (아이콘 전용 버튼이라 텍스트 대신 aria-label 사용) */
 const PROVIDER_META = {
@@ -79,7 +81,7 @@ function SocialLoginButton({
   "aria-label": ariaLabel,
   ...props
 }: SocialLoginButtonProps) {
-  const preset = PROVIDER_META[provider ?? "google"];
+  const preset = PROVIDER_META[provider];
   return (
     <ButtonPrimitive
       data-slot="social-login-button"
