@@ -37,7 +37,7 @@ function LogoSymbol({ className, ...props }: React.SVGProps<SVGSVGElement>) {
       fill="none"
       role="img"
       aria-label="PromSearch"
-      className={cn("size-11", className)}
+      className={cn("size-6", className)}
       {...props}
     >
       {/* 원형 배지 — 브랜드(red-500) */}
