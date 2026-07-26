@@ -33,9 +33,13 @@ function FilterSelect<T extends string>({
 
   return (
     <Select multiple value={value} onValueChange={(next) => onChange(next as T[])}>
-      {/* 시안 드롭다운 = px-16/py-12/h-48 → SelectTrigger 기본 size(default) */}
-      <SelectTrigger className="w-40" aria-label={`${label} 필터`}>
-        <span className={hasValue ? "text-text-primary" : "text-text-disabled"}>{triggerText}</span>
+      {/* 시안 드롭다운 = px-16/py-12/h-48 → SelectTrigger 기본 size(default).
+          색은 트리거에 지정 → 텍스트와 화살표(text-current)가 함께 따라간다. */}
+      <SelectTrigger
+        className={`w-40 ${hasValue ? "text-text-primary" : "text-text-disabled"}`}
+        aria-label={`${label} 필터`}
+      >
+        <span>{triggerText}</span>
       </SelectTrigger>
       {/* 트리거 아래로 펼침(선택 항목을 트리거에 겹치지 않게) */}
       <SelectContent

@@ -69,10 +69,11 @@ function SelectTrigger({
       {...props}
     >
       {children}
-      {/* 화살표 아이콘: 열림 시 base-ui가 data-popup-open을 부여 → 위로 회전 */}
+      {/* 화살표 아이콘: 트리거 텍스트 색을 상속(currentColor) → 미선택/placeholder 시 함께 흐려짐.
+          열림 시 base-ui가 data-popup-open을 부여 → 위로 회전 */}
       <SelectPrimitive.Icon
         render={
-          <ChevronDownIcon className="pointer-events-none size-5 shrink-0 text-text-primary transition-transform data-popup-open:rotate-180" />
+          <ChevronDownIcon className="pointer-events-none size-5 shrink-0 text-current transition-transform data-popup-open:rotate-180" />
         }
       />
     </SelectPrimitive.Trigger>
