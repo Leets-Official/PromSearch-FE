@@ -12,9 +12,13 @@ import type { PromptDetail } from "@/features/prompt-detail/types";
 import { buildComments, countComments } from "@/mocks/data/comments";
 import type { PromptRecord } from "@/mocks/data/prompts";
 
-/** 상세 더미 본문(설명 탭) */
+/** 상세 더미 본문(설명 탭) — 스크롤(탭 고정) 확인용으로 충분히 길게 */
 export function buildDescriptionBody(record: PromptRecord): string {
-  return `${record.title} 상세 설명입니다. 이 프롬프트는 ${record.description ?? ""}`.repeat(3);
+  const lead = `${record.title} 상세 설명입니다. 이 프롬프트는 ${record.description ?? ""}\n\n`;
+  const para =
+    "이 프롬프트는 실제 업무에 바로 쓸 수 있도록 설계되었습니다. 입력값을 상황에 맞게 바꾸면 " +
+    "다양한 결과물을 얻을 수 있고, 예시와 제약 조건을 함께 제공해 품질을 높였습니다. ";
+  return lead + `${para}\n\n`.repeat(12);
 }
 
 /** 레시피 전문(잠금 전 원본) */
@@ -22,9 +26,9 @@ export function buildRecipeBody(record: PromptRecord): string {
   return `# ${record.title}\n\n아래 지침을 그대로 복사해 사용하세요.\n${"레시피 본문 문장. ".repeat(40)}`;
 }
 
-/** 아웃풋 이미지들(캐러셀). 결정적으로 3장 */
+/** 아웃풋 이미지들(캐러셀). 결정적으로 3장 — 실제 로드되는 placeholder(picsum) */
 export function buildImages(record: PromptRecord): string[] {
-  return [1, 2, 3].map((n) => `https://mock.promsearch.dev/${record.id}/output-${n}.png`);
+  return [1, 2, 3].map((n) => `https://picsum.photos/seed/${record.id}-${n}/900/900`);
 }
 
 /**

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { track } from "@/analytics/track";
+import { cn } from "@/lib/utils";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useBookmark } from "@/features/prompt-detail/hooks/use-bookmark";
 import { useComments } from "@/features/prompt-detail/hooks/use-comments";
@@ -24,6 +25,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const like = useLikePrompt(detail.id);
   const bookmark = useBookmark(detail.id);
   const comments = useComments(detail.id);
+  const isComments = tab === "comments";
 
   // 상세 진입 지표 — prompt id 당 1회
   const viewedRef = useRef<string | null>(null);
@@ -53,13 +55,20 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
       />
 
       {/*
-        스크롤 모델: 우측 컬럼 자체가 단일 스크롤 컨테이너.
-        내용이 짧으면 그대로, 길면 메타·태그가 위로 밀려 스크롤되고 탭(sticky)이 상단에 고정된다.
-        각 패널은 내부 스크롤 없이 내용 높이로 흐른다.
+        스크롤 모델(탭별):
+        - 설명/레시피: 우측 컬럼이 단일 스크롤 컨테이너. 길면 메타·태그가 위로 밀리고 탭(sticky)이 상단 고정.
+        - 댓글: 컬럼 높이는 고정, 리스트만 내부 스크롤하고 입력창은 항상 하단 고정.
       */}
-      <div className="flex min-w-0 flex-1 flex-col lg:h-[624px] lg:overflow-y-auto">
-        <DetailHeader detail={detail} />
-        <div className="sticky top-0 z-10 bg-bg-primary py-4">
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col lg:h-[624px]",
+          isComments ? "" : "lg:overflow-y-auto",
+        )}
+      >
+        <div className="shrink-0">
+          <DetailHeader detail={detail} />
+        </div>
+        <div className={cn("shrink-0 bg-bg-primary py-4", isComments ? "" : "sticky top-0 z-10")}>
           <DetailTabs active={tab} onSelect={setTab} />
         </div>
 
@@ -72,7 +81,9 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
             userStatus={status}
           />
         ) : null}
-        {tab === "comments" ? <CommentPanel comments={comments.data ?? []} /> : null}
+        {isComments ? (
+          <CommentPanel comments={comments.data ?? []} className="min-h-0 flex-1" />
+        ) : null}
       </div>
     </div>
   );
