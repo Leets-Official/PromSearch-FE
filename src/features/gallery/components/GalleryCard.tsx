@@ -16,12 +16,12 @@ import {
 } from "@/features/gallery/categories";
 import type { OutputType, PromptSummary } from "@/features/gallery/types";
 
-/** 썸네일 우하단 결과물타입 배지 — 텍스트(T) / 이미지 아이콘 */
+/** 썸네일 우하단 결과물타입 배지 — 텍스트(T) / 이미지 아이콘 (Figma 1006:2312) */
 function OutputTypeBadge({ type }: { type: OutputType }) {
   return (
     <span
       aria-label={OUTPUT_TYPE_LABEL[type]}
-      className="flex size-7 items-center justify-center rounded-md bg-interaction-brand text-text-on-brand"
+      className="flex items-center rounded-[4px] bg-interaction-brand p-1 text-text-on-brand"
     >
       {type === "image" ? <ImageIcon className="size-4" /> : <Type className="size-4" />}
     </span>
@@ -73,11 +73,10 @@ export function GalleryCard({ prompt, position, userStatus }: GalleryCardProps) 
     <PromptCard
       ref={ref}
       title={prompt.title}
-      description={prompt.description}
       tags={buildCardTags(prompt)}
       thumbnailSrc={prompt.thumbnailUrl}
       badge={<OutputTypeBadge type={prompt.outputType} />}
-      // 개정(309:1875): 카드에 작성자 프로필(아바타+이름) 노출
+      // 개정(209:3690): [아바타 | 제목 / 작성자이름] → 태그 순서
       author={{ name: prompt.author.name, avatarSrc: prompt.author.avatarUrl }}
       render={<Link href={promptDetailHref(prompt.id)} />}
       onClick={() =>

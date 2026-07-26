@@ -28,9 +28,9 @@ function FilterSelect<T extends string>({
           {value.length > 0 ? `${label} ${value.length}` : `${label} 전체`}
         </span>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="min-w-[200px]">
         {options.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
+          <SelectItem key={opt.value} value={opt.value} checkbox>
             {opt.label}
           </SelectItem>
         ))}
