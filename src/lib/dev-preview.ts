@@ -93,6 +93,15 @@ export function writeDevPreviewCookie(value: DevPreview): void {
 }
 
 /**
+ * 현재 dev 엣지 상태(클라 쿠키 기준). 강제 에러 시 React Query 재시도를 꺼
+ * 즉시 에러가 반영되도록 하는 데 쓴다(툴바 꺼져 있으면 항상 normal).
+ */
+export function currentDevEdge(): DevEdge {
+  if (!DEV_TOOLBAR_ENABLED) return "normal";
+  return readDevPreviewCookie().edge;
+}
+
+/**
  * 클라이언트 fetch 에 실을 dev 헤더(콘텐츠 길이·엣지). MSW 목이 이를 읽어 응답을 바꾼다.
  * 툴바가 꺼져 있거나 기본 상태면 빈 객체(실서버 호출에 흔적 없음).
  */

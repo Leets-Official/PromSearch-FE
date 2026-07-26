@@ -81,7 +81,7 @@ export function DevPreviewProvider({
     if (serializeDevPreview(fromUrl) === initialKey) return;
     writeDevPreviewCookie(fromUrl);
     router.refresh(); // 서버 컴포넌트를 새 쿠키로 재실행 → initialPreview 갱신 → 렌더 중 동기화
-    void queryClient.invalidateQueries();
+    void queryClient.resetQueries();
   }, [initialKey, queryClient, router]);
 
   const applyToUrl = useCallback((value: DevPreview) => {
@@ -102,8 +102,9 @@ export function DevPreviewProvider({
       // 부수효과는 렌더(updater) 밖 이벤트 핸들러에서 실행 — 렌더 중 Router/쿼리 갱신 금지.
       writeDevPreviewCookie(value);
       applyToUrl(value);
-      // auth 는 쿼리키에 포함돼 자동 리페치되지만, content/edge 는 키에 없으므로 명시적 무효화.
-      void queryClient.invalidateQueries();
+      // content/edge 는 쿼리키에 없어 invalidate(백그라운드 리페치)로는 isPending 이 안 뜬다.
+      // reset 으로 캐시를 비워 처음부터 다시 받게 해야 로딩 스켈레톤·에러가 옛 데이터 없이 반영된다.
+      void queryClient.resetQueries();
       // 서버 컴포넌트(쿠키 기반)도 새 상태로 재실행.
       router.refresh();
     },
