@@ -96,19 +96,18 @@ export function DevPreviewProvider({
 
   const setPreview = useCallback(
     (next: Partial<DevPreview>) => {
-      setPreviewState((prev) => {
-        const value: DevPreview = { ...prev, ...next };
-        writeDevPreviewCookie(value);
-        applyToUrl(value);
-        setSeededKey(serializeDevPreview(value)); // refresh 후 재시드가 이 값을 덮어쓰지 않도록
-        // auth 는 쿼리키에 포함돼 자동 리페치되지만, content/edge 는 키에 없으므로 명시적 무효화.
-        void queryClient.invalidateQueries();
-        // 서버 컴포넌트(쿠키 기반)도 새 상태로 재실행.
-        router.refresh();
-        return value;
-      });
+      const value: DevPreview = { ...preview, ...next };
+      setPreviewState(value);
+      setSeededKey(serializeDevPreview(value)); // refresh 후 재시드가 이 값을 덮어쓰지 않도록
+      // 부수효과는 렌더(updater) 밖 이벤트 핸들러에서 실행 — 렌더 중 Router/쿼리 갱신 금지.
+      writeDevPreviewCookie(value);
+      applyToUrl(value);
+      // auth 는 쿼리키에 포함돼 자동 리페치되지만, content/edge 는 키에 없으므로 명시적 무효화.
+      void queryClient.invalidateQueries();
+      // 서버 컴포넌트(쿠키 기반)도 새 상태로 재실행.
+      router.refresh();
     },
-    [applyToUrl, queryClient, router],
+    [preview, applyToUrl, queryClient, router],
   );
 
   const reset = useCallback(() => setPreview(DEV_PREVIEW_DEFAULT), [setPreview]);
