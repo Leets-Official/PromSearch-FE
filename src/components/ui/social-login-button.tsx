@@ -4,24 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * 소셜 로그인 버튼 (Figma: Google Login 412:2549 / Kakao Login 412:2548)
+ * 소셜 로그인 버튼 (Figma: Google Login / Kakao Login — 원형 아이콘 버전)
  *
- * 공통: 높이 44px, 아이콘 18px + 텍스트, 가로 꽉 참(기본), Title 3(14px) 세미볼드.
+ * 공통: 44px 원형(rounded-full), 아이콘 18px 단독 표시.
  * 색은 각 플랫폼의 고정 브랜드 색이라 시안 값을 그대로 임의값으로 사용합니다.
- * (디자인 토큰이 아닌 브랜드 컬러 — Google #f2f2f2/#1f1f1f, Kakao #fee500/#232321)
- * 텍스트/문구는 시안 그대로: "구글로 시작하기" / "카카오로 시작하기".
+ * (디자인 토큰이 아닌 브랜드 컬러 — Google #f2f2f2, Kakao #fee500)
+ * 텍스트가 없으므로 기존 문구는 aria-label로 제공합니다.
  */
 const socialLoginButtonVariants = cva(
-  "inline-flex h-11 w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap border border-transparent text-title-3 outline-none transition-[filter,box-shadow] select-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4.5 [&_svg]:shrink-0",
+  "inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-transparent outline-none transition-[filter,box-shadow] select-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4.5 [&_svg]:shrink-0",
   {
     variants: {
       provider: {
-        // Google: 연회색 배경(#f2f2f2) + 진한 텍스트(#1f1f1f), radius 4px
-        google:
-          "rounded-[4px] bg-[#f2f2f2] text-[#1f1f1f] hover:brightness-95 focus-visible:border-ring",
-        // Kakao: 카카오 옐로우(#fee500) + 텍스트 primary, radius 6px
-        kakao:
-          "rounded-[6px] bg-[#fee500] text-text-primary hover:brightness-95 focus-visible:border-[#fee500]",
+        // Google: 연회색 원(#f2f2f2)
+        google: "bg-[#f2f2f2] hover:brightness-95 focus-visible:border-ring",
+        // Kakao: 카카오 옐로우 원(#fee500)
+        kakao: "bg-[#fee500] hover:brightness-95 focus-visible:border-[#fee500]",
       },
     },
     defaultVariants: {
@@ -57,7 +55,7 @@ function GoogleIcon() {
 /** Kakao 말풍선 로고 (self-contained SVG) */
 function KakaoIcon() {
   return (
-    <svg viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
         fill="#000000"
         d="M9 1.5C4.858 1.5 1.5 4.099 1.5 7.305c0 2.075 1.406 3.895 3.522 4.927-.155.556-.562 2.018-.643 2.331-.1.388.143.383.3.279.124-.082 1.964-1.334 2.76-1.876.343.05.697.076 1.061.076 4.142 0 7.5-2.599 7.5-5.804C16 4.099 13.142 1.5 9 1.5Z"
@@ -67,10 +65,12 @@ function KakaoIcon() {
 }
 
 type SocialLoginButtonProps = ButtonPrimitive.Props &
-  VariantProps<typeof socialLoginButtonVariants>;
+  Omit<VariantProps<typeof socialLoginButtonVariants>, "provider"> & {
+    provider?: "google" | "kakao";
+  };
 
-/** provider별 로고 + 기본 문구 */
-const PROVIDER_LABEL = {
+/** provider별 로고 + 접근성 라벨 (아이콘 전용 버튼이라 텍스트 대신 aria-label 사용) */
+const PROVIDER_META = {
   google: { icon: <GoogleIcon />, label: "구글로 시작하기" },
   kakao: { icon: <KakaoIcon />, label: "카카오로 시작하기" },
 } as const;
@@ -78,18 +78,18 @@ const PROVIDER_LABEL = {
 function SocialLoginButton({
   className,
   provider = "google",
-  children,
+  "aria-label": ariaLabel,
   ...props
 }: SocialLoginButtonProps) {
-  const preset = PROVIDER_LABEL[provider ?? "google"];
+  const preset = PROVIDER_META[provider];
   return (
     <ButtonPrimitive
       data-slot="social-login-button"
+      aria-label={ariaLabel ?? preset.label}
       className={cn(socialLoginButtonVariants({ provider, className }))}
       {...props}
     >
       {preset.icon}
-      {children ?? preset.label}
     </ButtonPrimitive>
   );
 }

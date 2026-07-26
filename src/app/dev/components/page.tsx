@@ -10,6 +10,7 @@ import { NavigationSection } from "./sections/navigation-section";
 import { OverlaySection } from "./sections/overlay-section";
 import { SelectionSection } from "./sections/selection-section";
 import { TokenSection } from "./sections/token-section";
+import { ModalSection } from "./sections/modal-section";
 
 export const metadata: Metadata = {
   title: "공통 컴포넌트 갤러리 | PromSearch Dev",
@@ -27,6 +28,7 @@ const TOC = [
   ["#icon", "Icon"],
   ["#overlay-dialog", "Dialog · Dropdown"],
   ["#feedback-spinner", "Spinner"],
+  ["#modal", "Modal"],
 ] as const;
 
 /**
@@ -77,6 +79,7 @@ export default function ComponentsGalleryPage() {
         <IconSection />
         <OverlaySection />
         <FeedbackSection />
+        <ModalSection />
       </main>
     </div>
   );
