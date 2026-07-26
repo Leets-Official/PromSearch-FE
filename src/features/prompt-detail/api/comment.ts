@@ -5,9 +5,12 @@
  */
 
 import type { PromptComment } from "@/features/prompt-detail/types";
+import { devPreviewFetchHeaders } from "@/lib/dev-preview";
 
 export async function fetchComments(id: string): Promise<PromptComment[]> {
-  const res = await fetch(`/api/prompts/${id}/comments`);
+  const res = await fetch(`/api/prompts/${id}/comments`, {
+    headers: devPreviewFetchHeaders(),
+  });
 
   if (!res.ok) {
     throw new Error(`댓글 조회 실패: ${res.status}`);

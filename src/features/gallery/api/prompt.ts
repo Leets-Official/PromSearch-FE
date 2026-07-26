@@ -5,6 +5,7 @@
  */
 
 import type { GalleryQuery, PromptListResponse } from "@/features/gallery/types";
+import { devPreviewFetchHeaders } from "@/lib/dev-preview";
 
 /**
  * 필터 상태 → 쿼리스트링. 기본값(빈 배열·빈 문자열·page 1·nav home)은 생략해 URL 을 깔끔하게 유지한다.
@@ -27,7 +28,9 @@ export function toSearchParams(query: GalleryQuery): URLSearchParams {
 export async function fetchPrompts(query: GalleryQuery): Promise<PromptListResponse> {
   const params = toSearchParams(query);
   const qs = params.toString();
-  const res = await fetch(`/api/prompts${qs ? `?${qs}` : ""}`);
+  const res = await fetch(`/api/prompts${qs ? `?${qs}` : ""}`, {
+    headers: devPreviewFetchHeaders(),
+  });
 
   if (!res.ok) {
     throw new Error(`프롬프트 목록 조회 실패: ${res.status}`);
