@@ -9,6 +9,12 @@ import { ImageZoomModal } from "./ImageZoomModal";
 /** 아웃풋 이미지 최대 개수(BE 제약과 동일) */
 export const MAX_OUTPUT_IMAGES = 10;
 
+/** 현재 인덱스 기준 인접(±1, 순환) 인덱스 집합 — 프리로드 대상 */
+function windowIndices(index: number, total: number): Set<number> {
+  if (total <= 1) return new Set([0]);
+  return new Set([(index - 1 + total) % total, index, (index + 1) % total]);
+}
+
 type OutputCarouselProps = {
   images: string[];
   title: string;
@@ -37,12 +43,18 @@ export function OutputCarousel({
   onReport,
 }: OutputCarouselProps) {
   const items = images.slice(0, MAX_OUTPUT_IMAGES);
-  const [index, setIndex] = useState(0);
-  const [zoomOpen, setZoomOpen] = useState(false);
   const total = items.length;
+  const [index, setIndex] = useState(0);
+  // 로드된(=DOM에 src가 걸린) 인덱스. 초기엔 인접 ±1만, 이동하며 누적(한 번 로드하면 유지 → 재방문 즉시).
+  const [loaded, setLoaded] = useState<Set<number>>(() => windowIndices(0, total));
+  const [zoomOpen, setZoomOpen] = useState(false);
   const hasMultiple = total > 1;
 
-  const go = (delta: number) => setIndex((i) => (i + delta + total) % total);
+  const goTo = (next: number) => {
+    setIndex(next);
+    setLoaded((prev) => new Set([...prev, ...windowIndices(next, total)]));
+  };
+  const go = (delta: number) => goTo((index + delta + total) % total);
 
   return (
     <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-md bg-bg-disabled lg:aspect-auto lg:h-[624px] lg:w-[432px]">
@@ -52,12 +64,13 @@ export function OutputCarousel({
         onClick={() => setZoomOpen(true)}
         className="relative size-full cursor-zoom-in"
       >
-        {/* 모든 이미지를 미리 로드해 스택 — 전환 시 즉시 표시(네트워크 재요청 지연 제거) */}
+        {/* 이미지 스택(opacity 크로스페이드). src 는 인접 프리로드된(loaded) 것만 걸어
+            초기 로드를 ±1로 제한하고, 이동 시 다음 이웃을 미리 받아 전환을 즉시(0ms)로 유지 */}
         {items.map((src, i) => (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={i}
-            src={src}
+            src={loaded.has(i) ? src : undefined}
             alt={i === index ? `${title} 아웃풋 ${index + 1}` : ""}
             aria-hidden={i !== index}
             className={cn(
