@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { MouseEvent } from "react";
 
 import { Sidebar, SidebarGroupLabel, SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { JOB_CATEGORIES } from "@/features/gallery/categories";
@@ -26,6 +27,14 @@ function navHref(nav: Nav, job?: JobCategory): string {
  * 상세 등 `(main)` 셸을 공유하는 다른 페이지에서도 노출되므로, 클릭 시 현재 URL 에
  * 쿼리만 덧붙이지 않고 **항상 홈 갤러리(`/home`)로 이동**한다(Link). 활성 표시는 홈에서만.
  */
+/**
+ * 마우스 클릭으로 이동한 뒤 링크에 포커스 링이 남는 것을 막는다(SPA 네비 특성).
+ * `e.detail === 0` = 키보드(Enter/Space) → blur 안 함(키보드 포커스 링은 유지, 접근성).
+ */
+function blurOnMouseClick(e: MouseEvent<HTMLElement>) {
+  if (e.detail !== 0) e.currentTarget.blur();
+}
+
 export function CategoryNav() {
   const pathname = usePathname();
   const { query } = useGalleryFilters();
@@ -37,10 +46,18 @@ export function CategoryNav() {
   return (
     <Sidebar>
       <SidebarMenu>
-        <SidebarMenuItem active={isActive("home")} render={<Link href={navHref("home")} />}>
+        <SidebarMenuItem
+          active={isActive("home")}
+          onClick={blurOnMouseClick}
+          render={<Link href={navHref("home")} />}
+        >
           홈
         </SidebarMenuItem>
-        <SidebarMenuItem active={isActive("popular")} render={<Link href={navHref("popular")} />}>
+        <SidebarMenuItem
+          active={isActive("popular")}
+          onClick={blurOnMouseClick}
+          render={<Link href={navHref("popular")} />}
+        >
           인기 프롬프트
         </SidebarMenuItem>
       </SidebarMenu>
@@ -53,6 +70,7 @@ export function CategoryNav() {
               key={job.value}
               size="sm"
               active={isActive("job", job.value)}
+              onClick={blurOnMouseClick}
               render={<Link href={navHref("job", job.value)} />}
             >
               {job.label}

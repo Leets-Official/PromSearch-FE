@@ -20,15 +20,30 @@ function FilterSelect<T extends string>({
   value: T[];
   onChange: (value: T[]) => void;
 }) {
+  // 트리거 표기(Figma 1174:4704):
+  // - 미선택: "{label} 전체" (text-disabled)
+  // - 1개: "{첫 라벨}"  / 2개↑: "{첫 라벨} 외 +{N-1}"  (text-primary)
+  const selected = options.filter((o) => value.includes(o.value));
+  const hasValue = selected.length > 0;
+  const triggerText = !hasValue
+    ? `${label} 전체`
+    : selected.length === 1
+      ? selected[0].label
+      : `${selected[0].label} 외 +${selected.length - 1}`;
+
   return (
     <Select multiple value={value} onValueChange={(next) => onChange(next as T[])}>
       {/* 시안 드롭다운 = px-16/py-12/h-48 → SelectTrigger 기본 size(default) */}
       <SelectTrigger className="w-40" aria-label={`${label} 필터`}>
-        <span className={value.length > 0 ? "text-text-primary" : "text-text-secondary"}>
-          {value.length > 0 ? `${label} ${value.length}` : `${label} 전체`}
-        </span>
+        <span className={hasValue ? "text-text-primary" : "text-text-disabled"}>{triggerText}</span>
       </SelectTrigger>
-      <SelectContent className="min-w-[200px]">
+      {/* 트리거 아래로 펼침(선택 항목을 트리거에 겹치지 않게) */}
+      <SelectContent
+        className="min-w-[200px]"
+        align="start"
+        alignItemWithTrigger={false}
+        sideOffset={4}
+      >
         {options.map((opt) => (
           <SelectItem key={opt.value} value={opt.value} checkbox>
             {opt.label}
