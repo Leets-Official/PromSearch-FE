@@ -89,9 +89,12 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
           if (e.target === e.currentTarget) onClose();
         }}
       >
+        {/* centerZoomedOut: 축소돼 이미지가 뷰포트보다 작아지면 다시 중앙 정렬
+            (포인터 기준 줌으로 커서 쪽에 치우치는 것 방지) */}
         <TransformWrapper
           key={index}
           centerOnInit
+          centerZoomedOut
           doubleClick={{ mode: "toggle" }}
           minScale={1}
           maxScale={5}
