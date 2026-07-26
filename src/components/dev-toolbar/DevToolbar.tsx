@@ -49,7 +49,7 @@ export function DevToolbar() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed right-4 bottom-4 z-[9999] flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg ring-1 ring-white/10 transition hover:bg-neutral-800"
+        className="fixed right-4 bottom-20 z-[9999] flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg ring-1 ring-white/10 transition hover:bg-neutral-800"
         aria-label="Dev 프리뷰 툴바 열기"
       >
         <SlidersHorizontalIcon className="size-4" />
@@ -60,7 +60,7 @@ export function DevToolbar() {
   }
 
   return (
-    <div className="fixed right-4 bottom-4 z-[9999] w-[300px] rounded-2xl bg-neutral-900 p-4 text-white shadow-2xl ring-1 ring-white/10">
+    <div className="fixed right-4 bottom-20 z-[9999] w-[300px] rounded-2xl bg-neutral-900 p-4 text-white shadow-2xl ring-1 ring-white/10">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <SlidersHorizontalIcon className="size-4" />

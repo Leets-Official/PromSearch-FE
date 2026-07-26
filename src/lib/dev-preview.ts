@@ -49,24 +49,26 @@ function coerce<T extends string>(value: unknown, allowed: readonly T[], fallbac
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
 
-/** 직렬화 문자열(쿠키/URL) → DevPreview. 잘못된 값은 기본값으로 방어적 폴백. */
+/**
+ * 직렬화 문자열(쿠키/URL) → DevPreview. 잘못된/누락 값은 필드별 기본값으로 방어적 폴백.
+ * 포맷은 `auth.content.edge`(위치 기반) — 세 축의 값 집합이 서로 겹치지 않아 순서만으로 파싱된다.
+ */
 export function parseDevPreview(raw: string | undefined | null): DevPreview {
   if (!raw) return DEV_PREVIEW_DEFAULT;
-  try {
-    const parsed = JSON.parse(decodeURIComponent(raw)) as Partial<DevPreview>;
-    return {
-      auth: coerce(parsed.auth, AUTH_VALUES, DEV_PREVIEW_DEFAULT.auth),
-      content: coerce(parsed.content, CONTENT_VALUES, DEV_PREVIEW_DEFAULT.content),
-      edge: coerce(parsed.edge, EDGE_VALUES, DEV_PREVIEW_DEFAULT.edge),
-    };
-  } catch {
-    return DEV_PREVIEW_DEFAULT;
-  }
+  const [auth, content, edge] = raw.split(".");
+  return {
+    auth: coerce(auth, AUTH_VALUES, DEV_PREVIEW_DEFAULT.auth),
+    content: coerce(content, CONTENT_VALUES, DEV_PREVIEW_DEFAULT.content),
+    edge: coerce(edge, EDGE_VALUES, DEV_PREVIEW_DEFAULT.edge),
+  };
 }
 
-/** DevPreview → 쿠키/URL 에 담을 문자열(URL-encoded JSON) */
+/**
+ * DevPreview → 쿠키/URL 공용 문자열. `authenticated.long.error` 처럼 짧고 읽기 쉬우며,
+ * 모두 URL-safe 문자라 URLSearchParams 가 재인코딩하지 않는다(주소창이 깔끔).
+ */
 export function serializeDevPreview(value: DevPreview): string {
-  return encodeURIComponent(JSON.stringify(value));
+  return `${value.auth}.${value.content}.${value.edge}`;
 }
 
 /** 기본값과 동일한가(= 오버라이드 없음). URL 파라미터를 생략해 주소를 깔끔히 유지할 때 사용. */
