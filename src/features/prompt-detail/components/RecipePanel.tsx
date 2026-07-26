@@ -42,10 +42,10 @@ export function RecipePanel({
     onUnlock?.(reason);
   };
 
-  // 열람 가능 — 전문(복사 버튼은 탭 행에서 렌더)
+  // 열람 가능 — 전문(복사 버튼은 탭 행에서 렌더). 레시피는 회색 박스 배경 유지(Figma 409:8197)
   if (!access.locked) {
     return (
-      <div className="w-full">
+      <div className="w-full rounded-md bg-bg-secondary px-5 py-4">
         <p className="text-body-1 whitespace-pre-wrap text-text-secondary">{recipeBody}</p>
       </div>
     );

@@ -28,10 +28,11 @@ export function DetailTabs({ active, onSelect }: DetailTabsProps) {
             aria-selected={selected}
             onClick={() => onSelect(tab.value)}
             className={cn(
-              "border-b p-3 text-title-1",
+              // 선택된 탭만 하단 언더바(stroke-strong), 나머지는 언더바 없음(투명)
+              "border-b-2 p-3 text-title-1",
               selected
                 ? "border-stroke-strong text-text-primary"
-                : "border-stroke-disabled text-text-disabled",
+                : "border-transparent text-text-disabled",
             )}
           >
             {tab.label}

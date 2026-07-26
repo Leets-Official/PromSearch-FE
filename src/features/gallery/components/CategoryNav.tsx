@@ -1,27 +1,46 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import { Sidebar, SidebarGroupLabel, SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { JOB_CATEGORIES } from "@/features/gallery/categories";
 import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters";
+import type { JobCategory } from "@/features/gallery/types";
+
+/** 홈 갤러리 경로 — 사이드바는 어느 페이지에서든 홈으로 이동한다 */
+const HOME_PATH = "/home";
+
+type Nav = "home" | "popular" | "job";
+
+/** 사이드바 항목 → 홈 갤러리 링크(nav/job 쿼리). 상세 등 다른 페이지에서도 홈으로 이동한다. */
+function navHref(nav: Nav, job?: JobCategory): string {
+  if (nav === "popular") return `${HOME_PATH}?nav=popular`;
+  if (nav === "job" && job) return `${HOME_PATH}?nav=job&job=${job}`;
+  return HOME_PATH;
+}
 
 /**
- * 좌측 카테고리 사이드바.
- * - 홈 / 인기 프롬프트 (nav)
- * - 직군별: 학생/직장인/기획자/디자이너/개발자/자영업자 (nav=job)
+ * 좌측 카테고리 사이드바 — 홈 / 인기 프롬프트 / 직군별.
  *
- * 직군 클릭은 해당 직군으로 필터링된 갤러리로 전환하는 느낌(라우팅형)이며,
- * 상단 필터와 AND 로 결합된다.
+ * 상세 등 `(main)` 셸을 공유하는 다른 페이지에서도 노출되므로, 클릭 시 현재 URL 에
+ * 쿼리만 덧붙이지 않고 **항상 홈 갤러리(`/home`)로 이동**한다(Link). 활성 표시는 홈에서만.
  */
 export function CategoryNav() {
-  const { query, setNav, selectJob } = useGalleryFilters();
+  const pathname = usePathname();
+  const { query } = useGalleryFilters();
+  const onHome = pathname === HOME_PATH;
+
+  const isActive = (nav: Nav, job?: JobCategory) =>
+    onHome && query.nav === nav && (nav === "job" ? query.job === job : true);
 
   return (
     <Sidebar>
       <SidebarMenu>
-        <SidebarMenuItem active={query.nav === "home"} onClick={() => setNav("home")}>
+        <SidebarMenuItem active={isActive("home")} render={<Link href={navHref("home")} />}>
           홈
         </SidebarMenuItem>
-        <SidebarMenuItem active={query.nav === "popular"} onClick={() => setNav("popular")}>
+        <SidebarMenuItem active={isActive("popular")} render={<Link href={navHref("popular")} />}>
           인기 프롬프트
         </SidebarMenuItem>
       </SidebarMenu>
@@ -33,8 +52,8 @@ export function CategoryNav() {
             <SidebarMenuItem
               key={job.value}
               size="sm"
-              active={query.nav === "job" && query.job === job.value}
-              onClick={() => selectJob(job.value)}
+              active={isActive("job", job.value)}
+              render={<Link href={navHref("job", job.value)} />}
             >
               {job.label}
             </SidebarMenuItem>

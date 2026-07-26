@@ -73,7 +73,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
         스크롤하면 메타·태그가 위로 밀리고 탭(sticky-top)이 상단에 고정된다.
         댓글 입력창은 sticky-bottom 이라, 탭이 상단에 닿은 뒤엔 댓글 리스트만 그 사이에서 스크롤된다.
       */}
-      <div className="flex min-w-0 flex-1 flex-col lg:h-[624px] lg:overflow-y-auto">
+      <div className="flex scrollbar-minimal min-w-0 flex-1 flex-col lg:h-[624px] lg:overflow-y-auto lg:pr-3">
         <DetailHeader detail={detail} />
 
         {/* 탭 행 — 상단 고정 + 레시피 열람 시 복사 버튼(디자인상 탭과 같은 줄) */}
