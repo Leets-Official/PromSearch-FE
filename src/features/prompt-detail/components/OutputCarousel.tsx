@@ -67,15 +67,15 @@ export function OutputCarousel({
           label="추천"
           active={liked}
           onClick={onToggleLike}
-          icon={<Heart className={cn("size-5", liked && "fill-current")} />}
+          icon={<Heart className={cn("size-6", liked && "fill-current")} />}
         />
         <OverlayAction
           label="북마크"
           active={bookmarked}
           onClick={onToggleBookmark}
-          icon={<Bookmark className={cn("size-5", bookmarked && "fill-current")} />}
+          icon={<Bookmark className={cn("size-6", bookmarked && "fill-current")} />}
         />
-        <OverlayAction label="신고" onClick={onReport} icon={<Flag className="size-5" />} />
+        <OverlayAction label="신고" onClick={onReport} icon={<Flag className="size-6" />} />
       </div>
 
       {hasMultiple ? (
@@ -121,7 +121,7 @@ export function OutputCarousel({
   );
 }
 
-/** 이미지 위 반투명 액션 버튼 */
+/** 이미지 위 액션 버튼 — Button/Icon type=background: dim(gray-900/60%) 배경 + 흰 아이콘 */
 function OverlayAction({
   label,
   active,
@@ -139,10 +139,7 @@ function OverlayAction({
       aria-label={label}
       aria-pressed={active}
       onClick={onClick}
-      className={cn(
-        "flex size-9 items-center justify-center rounded-md bg-bg-elevated/90 text-text-primary shadow-sm backdrop-blur-sm transition-colors hover:bg-bg-elevated",
-        active && "text-text-brand",
-      )}
+      className="flex items-center justify-center rounded-md bg-dim p-2 text-white transition-colors hover:bg-dim/80"
     >
       {icon}
     </button>
