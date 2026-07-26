@@ -7,7 +7,8 @@ import { CommentItem } from "./CommentItem";
 
 /**
  * 댓글 탭 — 표시 전용(작성/삭제/신고는 후속).
- * 레이아웃: 댓글 리스트가 남은 높이를 채우며 내부 스크롤, 입력창은 **항상 하단 고정**(디자인).
+ * 레이아웃: 우측 컬럼 스크롤 안에서 리스트가 흐르고, 입력창은 `sticky bottom-0` 으로
+ * 항상 하단에 고정된다(스크롤 시 탭은 상단, 입력창은 하단, 그 사이 댓글만 스크롤).
  */
 export function CommentPanel({
   comments,
@@ -18,12 +19,11 @@ export function CommentPanel({
 }) {
   return (
     <div className={cn("flex w-full flex-col gap-4", className)}>
-      {/* 리스트 — 남은 높이를 채우고 넘치면 내부 스크롤 */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div>
         {comments.length === 0 ? (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-body-2 text-text-disabled">아직 작성된 댓글이 없어요.</p>
-          </div>
+          <p className="py-16 text-center text-body-2 text-text-disabled">
+            아직 작성된 댓글이 없어요.
+          </p>
         ) : (
           <ul className="flex flex-col gap-4">
             {comments.map((c) => (
@@ -33,17 +33,18 @@ export function CommentPanel({
         )}
       </div>
 
-      {/* 입력창 — 항상 하단 고정. 개정 TextField(등록 버튼 + 카운터). 작성 동작은 후속(no-op). */}
-      <TextField
-        className="shrink-0"
-        aria-label="댓글 입력"
-        placeholder="댓글을 입력해주세요"
-        maxLength={500}
-        submitLabel="등록"
-        onSubmit={() => {
-          /* 댓글 작성 — 후속 브랜치 */
-        }}
-      />
+      {/* 입력창 — 하단 고정(sticky). 개정 TextField(등록 버튼 + 카운터). 작성 동작은 후속(no-op). */}
+      <div className="sticky bottom-0 bg-bg-primary pt-2 pb-1">
+        <TextField
+          aria-label="댓글 입력"
+          placeholder="댓글을 입력해주세요"
+          maxLength={500}
+          submitLabel="등록"
+          onSubmit={() => {
+            /* 댓글 작성 — 후속 브랜치 */
+          }}
+        />
+      </div>
     </div>
   );
 }

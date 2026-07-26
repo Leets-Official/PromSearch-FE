@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { Copy } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import { track } from "@/analytics/track";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useBookmark } from "@/features/prompt-detail/hooks/use-bookmark";
 import { useComments } from "@/features/prompt-detail/hooks/use-comments";
@@ -25,7 +26,20 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const like = useLikePrompt(detail.id);
   const bookmark = useBookmark(detail.id);
   const comments = useComments(detail.id);
-  const isComments = tab === "comments";
+  const [copied, setCopied] = useState(false);
+
+  const access = detail.access ?? { locked: false, reason: null };
+  const showCopy = tab === "recipe" && !access.locked;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(detail.recipeBody);
+    setCopied(true);
+    track("prompt_copy_click", {
+      prompt_id: detail.id,
+      user_status: status,
+      source: "detail",
+    });
+  };
 
   // 상세 진입 지표 — prompt id 당 1회
   const viewedRef = useRef<string | null>(null);
@@ -55,21 +69,22 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
       />
 
       {/*
-        스크롤 모델(탭별):
-        - 설명/레시피: 우측 컬럼이 단일 스크롤 컨테이너. 길면 메타·태그가 위로 밀리고 탭(sticky)이 상단 고정.
-        - 댓글: 컬럼 높이는 고정, 리스트만 내부 스크롤하고 입력창은 항상 하단 고정.
+        스크롤 모델: 우측 컬럼이 단일 스크롤 컨테이너.
+        스크롤하면 메타·태그가 위로 밀리고 탭(sticky-top)이 상단에 고정된다.
+        댓글 입력창은 sticky-bottom 이라, 탭이 상단에 닿은 뒤엔 댓글 리스트만 그 사이에서 스크롤된다.
       */}
-      <div
-        className={cn(
-          "flex min-w-0 flex-1 flex-col lg:h-[624px]",
-          isComments ? "" : "lg:overflow-y-auto",
-        )}
-      >
-        <div className="shrink-0">
-          <DetailHeader detail={detail} />
-        </div>
-        <div className={cn("shrink-0 bg-bg-primary py-4", isComments ? "" : "sticky top-0 z-10")}>
+      <div className="flex min-w-0 flex-1 flex-col lg:h-[624px] lg:overflow-y-auto">
+        <DetailHeader detail={detail} />
+
+        {/* 탭 행 — 상단 고정 + 레시피 열람 시 복사 버튼(디자인상 탭과 같은 줄) */}
+        <div className="sticky top-0 z-10 flex items-center justify-between bg-bg-primary py-4">
           <DetailTabs active={tab} onSelect={setTab} />
+          {showCopy ? (
+            <Button variant="neutral" size="sm" onClick={handleCopy}>
+              <Copy data-icon="inline-start" />
+              {copied ? "복사됨" : "복사하기"}
+            </Button>
+          ) : null}
         </div>
 
         {tab === "description" ? <DescriptionPanel body={detail.descriptionBody} /> : null}
@@ -77,13 +92,11 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
           <RecipePanel
             promptId={detail.id}
             recipeBody={detail.recipeBody}
-            access={detail.access ?? { locked: false, reason: null }}
+            access={access}
             userStatus={status}
           />
         ) : null}
-        {isComments ? (
-          <CommentPanel comments={comments.data ?? []} className="min-h-0 flex-1" />
-        ) : null}
+        {tab === "comments" ? <CommentPanel comments={comments.data ?? []} /> : null}
       </div>
     </div>
   );

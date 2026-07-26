@@ -52,6 +52,29 @@ describe("PromptDetailView", () => {
     expect(screen.getByRole("button", { name: /복사하기/ })).toBeInTheDocument();
   });
 
+  it("복사하기(탭 행) 클릭 → 클립보드 복사 + prompt_copy_click 발송", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.fn();
+    renderView(
+      makeDetail({
+        id: "prompt-001",
+        access: { locked: false, reason: null },
+        recipeBody: "복사될 전문",
+      }),
+      "?tab=recipe",
+    );
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+
+    await user.click(screen.getByRole("button", { name: /복사하기/ }));
+
+    expect(writeText).toHaveBeenCalledWith("복사될 전문");
+    expect(track).toHaveBeenCalledWith("prompt_copy_click", {
+      prompt_id: "prompt-001",
+      user_status: "authenticated",
+      source: "detail",
+    });
+  });
+
   it("?tab=recipe 초기 URL 이면 레시피 탭이 활성이다", () => {
     renderView(
       makeDetail({ access: { locked: true, reason: "anonymous" }, recipeBody: "" }),

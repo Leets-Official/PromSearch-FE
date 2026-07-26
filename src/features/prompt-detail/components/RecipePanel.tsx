@@ -1,7 +1,6 @@
 "use client";
 
-import { Copy, Lock, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { Lock, Sparkles } from "lucide-react";
 
 import { track } from "@/analytics/track";
 import type { UserStatus } from "@/analytics/events";
@@ -33,18 +32,6 @@ export function RecipePanel({
   userStatus,
   onUnlock,
 }: RecipePanelProps) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(recipeBody);
-    setCopied(true);
-    track("prompt_copy_click", {
-      prompt_id: promptId,
-      user_status: userStatus,
-      source: "detail",
-    });
-  };
-
   const handleUnlock = (reason: "anonymous" | "premium") => {
     track("prompt_unlock_click", {
       prompt_id: promptId,
@@ -55,19 +42,11 @@ export function RecipePanel({
     onUnlock?.(reason);
   };
 
-  // 열람 가능 — 전문 + 복사하기
+  // 열람 가능 — 전문(복사 버튼은 탭 행에서 렌더)
   if (!access.locked) {
     return (
-      <div className="flex w-full flex-col gap-4">
-        <div className="flex justify-end">
-          <Button variant="neutral" size="sm" onClick={handleCopy}>
-            <Copy data-icon="inline-start" />
-            {copied ? "복사됨" : "복사하기"}
-          </Button>
-        </div>
-        <div className="w-full rounded-md bg-bg-secondary px-5 py-4">
-          <p className="text-body-1 whitespace-pre-wrap text-text-secondary">{recipeBody}</p>
-        </div>
+      <div className="w-full">
+        <p className="text-body-1 whitespace-pre-wrap text-text-secondary">{recipeBody}</p>
       </div>
     );
   }

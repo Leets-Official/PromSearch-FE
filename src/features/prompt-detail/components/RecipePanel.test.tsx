@@ -8,18 +8,9 @@ import type { RecipeAccess } from "@/features/prompt-detail/types";
 
 vi.mock("@/analytics/track", () => ({ track: vi.fn() }));
 
-const writeText = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
 });
-
-// userEvent.setup() 이 자체 clipboard 를 설치하므로, setup 이후에 우리 mock 을 덮어씌운다
-function stubClipboard() {
-  Object.defineProperty(navigator, "clipboard", {
-    value: { writeText },
-    configurable: true,
-  });
-}
 
 function renderPanel(access: RecipeAccess, recipeBody = "레시피 전문 내용입니다") {
   return render(
@@ -34,27 +25,11 @@ function renderPanel(access: RecipeAccess, recipeBody = "레시피 전문 내용
 
 describe("RecipePanel", () => {
   describe("열람(unlocked)", () => {
-    it("전문과 복사하기 버튼을 보여주고 잠금 CTA 는 없다", () => {
+    it("전문을 보여주고 잠금 CTA 는 없다(복사 버튼은 탭 행에서 렌더)", () => {
       renderPanel({ locked: false, reason: null }, "실제 레시피 전문");
 
       expect(screen.getByText("실제 레시피 전문")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /복사하기/ })).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /프롬프트 보기|전문 보기/ })).toBeNull();
-    });
-
-    it("복사하기 클릭 → 클립보드 복사 + prompt_copy_click 발송", async () => {
-      const user = userEvent.setup();
-      stubClipboard();
-      renderPanel({ locked: false, reason: null }, "복사될 전문");
-
-      await user.click(screen.getByRole("button", { name: /복사하기/ }));
-
-      expect(writeText).toHaveBeenCalledWith("복사될 전문");
-      expect(track).toHaveBeenCalledWith("prompt_copy_click", {
-        prompt_id: "prompt-001",
-        user_status: "authenticated",
-        source: "detail",
-      });
     });
   });
 

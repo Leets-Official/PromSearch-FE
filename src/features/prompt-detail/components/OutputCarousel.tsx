@@ -3,7 +3,6 @@
 import { Bookmark, ChevronLeft, ChevronRight, Flag, Heart } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ImageZoomModal } from "./ImageZoomModal";
 
@@ -51,14 +50,22 @@ export function OutputCarousel({
         type="button"
         aria-label={`${title} 이미지 확대`}
         onClick={() => setZoomOpen(true)}
-        className="size-full cursor-zoom-in"
+        className="relative size-full cursor-zoom-in"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={items[index]}
-          alt={`${title} 아웃풋 ${index + 1}`}
-          className="size-full object-cover"
-        />
+        {/* 모든 이미지를 미리 로드해 스택 — 전환 시 즉시 표시(네트워크 재요청 지연 제거) */}
+        {items.map((src, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={i}
+            src={src}
+            alt={i === index ? `${title} 아웃풋 ${index + 1}` : ""}
+            aria-hidden={i !== index}
+            className={cn(
+              "absolute inset-0 size-full object-cover transition-opacity duration-150",
+              i === index ? "opacity-100" : "opacity-0",
+            )}
+          />
+        ))}
       </button>
 
       {/* 좌상단 액션 오버레이 */}
@@ -82,30 +89,26 @@ export function OutputCarousel({
         <>
           <span
             data-testid="carousel-indicator"
-            className="absolute top-4 right-4 text-title-1 text-text-primary"
+            className="absolute top-4 right-4 rounded bg-dim px-2 py-0.5 text-title-3 text-white"
           >
             {index + 1}/{total}
           </span>
-          <Button
+          <button
             type="button"
-            variant="plain"
-            size="icon"
             aria-label="이전 이미지"
             onClick={() => go(-1)}
-            className="absolute top-1/2 left-2 -translate-y-1/2"
+            className="absolute top-1/2 left-3 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80"
           >
-            <ChevronLeft />
-          </Button>
-          <Button
+            <ChevronLeft className="size-6" />
+          </button>
+          <button
             type="button"
-            variant="plain"
-            size="icon"
             aria-label="다음 이미지"
             onClick={() => go(1)}
-            className="absolute top-1/2 right-2 -translate-y-1/2"
+            className="absolute top-1/2 right-3 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80"
           >
-            <ChevronRight />
-          </Button>
+            <ChevronRight className="size-6" />
+          </button>
         </>
       ) : null}
 
