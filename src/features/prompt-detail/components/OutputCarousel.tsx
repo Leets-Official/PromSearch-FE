@@ -74,7 +74,7 @@ export function OutputCarousel({
             alt={i === index ? `${title} 아웃풋 ${index + 1}` : ""}
             aria-hidden={i !== index}
             className={cn(
-              "absolute inset-0 size-full object-cover transition-opacity duration-150",
+              "absolute inset-0 size-full object-contain transition-opacity duration-150",
               i === index ? "opacity-100" : "opacity-0",
             )}
           />
