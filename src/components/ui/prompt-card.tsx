@@ -39,37 +39,48 @@ type PromptAuthor = {
 type PromptCardProps = useRender.ComponentProps<"div"> & {
   /** 프롬프트 제목 */
   title: string;
-  /** 보조 설명(선택) */
-  description?: string;
   /** 태그 목록 */
   tags?: string[];
   /** 썸네일 이미지 URL */
   thumbnailSrc?: string;
-  /** 작성자 정보(선택) — 있으면 하단에 아바타+이름 노출 */
+  /** 썸네일 우하단 배지(선택) — 결과물타입 등 */
+  badge?: React.ReactNode;
+  /** 작성자 정보(선택) — 있으면 아바타+이름 노출 */
   author?: PromptAuthor;
 };
 
 function PromptCard({
   className,
   title,
-  description,
   tags,
   thumbnailSrc,
+  badge,
   author,
   render,
   ...props
 }: PromptCardProps) {
   const content = (
     <>
-      {/* 썸네일 16:9 */}
-      <Thumbnail src={thumbnailSrc} alt={title} />
+      {/* 썸네일 16:9 (+ 우하단 결과물타입 배지) */}
+      <div className="relative w-full">
+        <Thumbnail src={thumbnailSrc} alt={title} />
+        {badge ? <div className="absolute right-2 bottom-2">{badge}</div> : null}
+      </div>
 
-      {/* 제목 + 설명 */}
-      <div data-slot="prompt-card-body" className="flex w-full flex-col gap-1">
-        <p className="w-full truncate text-heading-2 text-text-primary">{title}</p>
-        {description ? (
-          <p className="line-clamp-2 text-body-3 text-text-secondary">{description}</p>
+      {/* 제목 + 작성자 — Figma 209:3690: [아바타 | 제목 / 작성자이름] */}
+      <div data-slot="prompt-card-head" className="flex w-full items-start gap-2">
+        {author ? (
+          <Avatar size="sm" className="size-8 shrink-0 border border-stroke-primary">
+            {author.avatarSrc ? <AvatarImage src={author.avatarSrc} alt={author.name} /> : null}
+            <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
+          </Avatar>
         ) : null}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <p className="w-full truncate text-title-1 text-text-primary">{title}</p>
+          {author ? (
+            <p className="w-full truncate text-caption-1 text-text-secondary">{author.name}</p>
+          ) : null}
+        </div>
       </div>
 
       {/* 태그 목록 */}
@@ -81,17 +92,6 @@ function PromptCard({
           {tags.map((tag) => (
             <PromptCardTag key={tag} label={tag} />
           ))}
-        </div>
-      ) : null}
-
-      {/* 작성자(선택) */}
-      {author ? (
-        <div data-slot="prompt-card-author" className="flex w-full items-center gap-2">
-          <Avatar size="sm">
-            {author.avatarSrc ? <AvatarImage src={author.avatarSrc} alt={author.name} /> : null}
-            <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <span className="truncate text-body-3 text-text-secondary">{author.name}</span>
         </div>
       ) : null}
     </>

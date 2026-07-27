@@ -1,7 +1,11 @@
 import { http, HttpResponse } from "msw";
 
+import type { UserStatus } from "@/analytics/events";
+import { MOCK_VIEWER_HEADER } from "@/features/prompt-detail/api/prompt-detail";
 import type { AiModel, GalleryNav, JobCategory, OutputType, Task } from "@/features/gallery/types";
+import { buildComments } from "@/mocks/data/comments";
 import { PROMPT_SEED } from "@/mocks/data/prompts";
+import { findPromptDetail } from "@/mocks/prompt-detail-query";
 import { queryPrompts } from "@/mocks/prompt-query";
 
 // API 목 핸들러. 브라우저(개발)와 Node(테스트)에서 공유한다.
@@ -38,4 +42,46 @@ export const handlers = [
 
     return HttpResponse.json(response);
   }),
+
+  // 상세 조회 — 잠금(access) 판정 포함 (F-2). 뷰어 상태는 목 전용 헤더로 받는다.
+  http.get("/api/prompts/:id", ({ params, request }) => {
+    const id = String(params.id);
+    const viewerStatus = (request.headers.get(MOCK_VIEWER_HEADER) as UserStatus) ?? "anonymous";
+
+    const detail = findPromptDetail(PROMPT_SEED, id, viewerStatus);
+    if (!detail) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    return HttpResponse.json({
+      ...detail,
+      liked: likedState.get(id) ?? false,
+      bookmarked: bookmarkedState.get(id) ?? false,
+    });
+  }),
+
+  // 상세 댓글 — 표시 전용
+  http.get("/api/prompts/:id/comments", ({ params }) => {
+    return HttpResponse.json(buildComments(String(params.id)));
+  }),
+
+  // 좋아요(추천) 토글 — 인메모리 상태로 liked/카운트를 뒤집어 돌려준다(낙관적 롤백 테스트용)
+  http.post("/api/prompts/:id/like", ({ params }) => {
+    const id = String(params.id);
+    const base = PROMPT_SEED.find((r) => r.id === id)?.stats.likes ?? 0;
+    const liked = !(likedState.get(id) ?? false);
+    likedState.set(id, liked);
+    return HttpResponse.json({ liked, likeCount: base + (liked ? 1 : 0) });
+  }),
+
+  // 북마크 토글 — 인메모리 상태로 bookmarked 를 뒤집어 돌려준다
+  http.post("/api/prompts/:id/bookmark", ({ params }) => {
+    const id = String(params.id);
+    const bookmarked = !(bookmarkedState.get(id) ?? false);
+    bookmarkedState.set(id, bookmarked);
+    return HttpResponse.json({ bookmarked });
+  }),
 ];
+
+// 토글 인메모리 상태(목 전용). id → 현재 사용자의 좋아요/북마크 여부
+const likedState = new Map<string, boolean>();
+const bookmarkedState = new Map<string, boolean>();

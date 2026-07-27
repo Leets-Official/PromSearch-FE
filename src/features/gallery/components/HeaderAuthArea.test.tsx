@@ -10,21 +10,21 @@ vi.mock("next/link", () => ({
 }));
 
 describe("HeaderAuthArea", () => {
-  it("비회원이면 로그인 버튼만 노출한다", () => {
+  it("비회원이면 알림(벨) + 로그인 링크를 노출한다", () => {
     render(<HeaderAuthArea isAuthenticated={false} user={null} />);
 
+    // 개정: 비회원도 알림 벨이 있다
+    expect(screen.getByLabelText("알림")).toBeInTheDocument();
     const login = screen.getByRole("link", { name: "로그인" });
     expect(login).toHaveAttribute("href", "/login");
-    // 부정: 비회원에겐 알림/프로필이 없어야 한다
-    expect(screen.queryByLabelText("알림")).not.toBeInTheDocument();
   });
 
-  it("회원이면 알림 + 프로필을 노출하고 로그인 버튼은 없다", () => {
+  it("회원이면 알림 + 프로필을 노출하고 로그인 링크는 없다", () => {
     render(<HeaderAuthArea isAuthenticated user={{ name: "홍길동" }} />);
 
     expect(screen.getByLabelText("알림")).toBeInTheDocument();
     expect(screen.getByText("홍")).toBeInTheDocument(); // 아바타 fallback 이니셜
-    // 부정: 회원에겐 로그인 버튼이 없어야 한다
+    // 부정: 회원에겐 로그인 링크가 없어야 한다
     expect(screen.queryByRole("link", { name: "로그인" })).not.toBeInTheDocument();
   });
 });

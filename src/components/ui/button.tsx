@@ -39,8 +39,8 @@ const buttonVariants = cva(
         link: "text-text-brand underline-offset-4 hover:underline disabled:text-text-disabled",
       },
       size: {
-        // Figma size=48 CTA: h-48, px-16(xl), gap-8(md), Title 2(16px), 아이콘 24px
-        lg: "h-12 gap-2 px-4 text-title-2 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 [&_svg:not([class*='size-'])]:size-6",
+        // Figma size=48 CTA: h-48, px-16(xl), gap-8(md), Title 1(Bold 16/20), 아이콘 24px (2026.07 라벨 Title 2→1)
+        lg: "h-12 gap-2 px-4 text-title-1 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 [&_svg:not([class*='size-'])]:size-6",
         // 48/36 사이 중간 사이즈
         default:
           "h-10 gap-2 px-3.5 text-title-3 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5",

@@ -40,7 +40,8 @@ function SearchBar({ className, disabled, ...props }: React.ComponentProps<"inpu
         disabled={disabled}
         className={cn(
           // 인풋 본체: 래퍼가 테두리/배경을 담당하므로 투명 + 테두리 없음
-          "h-full w-full min-w-0 border-0 bg-transparent text-body-1 outline-none",
+          // 검색창 텍스트는 16/24 (body-1 이 16/28 로 바뀌어 leading-6 으로 행간만 24 고정)
+          "h-full w-full min-w-0 border-0 bg-transparent text-body-1 leading-6 outline-none",
           "text-text-primary placeholder:text-text-disabled",
           "disabled:cursor-not-allowed",
         )}
