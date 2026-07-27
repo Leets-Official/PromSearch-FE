@@ -11,19 +11,31 @@ import { resolveRecipeAccess } from "@/features/prompt-detail/access";
 import type { PromptDetail } from "@/features/prompt-detail/types";
 import { buildComments, countComments } from "@/mocks/data/comments";
 import type { PromptRecord } from "@/mocks/data/prompts";
+import type { DevContent } from "@/lib/dev-preview";
+
+/** 본문 길이 배수 — dev 툴바 콘텐츠 축(짧게/길게)으로 sticky 탭·스크롤 유무를 확인한다. */
+const CONTENT_MULTIPLIER: Record<DevContent, { description: number; recipe: number }> = {
+  short: { description: 1, recipe: 3 },
+  default: { description: 12, recipe: 40 },
+  long: { description: 40, recipe: 120 },
+};
 
 /** 상세 더미 본문(설명 탭) — 스크롤(탭 고정) 확인용으로 충분히 길게 */
-export function buildDescriptionBody(record: PromptRecord): string {
+export function buildDescriptionBody(
+  record: PromptRecord,
+  content: DevContent = "default",
+): string {
   const lead = `${record.title} 상세 설명입니다. 이 프롬프트는 ${record.description ?? ""}\n\n`;
   const para =
     "이 프롬프트는 실제 업무에 바로 쓸 수 있도록 설계되었습니다. 입력값을 상황에 맞게 바꾸면 " +
     "다양한 결과물을 얻을 수 있고, 예시와 제약 조건을 함께 제공해 품질을 높였습니다. ";
-  return lead + `${para}\n\n`.repeat(12);
+  return lead + `${para}\n\n`.repeat(CONTENT_MULTIPLIER[content].description);
 }
 
 /** 레시피 전문(잠금 전 원본) */
-export function buildRecipeBody(record: PromptRecord): string {
-  return `# ${record.title}\n\n아래 지침을 그대로 복사해 사용하세요.\n${"레시피 본문 문장. ".repeat(40)}`;
+export function buildRecipeBody(record: PromptRecord, content: DevContent = "default"): string {
+  const repeat = CONTENT_MULTIPLIER[content].recipe;
+  return `# ${record.title}\n\n아래 지침을 그대로 복사해 사용하세요.\n${"레시피 본문 문장. ".repeat(repeat)}`;
 }
 
 /** 아웃풋 이미지들(캐러셀). 결정적으로 3장 — 실제 로드되는 placeholder(picsum) */
@@ -53,6 +65,7 @@ export function findPromptDetail(
   records: PromptRecord[],
   id: string,
   viewerStatus: UserStatus,
+  content: DevContent = "default",
 ): PromptDetail | null {
   const record = records.find((r) => r.id === id);
   if (!record || record.status !== "active") return null;
@@ -65,11 +78,11 @@ export function findPromptDetail(
   return {
     ...summary,
     images: buildImages(record),
-    descriptionBody: buildDescriptionBody(record),
-    recipeBody: maskRecipeBody(buildRecipeBody(record), access),
+    descriptionBody: buildDescriptionBody(record, content),
+    recipeBody: maskRecipeBody(buildRecipeBody(record, content), access),
     access,
     liked: false,
     bookmarked: false,
-    commentCount: countComments(buildComments(record.id)),
+    commentCount: countComments(buildComments(record.id, content)),
   };
 }

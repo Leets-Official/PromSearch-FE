@@ -6,14 +6,36 @@
  */
 
 import type { PromptComment } from "@/features/prompt-detail/types";
+import type { DevContent } from "@/lib/dev-preview";
 
 /** 댓글 트리를 평탄화한 총 개수(블라인드 포함) */
 export function countComments(comments: PromptComment[]): number {
   return comments.reduce((sum, c) => sum + 1 + countComments(c.replies), 0);
 }
 
-/** id 기준 결정적 댓글 트리 */
-export function buildComments(promptId: string): PromptComment[] {
+/**
+ * id 기준 결정적 댓글 트리.
+ *
+ * `content`(dev 툴바 콘텐츠 축)로 개수를 조절해 댓글 탭 스크롤/빈 여백을 눈으로 확인한다.
+ * - short: 최상위 1개(대댓글 없음) — 스크롤 없는 짧은 상태
+ * - default: 시안 재현 트리
+ * - long: 기본 트리를 여러 벌 복제(id 유일) — 긴 스크롤 상태
+ */
+export function buildComments(promptId: string, content: DevContent = "default"): PromptComment[] {
+  const tree = buildBaseComments(promptId);
+  if (content === "short") {
+    return [{ ...tree[0], replies: [] }];
+  }
+  if (content === "long") {
+    // 트리를 4벌 복제하되 id 접두사로 충돌을 피한다.
+    return Array.from({ length: 4 }, (_, round) =>
+      buildBaseComments(`${promptId}-r${round}`),
+    ).flat();
+  }
+  return tree;
+}
+
+function buildBaseComments(promptId: string): PromptComment[] {
   return [
     {
       id: `${promptId}-c1`,

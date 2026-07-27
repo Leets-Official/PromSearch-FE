@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { UserStatus } from "@/analytics/events";
 import { fetchPromptDetail, PromptNotFoundError } from "@/features/prompt-detail/api/prompt-detail";
 import { useAuthStatus } from "@/hooks/use-auth-status";
+import { currentDevEdge } from "@/lib/dev-preview";
 
 /**
  * 상세 쿼리 키. **뷰어 상태를 포함**해 로그인/로그아웃 시 키가 바뀌어 자동 리페치된다
@@ -23,7 +24,8 @@ export function usePromptDetail(id: string) {
   return useQuery({
     queryKey: promptDetailKey(id, status),
     queryFn: () => fetchPromptDetail(id, status),
-    // 없는/비공개 게시글(404)은 재시도 무의미 → 즉시 실패
-    retry: (failureCount, error) => !(error instanceof PromptNotFoundError) && failureCount < 2,
+    // 없는/비공개 게시글(404)은 재시도 무의미 → 즉시 실패. dev 강제 에러도 재시도 건너뜀.
+    retry: (failureCount, error) =>
+      currentDevEdge() !== "error" && !(error instanceof PromptNotFoundError) && failureCount < 2,
   });
 }

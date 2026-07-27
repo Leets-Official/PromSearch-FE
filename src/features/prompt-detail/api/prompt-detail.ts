@@ -9,6 +9,7 @@
 
 import type { UserStatus } from "@/analytics/events";
 import type { PromptDetail } from "@/features/prompt-detail/types";
+import { devPreviewFetchHeaders } from "@/lib/dev-preview";
 
 /** 목 전용: 뷰어 인증 상태 전달 헤더(BE 전환 시 제거) */
 export const MOCK_VIEWER_HEADER = "x-mock-user-status";
@@ -25,7 +26,7 @@ export async function fetchPromptDetail(
   viewerStatus: UserStatus,
 ): Promise<PromptDetail> {
   const res = await fetch(`/api/prompts/${id}`, {
-    headers: { [MOCK_VIEWER_HEADER]: viewerStatus },
+    headers: { [MOCK_VIEWER_HEADER]: viewerStatus, ...devPreviewFetchHeaders() },
   });
 
   if (res.status === 404) {
