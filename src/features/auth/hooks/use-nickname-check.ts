@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { NICKNAME_MAX } from "@/components/modals/onboarding/constants";
 
 export type NicknameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
-
-const NICKNAME_MAX = 10;
 const DEBOUNCE_MS = 300;
 
+// 닉네임 형식: 한글/영어/숫자만, 1~NICKNAME_MAX자
+// TODO: BE 확정 규칙에 맞춰 조정 (자모 단독 허용 여부 등)
+const NICKNAME_PATTERN = new RegExp(`^[가-힣a-zA-Z0-9]{1,${NICKNAME_MAX}}$`);
+
 function isValidFormat(nickname: string) {
-  const trimmed = nickname.trim();
-  return trimmed.length > 0 && trimmed.length <= NICKNAME_MAX;
+  return NICKNAME_PATTERN.test(nickname.trim());
 }
 
 interface UseNicknameCheckOptions {
@@ -27,6 +29,13 @@ export function useNicknameCheck({ checkNickname }: UseNicknameCheckOptions) {
   const [result, setResult] = useState<CheckResult>({ phase: "idle" });
   const abortRef = useRef<AbortController | null>(null);
 
+  // checkNickname을 ref에 담아 deps에서 제외
+  // → 부모가 useCallback으로 감싸지 않아도 리렌더마다 디바운스가 초기화되지 않음
+  const checkNicknameRef = useRef(checkNickname);
+  useEffect(() => {
+    checkNicknameRef.current = checkNickname;
+  });
+
   useEffect(() => {
     abortRef.current?.abort();
 
@@ -40,7 +49,8 @@ export function useNicknameCheck({ checkNickname }: UseNicknameCheckOptions) {
     const timer = setTimeout(async () => {
       setResult({ phase: "checking", nickname });
       try {
-        const available = await checkNickname(nickname, controller.signal);
+        // ref로 최신 함수 참조 (deps엔 nickname만)
+        const available = await checkNicknameRef.current(nickname, controller.signal);
         if (!controller.signal.aborted) {
           setResult({ phase: "done", nickname, available });
         }
@@ -50,7 +60,7 @@ export function useNicknameCheck({ checkNickname }: UseNicknameCheckOptions) {
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [nickname, checkNickname]);
+  }, [nickname]);
 
   // status는 렌더 중 파생값으로 계산 (effect에서 setState 하지 않음)
   const status = deriveStatus(nickname, result);
