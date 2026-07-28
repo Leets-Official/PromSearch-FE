@@ -3,6 +3,7 @@ import { delay, http, HttpResponse } from "msw";
 import type { UserStatus } from "@/analytics/events";
 import { MOCK_VIEWER_HEADER } from "@/features/prompt-detail/api/prompt-detail";
 import type { AiModel, GalleryNav, JobCategory, OutputType, Task } from "@/features/gallery/types";
+import type { PromptDraft, PromptFormValues } from "@/features/upload/types";
 import { buildComments } from "@/mocks/data/comments";
 import { PROMPT_SEED } from "@/mocks/data/prompts";
 import { findPromptDetail } from "@/mocks/prompt-detail-query";
@@ -78,6 +79,37 @@ export const handlers = [
     return HttpResponse.json(response);
   }),
 
+  // 프롬프트 게시(생성) — 성공 시 새 id 반환. 검증은 프론트 zod 담당.
+  http.post("/api/prompts", async ({ request }) => {
+    const forced = await forceEdge(readDevEdge(request));
+    if (forced) return forced;
+    await request.json().catch(() => null); // 본문 소비(목은 저장하지 않고 id 만 발급)
+    createdCount += 1;
+    const id = `prompt-new-${String(createdCount).padStart(3, "0")}`;
+    return HttpResponse.json({ id }, { status: 201 });
+  }),
+
+  // 임시저장 조회 — 단일 슬롯. 없으면 draft: null.
+  // ⚠️ 반드시 "/api/prompts/:id" 보다 먼저 등록해야 draft 가 :id(=“draft”)로 새지 않는다.
+  http.get("/api/prompts/draft", async ({ request }) => {
+    const forced = await forceEdge(readDevEdge(request));
+    if (forced) return forced;
+    return HttpResponse.json({ draft: draftState });
+  }),
+
+  // 임시저장(덮어쓰기) — 단일 슬롯
+  http.put("/api/prompts/draft", async ({ request }) => {
+    const values = (await request.json()) as PromptFormValues;
+    draftState = { ...values, updatedAt: new Date().toISOString() };
+    return HttpResponse.json(draftState);
+  }),
+
+  // 임시저장 삭제("새로 작성하기" / 게시 완료 정리)
+  http.delete("/api/prompts/draft", () => {
+    draftState = null;
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   // 상세 조회 — 잠금(access) 판정 포함 (F-2). 뷰어 상태는 목 전용 헤더로 받는다.
   http.get("/api/prompts/:id", async ({ params, request }) => {
     const forced = await forceEdge(readDevEdge(request));
@@ -127,3 +159,26 @@ export const handlers = [
 // 토글 인메모리 상태(목 전용). id → 현재 사용자의 좋아요/북마크 여부
 const likedState = new Map<string, boolean>();
 const bookmarkedState = new Map<string, boolean>();
+
+// 게시 생성 카운터(목 전용) — 새 id 발급용
+let createdCount = 0;
+
+/**
+ * 임시저장 단일 슬롯(목 전용).
+ * 초기값으로 예시 드래프트를 넣어 진입 시 "불러오기/새로작성" 모달을 바로 확인할 수 있게 한다.
+ * (dev 툴바 edge=empty 로 "없음" 상태도 확인 가능)
+ */
+const SEEDED_DRAFT: PromptDraft = {
+  title: "임시저장된 블로그 글쓰기 프롬프트",
+  description: "블로그 초안을 빠르게 잡아주는 프롬프트입니다.",
+  outputType: "text",
+  jobCategories: ["worker", "planner"],
+  tasks: ["report", "document"],
+  models: ["chatgpt", "etc"],
+  modelEtcName: "뤼튼",
+  tier: "free",
+  body: "너는 전문 블로그 작가야. 아래 주제에 대해 목차와 초안을 작성해줘: ",
+  images: [],
+  updatedAt: "2026-07-27T09:30:00.000Z",
+};
+let draftState: PromptDraft | null = SEEDED_DRAFT;
