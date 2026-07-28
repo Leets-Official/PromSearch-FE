@@ -41,7 +41,8 @@ function SegmentedControlItem({ className, ...props }: TabsPrimitive.Tab.Props) 
       data-slot="segmented-control-item"
       className={cn(
         // 기본: 동일 폭(flex-1), title-3(14px semibold), 비활성 텍스트
-        "flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-transparent px-2 py-2 text-title-3 whitespace-nowrap text-text-disabled transition-colors outline-none select-none",
+        // radius 4px(Radius/xs) — 트랙(rounded-sm=6px)보다 작게 안쪽에 nesting. (전용 토큰 없어 4px 직접 지정)
+        "flex flex-1 cursor-pointer items-center justify-center rounded-[4px] border border-transparent px-2 py-2 text-title-3 whitespace-nowrap text-text-disabled transition-colors outline-none select-none",
         // 선택(active): neutral-selected 배경 + brand 스트로크 + brand 텍스트
         // base-ui Tabs.Tab 은 활성 시 data-active 를 부여한다(data-selected 아님).
         "data-active:border-stroke-brand data-active:bg-interaction-neutral-selected data-active:text-text-brand",
