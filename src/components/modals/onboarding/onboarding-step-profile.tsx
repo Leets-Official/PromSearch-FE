@@ -60,7 +60,7 @@ export function OnboardingStepProfile({
           id="onboarding-nickname"
           value={nickname}
           onChange={(e) => onNicknameChange(e.target.value.slice(0, NICKNAME_MAX))}
-          placeholder="닉네임을 입력해주세요"
+          placeholder="한글, 영어, 숫자로 10자 이하"
           maxLength={NICKNAME_MAX}
           aria-invalid={nicknameStatus === "taken" || nicknameStatus === "invalid"}
           data-success={nicknameStatus === "available" ? "" : undefined}
