@@ -54,7 +54,7 @@ export function OnboardingStepInterests({
         <button
           type="button"
           onClick={onSkip}
-          className="rounded-sm text-title-3 text-text-secondary hover:text-text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="rounded-sm text-title-3 text-text-disabled hover:text-text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           나중에 선택할게요
         </button>
