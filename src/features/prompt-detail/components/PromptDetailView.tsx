@@ -59,7 +59,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   }, [detail.id, detail.tier, status]);
 
   return (
-    <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-start">
+    <div className="flex w-full flex-col gap-6 xl:flex-row xl:items-start">
       <OutputCarousel
         images={detail.images}
         title={detail.title}
@@ -79,14 +79,14 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
       */}
       <div
         className={cn(
-          "flex scrollbar-minimal min-w-0 flex-1 flex-col lg:h-156 lg:pr-3",
-          isComments ? "lg:overflow-hidden" : "lg:overflow-y-auto",
+          "flex scrollbar-minimal min-w-0 flex-1 flex-col xl:h-156 xl:pr-3",
+          isComments ? "xl:overflow-hidden" : "xl:overflow-y-auto",
         )}
       >
         <DetailHeader detail={detail} />
 
         {/* 탭 행 — 상단 고정 + 레시피 열람 시 복사 버튼(디자인상 탭과 같은 줄) */}
-        <div className="sticky top-0 z-10 flex items-center justify-between bg-bg-primary py-4">
+        <div className="z-10 flex items-center justify-between bg-bg-primary py-4 xl:sticky xl:top-0">
           <DetailTabs active={tab} onSelect={setTab} />
           {showCopy ? (
             <Button variant="neutral" size="sm" onClick={handleCopy}>

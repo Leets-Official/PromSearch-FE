@@ -19,14 +19,15 @@ export function DetailHeader({ detail }: { detail: PromptDetail }) {
 
       <div className="flex items-center gap-4">
         <ProfileAvatar name={detail.author.name} src={detail.author.avatarUrl} size="md" />
-        <div className="flex flex-col gap-1">
-          <span className="text-title-2 text-text-secondary">{detail.author.name}</span>
-          <div className="flex items-center gap-1 text-body-3 text-text-secondary">
-            <span>{formatDetailDate(detail.createdAt)}</span>
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="truncate text-title-2 text-text-secondary">{detail.author.name}</span>
+          {/* 좁아지면 단어(세그먼트) 단위로만 줄바꿈 — 글자 단위로 깨지지 않게 */}
+          <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-body-3 text-text-secondary">
+            <span className="whitespace-nowrap">{formatDetailDate(detail.createdAt)}</span>
             <span className="text-black">・</span>
-            <span>조회 {detail.stats.views}</span>
+            <span className="whitespace-nowrap">조회 {detail.stats.views}</span>
             <span className="text-black">・</span>
-            <span>추천 {detail.stats.likes}</span>
+            <span className="whitespace-nowrap">추천 {detail.stats.likes}</span>
           </div>
         </div>
       </div>

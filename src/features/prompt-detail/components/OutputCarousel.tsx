@@ -57,7 +57,7 @@ export function OutputCarousel({
   const go = (delta: number) => goTo((index + delta + total) % total);
 
   return (
-    <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-md bg-bg-disabled lg:aspect-auto lg:h-[624px] lg:w-[432px]">
+    <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-md bg-bg-disabled xl:aspect-auto xl:h-156 xl:w-108">
       <button
         type="button"
         aria-label={`${title} 이미지 확대`}
