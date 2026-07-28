@@ -23,6 +23,7 @@ interface OnboardingModalProps {
 /**
  * 온보딩 모달 (Figma: 로그인 - 온보딩 1/2·2/2)
  * 껍데기(Dialog/오버레이) + step 상태만 관리하고, 각 단계는 하위 컴포넌트에 위임.
+ * 닫힐 때 step·입력값을 초기화해 다음에 열면 1단계부터 시작한다.
  */
 function OnboardingModal({
   open,
@@ -39,12 +40,29 @@ function OnboardingModal({
   const [jobs, setJobs] = useState<string[]>([]);
   const [tasks, setTasks] = useState<string[]>([]);
 
+  // 모달이 닫힐 때 온보딩 상태 초기화 (다음에 열면 1단계부터)
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+      setStep(1);
+      setNickname("");
+      onNicknameChange?.(""); // ← 부모 훅에도 알려서 nicknameStatus를 idle로 되돌림
+      setAvatarFile(null);
+      setAvatarPreview(null);
+      setJobs([]);
+      setTasks([]);
+    }
+    onOpenChange(next);
+  };
+
   const handleNicknameChange = (value: string) => {
     setNickname(value);
     onNicknameChange?.(value);
   };
 
   const handleAvatarChange = (file: File | null) => {
+    // 이전 미리보기 URL 해제 후 교체
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarFile(file);
     setAvatarPreview(file ? URL.createObjectURL(file) : null);
   };
@@ -57,7 +75,7 @@ function OnboardingModal({
         : list;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogPortal>
         <DialogOverlay className="backdrop-blur-sm" />
 
