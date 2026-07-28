@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 
 import { cn } from "@/lib/utils";
@@ -40,15 +40,21 @@ function OnboardingModal({
   const [jobs, setJobs] = useState<string[]>([]);
   const [tasks, setTasks] = useState<string[]>([]);
 
+  // avatarPreview blob URL 생명주기 관리:
+  // 값이 바뀌기 직전(cleanup)과 언마운트 시 이전 URL을 해제해 메모리 누수 방지
+  useEffect(() => {
+    if (!avatarPreview) return;
+    return () => URL.revokeObjectURL(avatarPreview);
+  }, [avatarPreview]);
+
   // 모달이 닫힐 때 온보딩 상태 초기화 (다음에 열면 1단계부터)
   const handleOpenChange = (next: boolean) => {
     if (!next) {
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
       setStep(1);
       setNickname("");
-      onNicknameChange?.(""); // ← 부모 훅에도 알려서 nicknameStatus를 idle로 되돌림
+      onNicknameChange?.(""); // 부모 훅의 nicknameStatus도 idle로 되돌림
       setAvatarFile(null);
-      setAvatarPreview(null);
+      setAvatarPreview(null); // effect cleanup이 이전 blob URL 해제
       setJobs([]);
       setTasks([]);
     }
@@ -61,8 +67,6 @@ function OnboardingModal({
   };
 
   const handleAvatarChange = (file: File | null) => {
-    // 이전 미리보기 URL 해제 후 교체
-    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarFile(file);
     setAvatarPreview(file ? URL.createObjectURL(file) : null);
   };
