@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { LoginModal } from "@/components/modals/login-modal";
+import { LoginModal } from "@/components/modals/login/login-modal";
 
 import { SpecGroup, SpecSection } from "./spec";
 

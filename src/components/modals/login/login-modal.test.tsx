@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { LoginModal } from "@/components/modals/login-modal";
+import { LoginModal } from "@/components/modals/login/login-modal";
 
 describe("LoginModal", () => {
   it("open 이면 제목과 입력 필드가 보인다", () => {
