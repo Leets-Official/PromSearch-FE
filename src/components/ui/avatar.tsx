@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
  * - 이미지 로드 실패/미지정 시 fallback(이니셜/아이콘) 노출.
  */
 const avatarVariants = cva(
-  "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-4xl bg-bg-secondary align-middle select-none",
+  "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-bg-secondary align-middle select-none",
   {
     variants: {
       size: {

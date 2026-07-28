@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { LoginModal } from "@/components/modals/login-modal";
+import { LoginModal } from "@/components/modals/login/login-modal";
+import { OnboardingModal } from "@/components/modals/onboarding/onboarding-modal";
+import { useNicknameCheck } from "@/features/auth/hooks/use-nickname-check";
 
 import { SpecGroup, SpecSection } from "./spec";
 
@@ -13,6 +15,16 @@ import { SpecGroup, SpecSection } from "./spec";
  */
 export function ModalSection() {
   const [loginOpen, setLoginOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+
+  // 온보딩 닉네임 자동 중복확인 — 목(관리자만 중복 처리)
+  const checkNickname = useCallback(async (nickname: string, signal: AbortSignal) => {
+    await new Promise((r) => setTimeout(r, 300));
+    if (signal.aborted) throw new Error("aborted");
+    return nickname !== "관리자";
+  }, []);
+
+  const { setNickname, status } = useNicknameCheck({ checkNickname });
 
   return (
     <SpecSection id="modal" label="Modal">
@@ -27,6 +39,23 @@ export function ModalSection() {
           onSignUp={() => console.log("signup")}
           onGoogleLogin={() => console.log("google")}
           onKakaoLogin={() => console.log("kakao")}
+        />
+      </SpecGroup>
+
+      <SpecGroup title="Onboarding Modal">
+        <Button variant="brand" onClick={() => setOnboardingOpen(true)}>
+          온보딩 모달 열기
+        </Button>
+        <OnboardingModal
+          open={onboardingOpen}
+          onOpenChange={setOnboardingOpen}
+          nicknameStatus={status}
+          onNicknameChange={setNickname}
+          onComplete={(result) => {
+            console.log("onboarding complete", result);
+            setOnboardingOpen(false);
+          }}
+          onSkip={() => setOnboardingOpen(false)}
         />
       </SpecGroup>
     </SpecSection>
