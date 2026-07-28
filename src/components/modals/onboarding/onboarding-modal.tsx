@@ -8,7 +8,7 @@ import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from "@/components/u
 import type { NicknameStatus } from "@/features/auth/hooks/use-nickname-check";
 import { OnboardingStepProfile } from "./onboarding-step-profile";
 import { OnboardingStepInterests } from "./onboarding-step-interests";
-import { MAX_JOBS, MAX_TASKS } from "./constants";
+import { MAX_JOBS, MAX_TASKS, STEP_META } from "./constants";
 import type { OnboardingResult } from "./types";
 
 interface OnboardingModalProps {
@@ -75,10 +75,12 @@ function OnboardingModal({
           {/* 헤더 */}
           <div className="flex flex-col gap-1">
             <span className="text-title-3 text-text-brand">{step} / 2</span>
-            <DialogTitle className="text-heading-1 text-text-primary">타이틀</DialogTitle>
-            <p className="text-body-3 text-text-secondary">
-              설명을 적습니다. 필요없다면 안 적어도 상관없음
-            </p>
+            <DialogTitle className="text-heading-1 text-text-primary">
+              {STEP_META[step].title}
+            </DialogTitle>
+            {STEP_META[step].description && (
+              <p className="text-body-3 text-text-secondary">{STEP_META[step].description}</p>
+            )}
           </div>
 
           {step === 1 ? (
