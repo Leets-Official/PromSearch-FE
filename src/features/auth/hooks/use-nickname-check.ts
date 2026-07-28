@@ -7,7 +7,6 @@ export type NicknameStatus = "idle" | "checking" | "available" | "taken" | "inva
 const DEBOUNCE_MS = 300;
 
 // 닉네임 형식: 한글/영어/숫자만, 1~NICKNAME_MAX자
-// TODO: BE 확정 규칙에 맞춰 조정 (자모 단독 허용 여부 등)
 const NICKNAME_PATTERN = new RegExp(`^[가-힣a-zA-Z0-9]{1,${NICKNAME_MAX}}$`);
 
 function isValidFormat(nickname: string) {
