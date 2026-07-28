@@ -51,11 +51,13 @@ export const PROMPT_SEED: PromptRecord[] = Array.from({ length: 48 }, (_, i) => 
   const secondaryTask = pick(TASKS, i + 3);
   const status = pick(STATUSES, i);
 
+  const id = `prompt-${String(i + 1).padStart(3, "0")}`;
   return {
-    id: `prompt-${String(i + 1).padStart(3, "0")}`,
+    id,
     title: `프롬프트 예시 ${i + 1}`,
     description: `${primaryJob} 대상 ${primaryTask} 프롬프트 설명 ${i + 1}`,
-    thumbnailUrl: undefined,
+    // 실제 로드되는 placeholder(picsum). BE 연동 시 워터마크 처리본 URL 로 교체
+    thumbnailUrl: `https://picsum.photos/seed/${id}/640/360`,
     outputType,
     model,
     modelEtcName: model === "etc" ? "뤼튼" : undefined,

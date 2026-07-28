@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PencilIcon } from "lucide-react";
 
@@ -20,15 +21,26 @@ const SEARCH_DEBOUNCE_MS = 300;
  * 검색 입력은 디바운스 후 URL `q` 로 반영한다(입력값이 현재 값과 다를 때만 → 마운트 시 page 리셋 방지).
  */
 export function GalleryTopBar() {
+  const pathname = usePathname();
+  const router = useRouter();
   const { query, setSearch } = useGalleryFilters();
   const { isAuthenticated, user } = useAuthStatus();
   const [keyword, setKeyword] = useState(query.q);
+  const onHome = pathname === "/home";
 
   useEffect(() => {
     if (keyword === query.q) return;
-    const timer = setTimeout(() => setSearch(keyword), SEARCH_DEBOUNCE_MS);
+    const timer = setTimeout(() => {
+      // 홈에서는 URL(q)만 갱신(제자리 필터). 다른 페이지(상세 등)에서는 홈 결과로 이동.
+      if (onHome) {
+        setSearch(keyword);
+      } else {
+        const q = keyword.trim();
+        router.push(q ? `/home?q=${encodeURIComponent(q)}` : "/home");
+      }
+    }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [keyword, query.q, setSearch]);
+  }, [keyword, query.q, setSearch, onHome, router]);
 
   return (
     <AppHeader

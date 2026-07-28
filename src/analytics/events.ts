@@ -21,6 +21,20 @@ export type AnalyticsEventPropertiesMap = {
     card_id?: string;
     source?: string;
   };
+  // 상세 진입 — 전환 퍼널의 상세 도달 측정
+  prompt_view: {
+    prompt_id: string;
+    user_status: UserStatus;
+    tier: "free" | "premium" | "master";
+    source?: string;
+  };
+  // 레시피 잠금 CTA 클릭(로그인/포인트 유도) — 전환 직결 지표
+  prompt_unlock_click: {
+    prompt_id: string;
+    reason: "anonymous" | "premium";
+    user_status: UserStatus;
+    source?: string;
+  };
   signup_complete: {
     user_id: string;
     method?: "email" | "google" | "github" | "kakao";

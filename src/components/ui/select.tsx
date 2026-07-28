@@ -69,10 +69,11 @@ function SelectTrigger({
       {...props}
     >
       {children}
-      {/* 화살표 아이콘: 열림 시 base-ui가 data-popup-open을 부여 → 위로 회전 */}
+      {/* 화살표 아이콘: 트리거 텍스트 색을 상속(currentColor) → 미선택/placeholder 시 함께 흐려짐.
+          열림 시 base-ui가 data-popup-open을 부여 → 위로 회전 */}
       <SelectPrimitive.Icon
         render={
-          <ChevronDownIcon className="pointer-events-none size-5 shrink-0 text-text-primary transition-transform data-popup-open:rotate-180" />
+          <ChevronDownIcon className="pointer-events-none size-5 shrink-0 text-current transition-transform data-popup-open:rotate-180" />
         }
       />
     </SelectPrimitive.Trigger>
@@ -131,7 +132,44 @@ function SelectLabel({ className, ...props }: SelectPrimitive.GroupLabel.Props) 
   );
 }
 
-function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Props) {
+function SelectItem({
+  className,
+  children,
+  checkbox = false,
+  ...props
+}: SelectPrimitive.Item.Props & {
+  /** 좌측 체크박스형(멀티 셀렉트 필터). Figma Dropdown/Option Item 1174:4660 */
+  checkbox?: boolean;
+}) {
+  if (checkbox) {
+    return (
+      <SelectPrimitive.Item
+        data-slot="select-item"
+        className={cn(
+          // Figma: h-48, px-16, gap-12, Body 1(16/28), 선택 상태와 무관하게 텍스트 primary
+          "relative flex h-12 w-full cursor-default items-center gap-3 px-4 text-body-1 text-text-primary outline-hidden select-none",
+          "focus:bg-bg-secondary data-disabled:pointer-events-none data-disabled:opacity-50",
+          className,
+        )}
+        {...props}
+      >
+        {/* 좌측 체크박스 — 기본은 브랜드 테두리 빈 상자, 선택 시 브랜드 채움 + 흰 체크 */}
+        <span className="relative flex size-5 shrink-0 items-center justify-center rounded-[4px] border border-stroke-brand">
+          <SelectPrimitive.ItemIndicator
+            render={
+              <span className="absolute inset-[-1px] flex items-center justify-center rounded-[4px] bg-stroke-brand text-text-on-brand" />
+            }
+          >
+            <CheckIcon className="size-4" />
+          </SelectPrimitive.ItemIndicator>
+        </span>
+        <SelectPrimitive.ItemText className="flex-1 whitespace-nowrap">
+          {children}
+        </SelectPrimitive.ItemText>
+      </SelectPrimitive.Item>
+    );
+  }
+
   return (
     <SelectPrimitive.Item
       data-slot="select-item"

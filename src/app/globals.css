@@ -81,7 +81,7 @@
   --text-title-3--font-weight: 600;
 
   --text-body-1: 1rem;
-  --text-body-1--line-height: 1.875rem; /* 2026.07.14 수정: 24 → 30 (본문 행간 확대) */
+  --text-body-1--line-height: 1.75rem; /* 2026.07.23 수정: 24 → 30 → 28 (본문 행간 재조정) */
   --text-body-1--font-weight: 400;
 
   --text-body-2: 1rem; /* 2026.07.14 수정: 14/20/Regular → 16/24/Medium */
@@ -121,6 +121,8 @@
   --color-bg-disabled: var(--color-gray-150); /* Background/disabled #ececec */
 
   /* Stroke */
+  /* Figma 디자인시스템 Stroke/primary=#e4e4e4(gray-200), secondary=#d2d2d0(gray-300).
+     (스와치 라벨의 gray-50/gray-100 텍스트는 stale — 실제 변수/스와치 색은 gray-200/gray-300) */
   --color-stroke-primary: var(--color-gray-200);
   --color-stroke-secondary: var(--color-gray-300);
   --color-stroke-strong: var(--color-gray-700); /* 2026.07.14 수정: black → gray-700 */
@@ -207,5 +209,23 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* 미니멀 스크롤바 — 트랙(배경) 없이 얇은 thumb 만. 상세 우측 스크롤 영역 등에 사용. */
+@utility scrollbar-minimal {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-stroke-disabled) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: var(--color-stroke-disabled);
   }
 }

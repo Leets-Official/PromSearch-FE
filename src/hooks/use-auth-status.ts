@@ -1,6 +1,7 @@
 "use client";
 
 import type { UserStatus } from "@/analytics/events";
+import { useDevPreview } from "@/components/dev-toolbar/dev-preview-context";
 
 /**
  * 인증 상태 어댑터.
@@ -30,9 +31,23 @@ const MOCK_AUTHENTICATED = process.env.NEXT_PUBLIC_MOCK_AUTH === "authenticated"
 
 const MOCK_USER: AuthUser = { name: "홍길동" };
 
+const AUTHENTICATED: AuthStatus = {
+  status: "authenticated",
+  isAuthenticated: true,
+  user: MOCK_USER,
+};
+const ANONYMOUS: AuthStatus = { status: "anonymous", isAuthenticated: false, user: null };
+
 export function useAuthStatus(): AuthStatus {
-  if (MOCK_AUTHENTICATED) {
-    return { status: "authenticated", isAuthenticated: true, user: MOCK_USER };
+  // Dev 툴바가 켜져 있으면 툴바의 인증 축이 최우선(디자이너가 배포 URL에서 직접 전환).
+  const dev = useDevPreview();
+  if (dev.enabled) {
+    return dev.preview.auth === "authenticated" ? AUTHENTICATED : ANONYMOUS;
   }
-  return { status: "anonymous", isAuthenticated: false, user: null };
+
+  // 폴백: 빌드타임 env 토글(실제 auth 소스가 붙으면 이 분기·플래그를 함께 제거).
+  if (MOCK_AUTHENTICATED) {
+    return AUTHENTICATED;
+  }
+  return ANONYMOUS;
 }

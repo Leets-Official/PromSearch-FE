@@ -21,7 +21,7 @@ const chipVariants = cva(
   {
     variants: {
       state: {
-        // 미선택: 기본 배경/테두리
+        // 미선택: 기본 배경 + Stroke/primary(#e4e4e4) 테두리
         default: "border-stroke-primary bg-bg-primary text-text-primary hover:bg-bg-secondary",
         // 선택됨: 브랜드 강조 (배경 red-400/25% · 테두리·글자 brand)
         selected: "border-stroke-brand bg-interaction-neutral-selected text-text-brand",

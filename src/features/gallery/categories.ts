@@ -5,7 +5,7 @@
  * 기획 변경 시 이 파일만 수정하면 된다. (기획 확정값 2026-07-10)
  */
 
-import type { AiModel, JobCategory, OutputType, Task } from "./types";
+import type { AiModel, ContentTier, JobCategory, OutputType, Task } from "./types";
 
 export type Option<T extends string> = {
   value: T;
@@ -46,11 +46,19 @@ export const OUTPUT_TYPES: readonly Option<OutputType>[] = [
   { value: "text", label: "텍스트" },
 ] as const;
 
+// 콘텐츠 등급 — 홈 필터 축은 아니고 상세 태그/배지 표시용
+export const TIERS: readonly Option<ContentTier>[] = [
+  { value: "free", label: "무료" },
+  { value: "premium", label: "프리미엄" },
+  { value: "master", label: "마스터" },
+] as const;
+
 // value → label 조회용 맵(카드 태그 표시 등)
 export const JOB_CATEGORY_LABEL = toLabelMap(JOB_CATEGORIES);
 export const TASK_LABEL = toLabelMap(TASKS);
 export const AI_MODEL_LABEL = toLabelMap(AI_MODELS);
 export const OUTPUT_TYPE_LABEL = toLabelMap(OUTPUT_TYPES);
+export const TIER_LABEL = toLabelMap(TIERS);
 
 function toLabelMap<T extends string>(options: readonly Option<T>[]): Record<T, string> {
   return options.reduce(
