@@ -73,14 +73,15 @@ function OutputImageUploader({
         </button>
 
         {value.map((src, index) => (
-          <div key={`${index}-${src.slice(0, 16)}`} className={cn(TILE, "group/tile relative")}>
+          <div key={`${index}-${src.slice(0, 16)}`} className={cn(TILE, "group relative")}>
             {/* eslint-disable-next-line @next/next/no-img-element -- data URL 미리보기(목) */}
             <img
               src={src}
               alt={`결과물 이미지 ${index + 1}`}
-              className="absolute inset-0 size-full rounded-md border border-stroke-primary object-cover"
+              className="pointer-events-none absolute inset-0 size-full rounded-md border border-stroke-primary object-cover"
             />
-            <div className="absolute inset-0 flex items-center justify-center rounded-md bg-dim opacity-0 transition-opacity group-hover/tile:opacity-100">
+            {/* 호버 시 딤 + 휴지통. focus-within 로 키보드 접근성도 확보 */}
+            <div className="absolute inset-0 flex items-center justify-center rounded-md bg-dim opacity-0 transition-opacity duration-75 ease-out group-hover:opacity-100 focus-within:opacity-100">
               <button
                 type="button"
                 onClick={() => removeAt(index)}

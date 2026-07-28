@@ -10,7 +10,7 @@ function values(overrides: Partial<PromptFormValues> = {}): PromptFormValues {
     outputType: "text",
     jobCategories: ["worker"],
     tasks: ["report"],
-    models: ["chatgpt"],
+    model: "chatgpt",
     modelEtcName: "",
     tier: "free",
     body: "본문",

@@ -3,7 +3,7 @@
  *
  * 기획 확정값:
  * - 글자 수 제한은 제목에만 둔다(최대 100자). 그 외 필드는 제한 없음.
- * - 결과물(outputType)만 단일 선택, 직군/태스크/AI모델은 복수 선택.
+ * - 결과물(outputType)·AI모델(model)은 단일 선택, 직군/태스크는 복수 선택.
  * - 임시저장은 계정당 1건만 유지한다(단일 슬롯). 저장 시 기존 임시저장을 덮어쓴다.
  *
  * BE 스펙 확정 전이라 요청/응답 형태는 여기서 정의하고 MSW 목으로 병렬 개발한다.
@@ -25,9 +25,9 @@ export type PromptFormValues = {
   jobCategories: JobCategory[];
   /** 태스크 — 복수 선택 */
   tasks: Task[];
-  /** AI 모델 — 복수 선택. etc 포함 시 modelEtcName 사용 */
-  models: AiModel[];
-  /** "기타" 모델 자유 입력명(models 에 etc 포함일 때만 의미) */
+  /** AI 모델 — 단일 선택. etc 면 modelEtcName 사용. 미선택은 null */
+  model: AiModel | null;
+  /** "기타" 모델 자유 입력명(model === "etc" 일 때만 의미) */
   modelEtcName: string;
   /** 콘텐츠 타입 — 무료/프리미엄(세그먼트, 단일) */
   tier: ContentTier;
@@ -44,7 +44,7 @@ export const EMPTY_FORM_VALUES: PromptFormValues = {
   outputType: null,
   jobCategories: [],
   tasks: [],
-  models: [],
+  model: null,
   modelEtcName: "",
   tier: "free",
   body: "",

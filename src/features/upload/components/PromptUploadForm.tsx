@@ -40,7 +40,7 @@ function draftToValues(draft: PromptDraft): PromptFormValues {
     outputType: draft.outputType,
     jobCategories: draft.jobCategories,
     tasks: draft.tasks,
-    models: draft.models,
+    model: draft.model,
     modelEtcName: draft.modelEtcName,
     tier: draft.tier,
     body: draft.body,
@@ -50,7 +50,7 @@ function draftToValues(draft: PromptDraft): PromptFormValues {
 
 /**
  * 프롬프트 업로드 폼.
- * - 제목만 글자 수 제한(100자). 결과물은 단일 선택, 직군/태스크/AI모델은 복수 선택.
+ * - 제목만 글자 수 제한(100자). 결과물·AI모델은 단일 선택, 직군/태스크는 복수 선택.
  * - 진입 시 임시저장이 있으면 모달로 불러오기/새로작성 선택.
  * - 임시저장(부분 허용) / 게시하기(전체 검증) 분리.
  */
@@ -62,7 +62,7 @@ function PromptUploadForm() {
   const deleteDraft = useDeleteDraft();
   const createPrompt = useCreatePrompt();
 
-  const { control, handleSubmit, reset, getValues } = useForm<PromptFormValues>({
+  const { control, handleSubmit, reset, getValues, setValue } = useForm<PromptFormValues>({
     resolver: zodResolver(promptFormSchema),
     defaultValues: EMPTY_FORM_VALUES,
     mode: "onChange",
@@ -104,7 +104,7 @@ function PromptUploadForm() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-160 flex-col gap-8">
+    <div className="flex w-full max-w-160 flex-col gap-8">
       <h1 className="text-heading-1 text-text-primary">프롬프트 업로드</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
@@ -116,7 +116,7 @@ function PromptUploadForm() {
             <TextField
               title="제목"
               required
-              placeholder="글자수 제한을 걸어야 합니다..."
+              placeholder="제목을 입력해주세요."
               maxLength={TITLE_MAX}
               value={field.value}
               onChange={(e) => field.onChange(e.target.value)}
@@ -136,6 +136,7 @@ function PromptUploadForm() {
               <span className="text-title-1 text-text-primary">프롬프트 설명</span>
               <Textarea
                 placeholder="프롬프트에 대한 설명을 입력해주세요."
+                className="min-h-42"
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
@@ -189,19 +190,24 @@ function PromptUploadForm() {
           )}
         />
 
-        {/* AI 모델 — 복수 선택. 기타 선택 시 자유 입력 */}
+        {/* AI 모델 — 단일 선택. 기타 선택 시 자유 입력 */}
         <Controller
           control={control}
-          name="models"
+          name="model"
           render={({ field }) => (
             <div className="flex w-full flex-col gap-3">
               <ChipGroupField
                 label="AI 모델"
                 options={AI_MODELS}
-                selected={field.value}
-                onToggle={(v) => field.onChange(toggle(field.value, v))}
+                selected={field.value ? [field.value] : []}
+                onToggle={(v) => {
+                  const next = field.value === v ? null : v;
+                  field.onChange(next);
+                  // 기타 해제 시 자유 입력값 정리
+                  if (next !== "etc") setValue("modelEtcName", "");
+                }}
               />
-              {field.value.includes("etc") ? (
+              {field.value === "etc" ? (
                 <Controller
                   control={control}
                   name="modelEtcName"

@@ -8,7 +8,7 @@
  * - 제목: 필수, 1~100자(유일한 글자 수 제한).
  * - 프롬프트 본문: 필수(게시하려면 본문이 있어야 한다).
  * - 결과물 타입: 필수(단일 선택).
- * - AI 모델에 "기타(etc)"가 포함되면 modelEtcName 필수.
+ * - AI 모델(단일)로 "기타(etc)"를 고르면 modelEtcName 필수.
  * - 그 외(설명/직군/태스크/이미지)는 선택.
  * 임시저장은 부분 작성도 허용하므로 이 스키마로 검증하지 않는다(게시 전용).
  */
@@ -45,14 +45,14 @@ export const promptFormSchema = z
     }),
     jobCategories: z.array(jobCategoryEnum),
     tasks: z.array(taskEnum),
-    models: z.array(aiModelEnum),
+    model: aiModelEnum.nullable(),
     modelEtcName: z.string(),
     tier: tierEnum,
     body: z.string().trim().min(1, "프롬프트 본문을 입력해주세요."),
     images: z.array(z.string()),
   })
   // "기타" 모델 선택 시 자유 입력명 필수
-  .refine((v) => !v.models.includes("etc") || v.modelEtcName.trim().length > 0, {
+  .refine((v) => v.model !== "etc" || v.modelEtcName.trim().length > 0, {
     path: ["modelEtcName"],
     message: "기타 모델명을 입력해주세요.",
   });
