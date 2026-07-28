@@ -121,7 +121,7 @@
   --color-bg-disabled: var(--color-gray-150); /* Background/disabled #ececec */
 
   /* Stroke */
-  --color-stroke-primary: var(--color-gray-50);
+  --color-stroke-primary: var(--color-gray-200);
   --color-stroke-secondary: var(--color-gray-300);
   --color-stroke-strong: var(--color-gray-700); /* 2026.07.14 수정: black → gray-700 */
   --color-stroke-brand: var(--color-brand);
