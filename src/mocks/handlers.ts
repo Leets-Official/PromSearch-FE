@@ -10,8 +10,10 @@ import { findPromptDetail } from "@/mocks/prompt-detail-query";
 import { queryPrompts } from "@/mocks/prompt-query";
 import {
   DEV_CONTENT_HEADER,
+  DEV_DRAFT_HEADER,
   DEV_EDGE_HEADER,
   type DevContent,
+  type DevDraft,
   type DevEdge,
 } from "@/lib/dev-preview";
 
@@ -24,6 +26,9 @@ function readDevContent(request: Request): DevContent {
 }
 function readDevEdge(request: Request): DevEdge {
   return (request.headers.get(DEV_EDGE_HEADER) as DevEdge) ?? "normal";
+}
+function readDevDraft(request: Request): DevDraft {
+  return (request.headers.get(DEV_DRAFT_HEADER) as DevDraft) ?? "seeded";
 }
 
 /**
@@ -91,9 +96,11 @@ export const handlers = [
 
   // 임시저장 조회 — 단일 슬롯. 없으면 draft: null.
   // ⚠️ 반드시 "/api/prompts/:id" 보다 먼저 등록해야 draft 가 :id(=“draft”)로 새지 않는다.
+  // dev 툴바 "임시저장" 축(seeded/none)으로 초안 유무를 강제할 수 있다.
   http.get("/api/prompts/draft", async ({ request }) => {
     const forced = await forceEdge(readDevEdge(request));
     if (forced) return forced;
+    if (readDevDraft(request) === "none") return HttpResponse.json({ draft: null });
     return HttpResponse.json({ draft: draftState });
   }),
 

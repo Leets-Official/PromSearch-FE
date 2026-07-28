@@ -19,17 +19,22 @@ export type DevAuth = "anonymous" | "authenticated";
 export type DevContent = "default" | "short" | "long";
 /** 데이터 엣지 상태 — 목록/상세에서 강제 노출 */
 export type DevEdge = "normal" | "empty" | "loading" | "error";
+/** 임시저장(초안) 유무 — 업로드 진입 시 불러오기/새로작성 모달 확인용 */
+export type DevDraft = "seeded" | "none";
 
 export type DevPreview = {
   auth: DevAuth;
   content: DevContent;
   edge: DevEdge;
+  draft: DevDraft;
 };
 
 export const DEV_PREVIEW_DEFAULT: DevPreview = {
   auth: "anonymous",
   content: "default",
   edge: "normal",
+  // 기본은 "있음" — 목 핸들러가 헤더 없이 시드 초안을 돌려주는 기본 동작과 일치.
+  draft: "seeded",
 };
 
 /** 상태 저장 쿠키명(서버 시드 + 클라 지속) */
@@ -40,10 +45,13 @@ export const DEV_PREVIEW_PARAM = "dev";
 export const DEV_CONTENT_HEADER = "x-dev-content";
 /** 엣지 상태 → MSW 전달 헤더(목 전용) */
 export const DEV_EDGE_HEADER = "x-dev-edge";
+/** 임시저장 유무 → MSW 전달 헤더(목 전용) */
+export const DEV_DRAFT_HEADER = "x-dev-draft";
 
 const AUTH_VALUES: readonly DevAuth[] = ["anonymous", "authenticated"];
 const CONTENT_VALUES: readonly DevContent[] = ["default", "short", "long"];
 const EDGE_VALUES: readonly DevEdge[] = ["normal", "empty", "loading", "error"];
+const DRAFT_VALUES: readonly DevDraft[] = ["seeded", "none"];
 
 function coerce<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
@@ -51,24 +59,25 @@ function coerce<T extends string>(value: unknown, allowed: readonly T[], fallbac
 
 /**
  * 직렬화 문자열(쿠키/URL) → DevPreview. 잘못된/누락 값은 필드별 기본값으로 방어적 폴백.
- * 포맷은 `auth.content.edge`(위치 기반) — 세 축의 값 집합이 서로 겹치지 않아 순서만으로 파싱된다.
+ * 포맷은 `auth.content.edge.draft`(위치 기반). 3-파트 구(舊) 링크도 draft 누락 → 기본값으로 안전 파싱.
  */
 export function parseDevPreview(raw: string | undefined | null): DevPreview {
   if (!raw) return DEV_PREVIEW_DEFAULT;
-  const [auth, content, edge] = raw.split(".");
+  const [auth, content, edge, draft] = raw.split(".");
   return {
     auth: coerce(auth, AUTH_VALUES, DEV_PREVIEW_DEFAULT.auth),
     content: coerce(content, CONTENT_VALUES, DEV_PREVIEW_DEFAULT.content),
     edge: coerce(edge, EDGE_VALUES, DEV_PREVIEW_DEFAULT.edge),
+    draft: coerce(draft, DRAFT_VALUES, DEV_PREVIEW_DEFAULT.draft),
   };
 }
 
 /**
- * DevPreview → 쿠키/URL 공용 문자열. `authenticated.long.error` 처럼 짧고 읽기 쉬우며,
+ * DevPreview → 쿠키/URL 공용 문자열. `authenticated.long.error.none` 처럼 짧고 읽기 쉬우며,
  * 모두 URL-safe 문자라 URLSearchParams 가 재인코딩하지 않는다(주소창이 깔끔).
  */
 export function serializeDevPreview(value: DevPreview): string {
-  return `${value.auth}.${value.content}.${value.edge}`;
+  return `${value.auth}.${value.content}.${value.edge}.${value.draft}`;
 }
 
 /** 기본값과 동일한가(= 오버라이드 없음). URL 파라미터를 생략해 주소를 깔끔히 유지할 때 사용. */
@@ -76,7 +85,8 @@ export function isDefaultDevPreview(value: DevPreview): boolean {
   return (
     value.auth === DEV_PREVIEW_DEFAULT.auth &&
     value.content === DEV_PREVIEW_DEFAULT.content &&
-    value.edge === DEV_PREVIEW_DEFAULT.edge
+    value.edge === DEV_PREVIEW_DEFAULT.edge &&
+    value.draft === DEV_PREVIEW_DEFAULT.draft
   );
 }
 
@@ -113,5 +123,6 @@ export function devPreviewFetchHeaders(): Record<string, string> {
   const headers: Record<string, string> = {};
   if (p.content !== "default") headers[DEV_CONTENT_HEADER] = p.content;
   if (p.edge !== "normal") headers[DEV_EDGE_HEADER] = p.edge;
+  if (p.draft !== "seeded") headers[DEV_DRAFT_HEADER] = p.draft;
   return headers;
 }

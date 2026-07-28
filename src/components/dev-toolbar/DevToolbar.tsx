@@ -11,6 +11,7 @@ import {
   serializeDevPreview,
   type DevAuth,
   type DevContent,
+  type DevDraft,
   type DevEdge,
 } from "@/lib/dev-preview";
 import { useDevPreview } from "./dev-preview-context";
@@ -112,6 +113,17 @@ export function DevToolbar() {
         />
       </Field>
 
+      <Field label="임시저장" hint="업로드 진입 시 초안 유무 (불러오기/새로작성 모달)">
+        <Segmented<DevDraft>
+          value={preview.draft}
+          onChange={(draft) => setPreview({ draft })}
+          options={[
+            { value: "seeded", label: "있음" },
+            { value: "none", label: "없음" },
+          ]}
+        />
+      </Field>
+
       <Field label="페이지 바로가기">
         <div className="grid grid-cols-2 gap-1.5">
           <JumpLink href="/home" active={pathname === "/home"}>
@@ -122,6 +134,9 @@ export function DevToolbar() {
           </JumpLink>
           <JumpLink href="/prompts/prompt-002" active={pathname === "/prompts/prompt-002"}>
             상세 · 프리미엄
+          </JumpLink>
+          <JumpLink href="/upload" active={pathname === "/upload"}>
+            업로드
           </JumpLink>
           <JumpLink href="/dev/components" active={pathname === "/dev/components"}>
             컴포넌트
