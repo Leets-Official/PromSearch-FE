@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PencilIcon, SaveIcon } from "lucide-react";
 
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/segmented-control";
 
 import { promptFormSchema, TITLE_MAX } from "../schema";
-import { EMPTY_FORM_VALUES, type PromptDraft, type PromptFormValues } from "../types";
+import type { PromptDraft, PromptFormValues } from "../types";
 import { AI_MODELS, CONTENT_TIER_OPTIONS, JOB_CATEGORIES, OUTPUT_TYPES, TASKS } from "../options";
 import { usePromptDraft } from "../hooks/use-prompt-draft";
 import { useSaveDraft } from "../hooks/use-save-draft";
@@ -32,8 +32,23 @@ function toggle<T>(arr: readonly T[], value: T): T[] {
   return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
 }
 
-/** 드래프트 → 폼 값(저장 시각 제외) */
-function draftToValues(draft: PromptDraft): PromptFormValues {
+/**
+ * 폼 기본값. 단일 선택(outputType·model)은 **미선택** 상태로 시작하므로 기본값에 넣지 않는다
+ * (선택 강제 = 검증에서 필수). 나머지는 빈 값으로 시작.
+ */
+const DEFAULT_VALUES: DefaultValues<PromptFormValues> = {
+  title: "",
+  description: "",
+  jobCategories: [],
+  tasks: [],
+  modelEtcName: "",
+  tier: "free",
+  body: "",
+  images: [],
+};
+
+/** 드래프트 → 폼 값(저장 시각 제외). 초안은 부분 작성이라 미입력 필드는 undefined 로 흐른다. */
+function draftToValues(draft: PromptDraft): DefaultValues<PromptFormValues> {
   return {
     title: draft.title,
     description: draft.description,
@@ -64,7 +79,7 @@ function PromptUploadForm() {
 
   const { control, handleSubmit, reset, getValues, setValue } = useForm<PromptFormValues>({
     resolver: zodResolver(promptFormSchema),
-    defaultValues: EMPTY_FORM_VALUES,
+    defaultValues: DEFAULT_VALUES,
     mode: "onChange",
   });
 
@@ -82,7 +97,7 @@ function PromptUploadForm() {
   const handleDiscardDraft = () => {
     deleteDraft.mutate(undefined, {
       onSuccess: () => {
-        reset(EMPTY_FORM_VALUES);
+        reset(DEFAULT_VALUES);
         setDecided(true);
       },
     });
@@ -131,7 +146,7 @@ function PromptUploadForm() {
         <Controller
           control={control}
           name="description"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <label className="flex w-full flex-col gap-2">
               <span className="text-title-1 text-text-primary">프롬프트 설명</span>
               <Textarea
@@ -140,7 +155,11 @@ function PromptUploadForm() {
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
+                aria-invalid={fieldState.error ? true : undefined}
               />
+              {fieldState.error ? (
+                <span className="text-body-3 text-red-500">{fieldState.error.message}</span>
+              ) : null}
             </label>
           )}
         />
@@ -154,38 +173,41 @@ function PromptUploadForm() {
               label="결과물"
               options={OUTPUT_TYPES}
               selected={field.value ? [field.value] : []}
-              onToggle={(v) => field.onChange(field.value === v ? null : v)}
+              // 필수 단일 선택 — 해제 없이 선택만
+              onToggle={(v) => field.onChange(v)}
               error={fieldState.error?.message}
             />
           )}
         />
 
-        {/* 직군 — 복수 선택 */}
+        {/* 직군 — 복수 선택(최소 1개) */}
         <Controller
           control={control}
           name="jobCategories"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <ChipGroupField
               label="직군"
               hint="복수선택이 가능해요."
               options={JOB_CATEGORIES}
               selected={field.value}
               onToggle={(v) => field.onChange(toggle(field.value, v))}
+              error={fieldState.error?.message}
             />
           )}
         />
 
-        {/* 태스크 — 복수 선택 */}
+        {/* 태스크 — 복수 선택(최소 1개) */}
         <Controller
           control={control}
           name="tasks"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <ChipGroupField
               label="태스크"
               hint="복수선택이 가능해요."
               options={TASKS}
               selected={field.value}
               onToggle={(v) => field.onChange(toggle(field.value, v))}
+              error={fieldState.error?.message}
             />
           )}
         />
@@ -194,18 +216,18 @@ function PromptUploadForm() {
         <Controller
           control={control}
           name="model"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <div className="flex w-full flex-col gap-3">
               <ChipGroupField
                 label="AI 모델"
                 options={AI_MODELS}
                 selected={field.value ? [field.value] : []}
+                // 필수 단일 선택 — 선택만. 기타가 아니면 자유 입력값 정리
                 onToggle={(v) => {
-                  const next = field.value === v ? null : v;
-                  field.onChange(next);
-                  // 기타 해제 시 자유 입력값 정리
-                  if (next !== "etc") setValue("modelEtcName", "");
+                  field.onChange(v);
+                  if (v !== "etc") setValue("modelEtcName", "");
                 }}
+                error={fieldState.error?.message}
               />
               {field.value === "etc" ? (
                 <Controller
@@ -273,17 +295,22 @@ function PromptUploadForm() {
           )}
         />
 
-        {/* 결과물 이미지 */}
+        {/* 결과물 이미지 — 최소 1장 */}
         <Controller
           control={control}
           name="images"
-          render={({ field }) => (
-            <OutputImageUploader
-              label="결과물 이미지"
-              hint="프롬프트로 생성한 결과물의 이미지를 첨부해주세요. 호버하면 삭제할 수 있어요."
-              value={field.value}
-              onChange={field.onChange}
-            />
+          render={({ field, fieldState }) => (
+            <div className="flex w-full flex-col gap-1">
+              <OutputImageUploader
+                label="결과물 이미지"
+                hint="프롬프트로 생성한 결과물의 이미지를 첨부해주세요. 호버하면 삭제할 수 있어요."
+                value={field.value}
+                onChange={field.onChange}
+              />
+              {fieldState.error ? (
+                <span className="text-body-3 text-red-500">{fieldState.error.message}</span>
+              ) : null}
+            </div>
           )}
         />
 

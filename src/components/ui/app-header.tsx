@@ -7,7 +7,7 @@ import { Logo } from "@/components/ui/logo";
  *
  * 레이아웃/치수(시안):
  * - 높이 80px, 상하 패딩 16px(= py-4), 배경 bg-bg-primary
- * - 하단 border(stroke) 로 본문과 구분
+ * - 하단 구분선 없음(시안 기준)
  * - [좌] 로고 · [중앙] 검색/네비 등 유연 영역 · [우] 알림/프로필 등 액션 영역
  *
  * 실제 항목(검색바·업로드·알림·프로필)은 프로젝트마다 달라질 수 있어
@@ -28,8 +28,8 @@ function AppHeader({ className, start, center, end, children, ...props }: AppHea
     <header
       data-slot="app-header"
       className={cn(
-        // 높이 80 · 상하 패딩 16 · 배경 primary · 하단 구분선
-        "flex h-20 w-full items-center gap-8 border-b border-stroke-primary bg-bg-primary px-6 py-4",
+        // 높이 80 · 상하 패딩 16 · 배경 primary (하단 구분선 없음)
+        "flex h-20 w-full items-center gap-8 bg-bg-primary px-6 py-4",
         className,
       )}
       {...props}

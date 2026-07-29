@@ -21,11 +21,18 @@ function CommentBody({ comment }: { comment: PromptComment }) {
     <div className="flex gap-3">
       <ProfileAvatar name={comment.author.name} src={comment.author.avatarUrl} size="sm" />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-center gap-1 text-body-3">
-          <span className="font-semibold text-text-primary">{comment.author.name}</span>
-          {comment.isAuthor ? <span className="text-caption-1 text-text-brand">작성자</span> : null}
+        {/* 좁아져도 단어 단위로만 줄바꿈(글자 단위 세로 깨짐 방지) */}
+        <div className="flex flex-wrap items-center gap-x-1 text-body-3">
+          <span className="font-semibold whitespace-nowrap text-text-primary">
+            {comment.author.name}
+          </span>
+          {comment.isAuthor ? (
+            <span className="text-caption-1 whitespace-nowrap text-text-brand">작성자</span>
+          ) : null}
           <span className="text-text-disabled">・</span>
-          <span className="text-text-disabled">{formatDetailDate(comment.createdAt)}</span>
+          <span className="whitespace-nowrap text-text-disabled">
+            {formatDetailDate(comment.createdAt)}
+          </span>
         </div>
         <p className="text-body-2 whitespace-pre-wrap text-text-secondary">{comment.body}</p>
       </div>
