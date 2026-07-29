@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import type { PromptComment } from "@/features/prompt-detail/types";
 import { formatDetailDate } from "@/features/prompt-detail/format";
-import { ProfileAvatar } from "./ProfileAvatar";
+import { ProfileAvatar } from "./profile-avatar";
 
 function CommentBody({ comment }: { comment: PromptComment }) {
   if (comment.isBlinded) {

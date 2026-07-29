@@ -1,10 +1,10 @@
 "use client";
 
 import { JOB_CATEGORY_LABEL } from "@/features/gallery/categories";
-import { GalleryFilters } from "@/features/gallery/components/GalleryFilters";
-import { GalleryGrid } from "@/features/gallery/components/GalleryGrid";
-import { GalleryPagination } from "@/features/gallery/components/GalleryPagination";
-import { GalleryError, GallerySkeleton } from "@/features/gallery/components/GalleryStates";
+import { GalleryFilters } from "@/features/gallery/components/gallery-filters";
+import { GalleryGrid } from "@/features/gallery/components/gallery-grid";
+import { GalleryPagination } from "@/features/gallery/components/gallery-pagination";
+import { GalleryError, GallerySkeleton } from "@/features/gallery/components/gallery-states";
 import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters";
 import { usePromptList } from "@/features/gallery/hooks/use-prompt-list";
 import type { GalleryQuery } from "@/features/gallery/types";

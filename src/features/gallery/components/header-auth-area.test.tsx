@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { HeaderAuthArea } from "@/features/gallery/components/HeaderAuthArea";
+import { HeaderAuthArea } from "@/features/gallery/components/header-auth-area";
 
 vi.mock("next/link", () => ({
   default: ({ href, children }: { href: string; children?: React.ReactNode }) => (

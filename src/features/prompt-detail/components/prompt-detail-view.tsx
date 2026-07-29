@@ -13,12 +13,12 @@ import { useDetailTab } from "@/features/prompt-detail/hooks/use-detail-tab";
 import { useLikePrompt } from "@/features/prompt-detail/hooks/use-like-prompt";
 import type { PromptDetail } from "@/features/prompt-detail/types";
 
-import { CommentPanel } from "./CommentPanel";
-import { DescriptionPanel } from "./DescriptionPanel";
-import { DetailHeader } from "./DetailHeader";
-import { DetailTabs } from "./DetailTabs";
-import { OutputCarousel } from "./OutputCarousel";
-import { RecipePanel } from "./RecipePanel";
+import { CommentPanel } from "./comment-panel";
+import { DescriptionPanel } from "./description-panel";
+import { DetailHeader } from "./detail-header";
+import { DetailTabs } from "./detail-tabs";
+import { OutputCarousel } from "./output-carousel";
+import { RecipePanel } from "./recipe-panel";
 
 /** 상세 본문 조립 — 좌(이미지) / 우(정보 + 탭). 진입 시 prompt_view 1회 발송. */
 export function PromptDetailView({ detail }: { detail: PromptDetail }) {

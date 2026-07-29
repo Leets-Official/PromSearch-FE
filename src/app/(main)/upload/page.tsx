@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { PromptUploadForm } from "@/features/upload/components/PromptUploadForm";
+import { PromptUploadForm } from "@/features/upload/components/prompt-upload-form";
 
 export const metadata: Metadata = {
   title: "프롬프트 업로드",

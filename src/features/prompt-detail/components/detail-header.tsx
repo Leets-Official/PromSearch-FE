@@ -3,7 +3,7 @@
 import { buildDetailTags } from "@/features/prompt-detail/detail-tags";
 import { formatDetailDate } from "@/features/prompt-detail/format";
 import type { PromptDetail } from "@/features/prompt-detail/types";
-import { ProfileAvatar } from "./ProfileAvatar";
+import { ProfileAvatar } from "./profile-avatar";
 
 /**
  * 우측 상단 정보 — 제목 · 작성자 · 메타(작성일·조회·추천수 표시) · 태그.

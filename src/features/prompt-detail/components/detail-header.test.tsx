@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { DetailHeader } from "@/features/prompt-detail/components/DetailHeader";
+import { DetailHeader } from "@/features/prompt-detail/components/detail-header";
 import { makeDetail } from "@/features/prompt-detail/test-fixtures";
 
 describe("DetailHeader", () => {

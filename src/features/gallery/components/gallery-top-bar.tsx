@@ -12,7 +12,7 @@ import { SearchBar } from "@/components/ui/search-bar";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters";
 
-import { HeaderAuthArea } from "./HeaderAuthArea";
+import { HeaderAuthArea } from "./header-auth-area";
 
 const SEARCH_DEBOUNCE_MS = 300;
 

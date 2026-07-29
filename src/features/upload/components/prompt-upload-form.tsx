@@ -23,9 +23,9 @@ import { usePromptDraft } from "../hooks/use-prompt-draft";
 import { useSaveDraft } from "../hooks/use-save-draft";
 import { useDeleteDraft } from "../hooks/use-delete-draft";
 import { useCreatePrompt } from "../hooks/use-create-prompt";
-import { ChipGroupField } from "./ChipGroupField";
-import { OutputImageUploader } from "./OutputImageUploader";
-import { DraftPromptModal } from "./DraftPromptModal";
+import { ChipGroupField } from "./chip-group-field";
+import { OutputImageUploader } from "./output-image-uploader";
+import { DraftPromptModal } from "./draft-prompt-modal";
 
 /** 배열 토글(있으면 제거, 없으면 추가) */
 function toggle<T>(arr: readonly T[], value: T): T[] {

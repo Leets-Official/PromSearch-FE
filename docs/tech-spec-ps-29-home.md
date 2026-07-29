@@ -396,9 +396,9 @@ src/mocks/MswProvider.tsx                               # dev MSW 워커 시작 
 src/mocks/prompt-query.test.ts                         # ACTIVE-only, OR/AND 필터, 정렬, 페이지네이션
 src/features/gallery/api/prompt.test.ts                # toSearchParams 매핑 + MSW 연동
 src/features/gallery/hooks/use-gallery-filters.test.tsx# 필터→URL, 필터 변경 시 page=1 리셋
-src/features/gallery/components/GalleryCard.test.tsx   # 클릭→card_click, 상세 링크, 태그 구성
-src/features/gallery/components/GalleryGrid.test.tsx   # 렌더/빈 상태
-src/features/gallery/components/HeaderAuthArea.test.tsx# 비회원/회원 헤더 분기
+src/features/gallery/components/gallery-card.test.tsx   # 클릭→card_click, 상세 링크, 태그 구성
+src/features/gallery/components/gallery-grid.test.tsx   # 렌더/빈 상태
+src/features/gallery/components/header-auth-area.test.tsx# 비회원/회원 헤더 분기
 ```
 
 수정 파일: `src/app/providers.tsx`(MswProvider), `src/mocks/handlers.ts`(`/api/prompts`), `.gitignore`(`.env.development` 예외)

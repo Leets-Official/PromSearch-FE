@@ -4,7 +4,7 @@ import { Bookmark, ChevronLeft, ChevronRight, Flag, Heart } from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { ImageZoomModal } from "./ImageZoomModal";
+import { ImageZoomModal } from "./image-zoom-modal";
 
 /** 아웃풋 이미지 최대 개수(BE 제약과 동일) */
 export const MAX_OUTPUT_IMAGES = 10;
