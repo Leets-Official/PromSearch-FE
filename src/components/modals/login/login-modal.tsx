@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogoSymbol } from "@/components/ui/logo";
 import { SocialLoginButton } from "@/components/ui/social-login-button";
+import { validateEmail, validatePassword } from "@/features/auth/hooks/use-signup-validation";
 
 interface LoginModalProps {
   open: boolean;
@@ -16,6 +19,7 @@ interface LoginModalProps {
   onSignUp?: () => void;
   onGoogleLogin?: () => void;
   onKakaoLogin?: () => void;
+  error?: string | null;
 }
 
 /**
@@ -25,6 +29,9 @@ interface LoginModalProps {
  *   → 이 모달(+온보딩)만 블러를 쓰므로 dialog.tsx는 수정하지 않고,
  *     여기서 Portal+Overlay+Popup을 직접 조립한다.
  * 카드: width 440px, padding 32px, gap 24px, radius 16px, bg-elevated + shadow.
+ *
+ * 아이디 검증: 로그인은 제출 시점에 이메일 형식만 1회 검증(실시간 X).
+ *   비밀번호는 형식 검증하지 않음 — 기존 사용자 비밀번호가 현재 규칙과 달라도 로그인은 가능해야 함.
  */
 function LoginModal({
   open,
@@ -33,14 +40,33 @@ function LoginModal({
   onSignUp,
   onGoogleLogin,
   onKakaoLogin,
+  error,
 }: LoginModalProps) {
+  // 클라이언트 형식 에러(제출 시 검증). 서버 에러(error prop)와 별개로 관리하되 표시는 합친다.
+  const [formError, setFormError] = useState<string | null>(null);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const id = (form.elements.namedItem("id") as HTMLInputElement).value;
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+
+    // 제출 시점 형식 검증 — 이메일 먼저, 그다음 비밀번호
+    if (validateEmail(id).status !== "valid") {
+      setFormError("이메일 형식으로 입력해주세요.");
+      return;
+    }
+    const pw = validatePassword(password);
+    if (!pw.isValid) {
+      setFormError(pw.message ?? "비밀번호 형식을 확인해주세요.");
+      return;
+    }
+    setFormError(null);
     onLogin?.(id, password);
   };
+
+  // 표시할 에러: 클라 형식 에러 우선, 없으면 서버 에러
+  const shownError = formError ?? error ?? null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -87,13 +113,20 @@ function LoginModal({
 
           {/* 입력 폼 */}
           <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
-            <Input name="id" type="text" placeholder="아이디" autoComplete="username" />
+            <Input
+              name="id"
+              type="email"
+              placeholder="이메일"
+              autoComplete="username"
+              aria-invalid={shownError ? true : undefined}
+            />
             <Input
               name="password"
               type="password"
               placeholder="비밀번호"
               autoComplete="current-password"
             />
+            {shownError && <span className="text-body-3 text-text-brand">{shownError}</span>}
             <Button type="submit" variant="brand" size="lg" className="mt-2 w-full">
               로그인
             </Button>
