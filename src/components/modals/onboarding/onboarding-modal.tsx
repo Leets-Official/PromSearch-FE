@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from "@/components/u
 import type { NicknameStatus } from "@/features/auth/hooks/use-nickname-check";
 import { OnboardingStepProfile } from "./onboarding-step-profile";
 import { OnboardingStepInterests } from "./onboarding-step-interests";
-import { MAX_JOBS, MAX_TASKS, STEP_META } from "./constants";
+import { STEP_META } from "./constants";
 import type { OnboardingResult } from "./types";
 
 interface OnboardingModalProps {
@@ -22,7 +22,8 @@ interface OnboardingModalProps {
 
 /**
  * 온보딩 모달 (Figma: 로그인 - 온보딩 1/2·2/2)
- * 껍데기(Dialog/오버레이) + step 상태만 관리하고, 각 단계는 하위 컴포넌트에 위임.
+ * 껍데기(Dialog/오버레이) + step·입력 상태만 관리하고, 각 단계는 하위 컴포넌트에 위임.
+ * 미리보기 URL 관리는 ProfileNicknameField(공용)로 이전되어 여기선 avatarFile만 다룬다.
  * 닫힐 때 step·입력값을 초기화해 다음에 열면 1단계부터 시작한다.
  */
 function OnboardingModal({
@@ -36,16 +37,8 @@ function OnboardingModal({
   const [step, setStep] = useState<1 | 2>(1);
   const [nickname, setNickname] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [jobs, setJobs] = useState<string[]>([]);
   const [tasks, setTasks] = useState<string[]>([]);
-
-  // avatarPreview blob URL 생명주기 관리:
-  // 값이 바뀌기 직전(cleanup)과 언마운트 시 이전 URL을 해제해 메모리 누수 방지
-  useEffect(() => {
-    if (!avatarPreview) return;
-    return () => URL.revokeObjectURL(avatarPreview);
-  }, [avatarPreview]);
 
   // 모달이 닫힐 때 온보딩 상태 초기화 (다음에 열면 1단계부터)
   const handleOpenChange = (next: boolean) => {
@@ -54,7 +47,6 @@ function OnboardingModal({
       setNickname("");
       onNicknameChange?.(""); // 부모 훅의 nicknameStatus도 idle로 되돌림
       setAvatarFile(null);
-      setAvatarPreview(null); // effect cleanup이 이전 blob URL 해제
       setJobs([]);
       setTasks([]);
     }
@@ -65,18 +57,6 @@ function OnboardingModal({
     setNickname(value);
     onNicknameChange?.(value);
   };
-
-  const handleAvatarChange = (file: File | null) => {
-    setAvatarFile(file);
-    setAvatarPreview(file ? URL.createObjectURL(file) : null);
-  };
-
-  const toggle = (list: string[], value: string, max: number) =>
-    list.includes(value)
-      ? list.filter((v) => v !== value)
-      : list.length < max
-        ? [...list, value]
-        : list;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -110,16 +90,16 @@ function OnboardingModal({
               nickname={nickname}
               onNicknameChange={handleNicknameChange}
               nicknameStatus={nicknameStatus}
-              avatarPreview={avatarPreview}
-              onAvatarChange={handleAvatarChange}
+              avatarFile={avatarFile}
+              onAvatarChange={setAvatarFile}
               onNext={() => setStep(2)}
             />
           ) : (
             <OnboardingStepInterests
               jobs={jobs}
               tasks={tasks}
-              onToggleJob={(v) => setJobs((prev) => toggle(prev, v, MAX_JOBS))}
-              onToggleTask={(v) => setTasks((prev) => toggle(prev, v, MAX_TASKS))}
+              onJobsChange={setJobs}
+              onTasksChange={setTasks}
               onComplete={() => onComplete?.({ nickname, avatarFile, jobs, tasks })}
               onSkip={() => onSkip?.()}
             />
