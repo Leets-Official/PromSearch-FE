@@ -1,8 +1,8 @@
 import type { UserStatus } from "@/analytics/events";
 import type { PromptSummary } from "@/features/gallery/types";
 
-import { GalleryCard } from "./GalleryCard";
-import { GalleryEmpty } from "./GalleryStates";
+import { GalleryCard } from "./gallery-card";
+import { GalleryEmpty } from "./gallery-states";
 
 type GalleryGridProps = {
   prompts: PromptSummary[];

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { track } from "@/analytics/track";
-import { RecipePanel } from "@/features/prompt-detail/components/RecipePanel";
+import { RecipePanel } from "@/features/prompt-detail/components/recipe-panel";
 import type { RecipeAccess } from "@/features/prompt-detail/types";
 
 vi.mock("@/analytics/track", () => ({ track: vi.fn() }));

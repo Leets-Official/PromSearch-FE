@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { track } from "@/analytics/track";
-import { PromptDetailView } from "@/features/prompt-detail/components/PromptDetailView";
+import { PromptDetailView } from "@/features/prompt-detail/components/prompt-detail-view";
 import { makeDetail } from "@/features/prompt-detail/test-fixtures";
 
 vi.mock("@/analytics/track", () => ({ track: vi.fn() }));

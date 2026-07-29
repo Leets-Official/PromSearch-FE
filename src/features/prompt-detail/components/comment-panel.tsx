@@ -3,7 +3,7 @@
 import { TextField } from "@/components/ui/text-field";
 import type { PromptComment } from "@/features/prompt-detail/types";
 import { cn } from "@/lib/utils";
-import { CommentItem } from "./CommentItem";
+import { CommentItem } from "./comment-item";
 
 /**
  * 댓글 탭 — 표시 전용(작성/삭제/신고는 후속).

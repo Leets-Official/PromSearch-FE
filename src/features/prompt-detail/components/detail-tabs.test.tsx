@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { DetailTabs } from "@/features/prompt-detail/components/DetailTabs";
+import { DetailTabs } from "@/features/prompt-detail/components/detail-tabs";
 
 describe("DetailTabs", () => {
   it("3개 탭을 렌더하고 active 를 aria-selected 로 표시한다", () => {

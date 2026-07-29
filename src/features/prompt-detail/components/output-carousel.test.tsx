@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { OutputCarousel } from "@/features/prompt-detail/components/OutputCarousel";
+import { OutputCarousel } from "@/features/prompt-detail/components/output-carousel";
 
 function renderCarousel(
   images = ["a.png", "b.png", "c.png"],

@@ -5,9 +5,9 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 import { getQueryClient } from "@/lib/query-client";
-import { MswProvider } from "@/mocks/MswProvider";
+import { MswProvider } from "@/mocks/msw-provider";
 import { DevPreviewProvider } from "@/components/dev-toolbar/dev-preview-context";
-import { DevToolbar } from "@/components/dev-toolbar/DevToolbar";
+import { DevToolbar } from "@/components/dev-toolbar/dev-toolbar";
 import { DEV_PREVIEW_DEFAULT, type DevPreview } from "@/lib/dev-preview";
 
 // 앱 전역 클라이언트 프로바이더 (TanStack Query, nuqs 등).

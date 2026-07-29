@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { GalleryGrid } from "@/features/gallery/components/GalleryGrid";
+import { GalleryGrid } from "@/features/gallery/components/gallery-grid";
 import type { PromptSummary } from "@/features/gallery/types";
 
 vi.mock("next/link", () => ({

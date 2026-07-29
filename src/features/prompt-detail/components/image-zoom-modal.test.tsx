@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { ImageZoomModal } from "@/features/prompt-detail/components/ImageZoomModal";
+import { ImageZoomModal } from "@/features/prompt-detail/components/image-zoom-modal";
 
 const IMAGES = ["a.png", "b.png", "c.png"];
 

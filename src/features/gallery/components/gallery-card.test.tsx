@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { track } from "@/analytics/track";
-import { GalleryCard, buildCardTags } from "@/features/gallery/components/GalleryCard";
+import { GalleryCard, buildCardTags } from "@/features/gallery/components/gallery-card";
 import type { PromptSummary } from "@/features/gallery/types";
 
 // next/link 를 순수 anchor 로 대체(라우터 컨텍스트 없이 클릭/href 검증)

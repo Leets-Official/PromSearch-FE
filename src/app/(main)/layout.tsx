@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import { CategoryNav } from "@/features/gallery/components/CategoryNav";
-import { GalleryTopBar } from "@/features/gallery/components/GalleryTopBar";
+import { CategoryNav } from "@/features/gallery/components/category-nav";
+import { GalleryTopBar } from "@/features/gallery/components/gallery-top-bar";
 
 // URL 필터(nuqs useSearchParams) + 클라이언트 데이터 페칭에 의존하는 세그먼트라 동적 렌더링.
 // (정적 프리렌더 시 useSearchParams 가 Suspense 경계를 요구하는 문제 회피)

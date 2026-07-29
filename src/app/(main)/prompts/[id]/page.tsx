@@ -7,8 +7,8 @@ import {
   DetailError,
   DetailNotFound,
   DetailSkeleton,
-} from "@/features/prompt-detail/components/DetailStates";
-import { PromptDetailView } from "@/features/prompt-detail/components/PromptDetailView";
+} from "@/features/prompt-detail/components/detail-states";
+import { PromptDetailView } from "@/features/prompt-detail/components/prompt-detail-view";
 import { usePromptDetail } from "@/features/prompt-detail/hooks/use-prompt-detail";
 
 export default function PromptDetailPage() {
