@@ -32,7 +32,7 @@ export function OnboardingStepInterests({
         onTasksChange={onTasksChange}
       />
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <Button
           variant="brand"
           size="lg"

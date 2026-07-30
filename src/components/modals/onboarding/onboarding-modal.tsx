@@ -81,7 +81,7 @@ function OnboardingModal({
               {STEP_META[step].title}
             </DialogTitle>
             {STEP_META[step].description && (
-              <p className="text-body-3 text-text-secondary">{STEP_META[step].description}</p>
+              <p className="text-caption-2 text-text-secondary">{STEP_META[step].description}</p>
             )}
           </div>
 
