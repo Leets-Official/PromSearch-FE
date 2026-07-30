@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { SignUpFormContainer } from "@/features/auth/components/singup-form-container";
+import { SignUpFormContainer } from "@/features/auth/components/signup-form-container";
 
 export const metadata: Metadata = {
   title: "회원가입 | PromSearch",
