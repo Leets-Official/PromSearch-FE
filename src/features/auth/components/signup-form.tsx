@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { ProfileNicknameField } from "./profile-nickname-field";
 import { InterestChips } from "./interest-chips";
 import { TermsAgreement } from "./terms-agreement";
-import { validateEmail, validatePassword } from "@/features/auth/hooks/use-signup-validation";
-import { TERMS } from "../signup/terms";
+import { validateEmail, validatePassword } from "@/features/auth/lib/validation";
+import { TERMS } from "@/features/auth/constants/terms";
 import type { NicknameStatus } from "@/features/auth/hooks/use-nickname-check";
 
 export interface SignUpValues {
