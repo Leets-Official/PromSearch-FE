@@ -85,7 +85,7 @@ export function SignUpForm({
       >
         {/* 아이디 (이메일) */}
         <label className="flex flex-col gap-2">
-          <span className="text-title-3 text-text-primary">아이디</span>
+          <span className="text-title-1 text-text-primary">아이디</span>
           <Input
             type="email"
             value={id}
@@ -98,7 +98,7 @@ export function SignUpForm({
 
         {/* 비밀번호 */}
         <label className="flex flex-col gap-2">
-          <span className="text-title-3 text-text-primary">비밀번호</span>
+          <span className="text-title-1 text-text-primary">비밀번호</span>
           <Input
             type="password"
             value={password}
