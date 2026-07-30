@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useId, useState } from "react";
 import { PencilIcon } from "lucide-react";
 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -31,12 +31,22 @@ export function ProfileNicknameField({
   onAvatarChange,
   layout = "vertical",
 }: ProfileNicknameFieldProps) {
-  const preview = useMemo(
-    () => (avatarFile ? URL.createObjectURL(avatarFile) : null),
-    [avatarFile],
-  );
+  // 온보딩·회원가입이 동시에 마운트돼도 id가 겹치지 않도록 useId 사용
+  const nicknameId = useId();
 
-  // 이전 preview URL 정리 (변경/언마운트 시 revoke)
+  // avatarFile → 미리보기 URL.
+  // preview는 avatarFile에서 파생되는 값이라 렌더 중에 생성한다(state 조정 패턴).
+  // effect에서 setState하면 cascading render 경고(react-hooks/set-state-in-effect)가
+  // 나므로, 생성은 렌더 중에 하고 effect는 revoke(정리)만 담당한다.
+  const [preview, setPreview] = useState<string | null>(null);
+  const [prevFile, setPrevFile] = useState<File | null>(null);
+
+  if (avatarFile !== prevFile) {
+    setPrevFile(avatarFile);
+    setPreview(avatarFile ? URL.createObjectURL(avatarFile) : null);
+  }
+
+  // 생성한 blob URL 정리 전용 (변경/언마운트 시 revoke)
   useEffect(() => {
     if (!preview) return;
     return () => URL.revokeObjectURL(preview);
@@ -71,11 +81,11 @@ export function ProfileNicknameField({
 
       {/* 닉네임 */}
       <div className="flex w-full flex-col gap-1.5">
-        <label htmlFor="nickname" className="text-title-3 text-text-primary">
+        <label htmlFor={nicknameId} className="text-title-3 text-text-primary">
           닉네임
         </label>
         <Input
-          id="nickname"
+          id={nicknameId}
           value={nickname}
           onChange={(e) => onNicknameChange(e.target.value.slice(0, NICKNAME_MAX))}
           placeholder="한글, 영어, 숫자로 10자 이하"
