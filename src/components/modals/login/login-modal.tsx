@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogoSymbol } from "@/components/ui/logo";
 import { SocialLoginButton } from "@/components/ui/social-login-button";
 import { validateEmail, validatePassword } from "@/features/auth/hooks/use-signup-validation";
 
@@ -99,7 +98,7 @@ function LoginModal({
           </div>
 
           {/* 입력 폼 */}
-          <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
+          <form onSubmit={handleSubmit} noValidate className="flex w-full flex-col gap-4">
             {/* 아이디 */}
             <label className="flex flex-col gap-2">
               <span className="text-title-1 text-text-primary">아이디</span>

@@ -81,6 +81,7 @@ export function SignUpForm({
             agreedTerms: [...agreed],
           });
         }}
+        noValidate
         className="flex w-[480px] max-w-full flex-col gap-8"
       >
         {/* 아이디 (이메일) */}
