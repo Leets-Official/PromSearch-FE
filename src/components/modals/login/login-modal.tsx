@@ -30,8 +30,8 @@ interface LoginModalProps {
  *     여기서 Portal+Overlay+Popup을 직접 조립한다.
  * 카드: width 440px, padding 32px, gap 24px, radius 16px, bg-elevated + shadow.
  *
- * 아이디 검증: 로그인은 제출 시점에 이메일 형식만 1회 검증(실시간 X).
- *   비밀번호는 형식 검증하지 않음 — 기존 사용자 비밀번호가 현재 규칙과 달라도 로그인은 가능해야 함.
+ * 검증: 제출 시점에 아이디(이메일 형식)·비밀번호(8~20자, 2종 조합)를 각각 검증하고,
+ *   에러는 해당 인풋 바로 아래에 표시한다. 서버 에러(error prop)는 폼 하단에 별도 표시.
  */
 function LoginModal({
   open,
@@ -42,8 +42,9 @@ function LoginModal({
   onKakaoLogin,
   error,
 }: LoginModalProps) {
-  // 클라이언트 형식 에러(제출 시 검증). 서버 에러(error prop)와 별개로 관리하되 표시는 합친다.
-  const [formError, setFormError] = useState<string | null>(null);
+  // 필드별 클라이언트 형식 에러(제출 시 검증)
+  const [idError, setIdError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -51,22 +52,18 @@ function LoginModal({
     const id = (form.elements.namedItem("id") as HTMLInputElement).value;
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
 
-    // 제출 시점 형식 검증 — 이메일 먼저, 그다음 비밀번호
-    if (validateEmail(id).status !== "valid") {
-      setFormError("이메일 형식으로 입력해주세요.");
-      return;
-    }
+    // 아이디·비밀번호를 각각 검증해 필드별 에러로 세팅 (둘 다 표시)
+    const emailInvalid = validateEmail(id).status !== "valid";
     const pw = validatePassword(password);
-    if (!pw.isValid) {
-      setFormError(pw.message ?? "비밀번호 형식을 확인해주세요.");
-      return;
-    }
-    setFormError(null);
+
+    setIdError(emailInvalid ? "이메일 형식으로 입력해주세요." : null);
+    setPasswordError(!pw.isValid ? (pw.message ?? "비밀번호 형식을 확인해주세요.") : null);
+
+    // 하나라도 형식 오류면 제출 중단
+    if (emailInvalid || !pw.isValid) return;
+
     onLogin?.(id, password);
   };
-
-  // 표시할 에러: 클라 형식 에러 우선, 없으면 서버 에러
-  const shownError = formError ?? error ?? null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,48 +82,55 @@ function LoginModal({
             "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           )}
         >
-          {/* 닫기 버튼 */}
-          <DialogPrimitive.Close
-            render={
-              <button
-                type="button"
-                aria-label="닫기"
-                className="absolute top-4 right-4 flex size-9 items-center justify-center rounded-md text-text-disabled transition-colors hover:text-text-secondary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-              >
-                <XIcon className="size-5" />
-              </button>
-            }
-          />
-
-          {/* 헤더: 로고 + 제목 + 설명 */}
-          <div className="flex flex-col items-center gap-2 text-center">
-            <LogoSymbol className="size-12 text-brand" />
-            <DialogTitle className="!text-heading-1 text-text-primary">
-              로그인이 필요해요
-            </DialogTitle>
-            <p className="text-body-3 text-text-secondary">
-              멘트를 작성해야 합니다
-              <br />
-              로그인해야하는 이유를 설명하면 좋겠습니다
-            </p>
+          {/* 헤더: 제목(앞) + 닫기(뒤) 한 줄 배치 */}
+          <div className="mb-3 flex w-full items-center justify-between">
+            <DialogTitle className="text-heading-1 text-text-primary">로그인</DialogTitle>
+            <DialogPrimitive.Close
+              render={
+                <button
+                  type="button"
+                  aria-label="닫기"
+                  className="flex size-9 items-center justify-center rounded-md text-stroke-secondary transition-colors hover:text-text-secondary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  <XIcon className="size-6" />
+                </button>
+              }
+            />
           </div>
 
           {/* 입력 폼 */}
           <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
-            <Input
-              name="id"
-              type="email"
-              placeholder="이메일"
-              autoComplete="username"
-              aria-invalid={shownError ? true : undefined}
-            />
-            <Input
-              name="password"
-              type="password"
-              placeholder="비밀번호"
-              autoComplete="current-password"
-            />
-            {shownError && <span className="text-body-3 text-text-brand">{shownError}</span>}
+            {/* 아이디 */}
+            <label className="flex flex-col gap-2">
+              <span className="text-title-1 text-text-primary">아이디</span>
+              <Input
+                name="id"
+                type="email"
+                placeholder="이메일을 입력해주세요."
+                autoComplete="username"
+                aria-invalid={idError ? true : undefined}
+              />
+              {idError && <span className="text-body-3 text-text-brand">{idError}</span>}
+            </label>
+
+            {/* 비밀번호 */}
+            <label className="flex flex-col gap-2">
+              <span className="text-title-1 text-text-primary">비밀번호</span>
+              <Input
+                name="password"
+                type="password"
+                placeholder="영문, 숫자, 특수문자 중 2가지 이상, 8~20자"
+                autoComplete="current-password"
+                aria-invalid={passwordError ? true : undefined}
+              />
+              {passwordError && (
+                <span className="text-body-3 text-text-brand">{passwordError}</span>
+              )}
+            </label>
+
+            {/* 서버 에러(로그인 실패 등)는 특정 필드에 속하지 않으므로 폼 하단에 별도 표시 */}
+            {error && <span className="text-body-3 text-text-brand">{error}</span>}
+
             <Button type="submit" variant="brand" size="lg" className="mt-2 w-full">
               로그인
             </Button>
