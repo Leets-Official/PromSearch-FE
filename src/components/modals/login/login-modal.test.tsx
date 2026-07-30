@@ -7,28 +7,63 @@ describe("LoginModal", () => {
   it("open 이면 제목과 입력 필드가 보인다", () => {
     render(<LoginModal open onOpenChange={() => {}} />);
 
-    expect(screen.getByText("로그인이 필요해요")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("아이디")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("비밀번호")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "로그인" })).toBeInTheDocument();
+    expect(screen.getByLabelText("아이디")).toBeInTheDocument();
+    expect(screen.getByLabelText("비밀번호")).toBeInTheDocument();
   });
 
   it("open 이 false 면 아무것도 렌더하지 않는다", () => {
     render(<LoginModal open={false} onOpenChange={() => {}} />);
-
-    expect(screen.queryByText("로그인이 필요해요")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "로그인" })).not.toBeInTheDocument();
   });
 
-  it("아이디·비밀번호를 입력하고 제출하면 onLogin 에 입력값을 전달한다", async () => {
+  it("올바른 형식으로 입력하고 제출하면 onLogin 에 값을 전달한다", async () => {
     const onLogin = vi.fn();
     const user = userEvent.setup();
     render(<LoginModal open onOpenChange={() => {}} onLogin={onLogin} />);
 
-    await user.type(screen.getByPlaceholderText("아이디"), "testuser");
-    await user.type(screen.getByPlaceholderText("비밀번호"), "pw1234");
+    // 형식 검증을 통과하는 값 (이메일 형식 + 비번 8~20자·2종 조합)
+    await user.type(screen.getByLabelText("아이디"), "user@example.com");
+    await user.type(screen.getByLabelText("비밀번호"), "abcd1234");
     await user.click(screen.getByRole("button", { name: "로그인" }));
 
-    expect(onLogin).toHaveBeenCalledTimes(1);
-    expect(onLogin).toHaveBeenCalledWith("testuser", "pw1234");
+    expect(onLogin).toHaveBeenCalledWith("user@example.com", "abcd1234");
+  });
+
+  it("이메일 형식이 아니면 에러를 보여주고 onLogin 을 호출하지 않는다", async () => {
+    const onLogin = vi.fn();
+    const user = userEvent.setup();
+    render(<LoginModal open onOpenChange={() => {}} onLogin={onLogin} />);
+
+    await user.type(screen.getByLabelText("아이디"), "notanemail");
+    await user.type(screen.getByLabelText("비밀번호"), "abcd1234");
+    await user.click(screen.getByRole("button", { name: "로그인" }));
+
+    expect(screen.getByText("이메일 형식으로 입력해주세요.")).toBeInTheDocument();
+    expect(onLogin).not.toHaveBeenCalled();
+  });
+
+  it("비밀번호 형식이 틀리면 에러를 보여주고 onLogin 을 호출하지 않는다", async () => {
+    const onLogin = vi.fn();
+    const user = userEvent.setup();
+    render(<LoginModal open onOpenChange={() => {}} onLogin={onLogin} />);
+
+    await user.type(screen.getByLabelText("아이디"), "user@example.com");
+    await user.type(screen.getByLabelText("비밀번호"), "abcdefgh"); // 영문만 → 2종 미달
+    await user.click(screen.getByRole("button", { name: "로그인" }));
+
+    expect(onLogin).not.toHaveBeenCalled();
+    // 비밀번호 에러 메시지 노출
+    expect(
+      screen.getByText("영문·숫자·특수문자 중 2가지 이상을 조합해주세요."),
+    ).toBeInTheDocument();
+  });
+
+  it("서버 에러(error prop)를 폼에 표시한다", () => {
+    render(
+      <LoginModal open onOpenChange={() => {}} error="아이디 또는 비밀번호가 일치하지 않습니다." />,
+    );
+    expect(screen.getByText("아이디 또는 비밀번호가 일치하지 않습니다.")).toBeInTheDocument();
   });
 
   it("회원가입·소셜 로그인 버튼은 각각의 콜백을 호출한다", async () => {

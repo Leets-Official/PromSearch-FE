@@ -12,6 +12,6 @@ export const STEP_META = {
   },
   2: {
     title: "관심 직군 & 태스크",
-    description: "", // TODO: 문구 미정
+    description: "관심 직군과 자주 하는 태스크를 알려주시면, 딱 맞는 프롬프트부터 보여드릴게요.",
   },
 } as const;

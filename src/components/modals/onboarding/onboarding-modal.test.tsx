@@ -1,5 +1,4 @@
-// src/components/modals/onboarding/onboarding-modal.test.tsx
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { OnboardingModal } from "@/components/modals/onboarding/onboarding-modal";
