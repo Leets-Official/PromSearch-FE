@@ -4,7 +4,11 @@ import { useState } from "react";
 import { CheckIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { TERMS, PRIVACY_NOTICE_DETAIL, PRIVACY_NOTICE_SUMMARY } from "../signup/terms";
+import {
+  TERMS,
+  PRIVACY_NOTICE_DETAIL,
+  PRIVACY_NOTICE_SUMMARY,
+} from "@/features/auth/constants/terms";
 
 interface TermsAgreementProps {
   /** 동의한 약관 id 집합 */

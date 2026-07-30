@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { TermsAgreement } from "@/features/auth/components/terms-agreement";
-import { TERMS } from "@/features/auth/signup/terms";
+import { TERMS } from "@/features/auth/constants/terms";
 
 describe("TermsAgreement", () => {
   it("전체 동의를 누르면 모든 약관 id가 onChange로 전달된다", async () => {
