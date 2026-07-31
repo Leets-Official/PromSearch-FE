@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
+import { BottomSheet, BottomSheetGroup } from "@/components/ui/bottom-sheet";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Chip } from "@/components/ui/chip";
 import { Switch } from "@/components/ui/switch";
@@ -61,6 +63,8 @@ export function SelectionSection() {
   const [tab, setTab] = useState("prompt");
   const [agreed, setAgreed] = useState(true);
   const [alertOn, setAlertOn] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [tasks, setTasks] = useState<string[]>(["PPT"]);
 
   const toggleChip = (job: string) =>
     setChips((prev) => (prev.includes(job) ? prev.filter((j) => j !== job) : [...prev, job]));
@@ -68,12 +72,15 @@ export function SelectionSection() {
   return (
     <SpecSection id="selection" label="Selection">
       {/* Chip — 클릭해서 선택 토글 */}
-      <SpecGroup title="Chip (클릭 → 선택 토글)">
+      <SpecGroup title="Chip (클릭 → 선택 토글 · size default 36 / lg 44)">
         {["개발", "디자인", "마케팅", "기획"].map((job) => (
           <Chip key={job} selected={chips.includes(job)} onClick={() => toggleChip(job)}>
             {job}
           </Chip>
         ))}
+        <Chip size="lg" selected>
+          lg (44px)
+        </Chip>
         <span className="self-center text-caption-1 text-text-disabled">
           선택됨: {chips.length ? chips.join(", ") : "없음"}
         </span>
@@ -85,6 +92,33 @@ export function SelectionSection() {
         <DropdownSwatch state="hover" />
         <DropdownSwatch state="active" />
         <DropdownSwatch state="selected" value="선택된 값" />
+      </SpecGroup>
+
+      {/* Bottom Sheet — Figma 1379:5220 (모바일 필터) */}
+      <SpecGroup title="Bottom Sheet (아래로 스와이프해서 닫기)">
+        <Button variant="brand" onClick={() => setSheetOpen(true)}>
+          바텀시트 열기
+        </Button>
+        <BottomSheet open={sheetOpen} onOpenChange={setSheetOpen} title="필터">
+          <BottomSheetGroup title="태스크">
+            <div className="flex flex-wrap gap-2">
+              {["PPT", "레포트", "이메일", "회의록", "보고서", "이미지 생성"].map((task) => (
+                <Chip
+                  key={task}
+                  size="lg"
+                  selected={tasks.includes(task)}
+                  onClick={() =>
+                    setTasks((prev) =>
+                      prev.includes(task) ? prev.filter((t) => t !== task) : [...prev, task],
+                    )
+                  }
+                >
+                  {task}
+                </Chip>
+              ))}
+            </div>
+          </BottomSheetGroup>
+        </BottomSheet>
       </SpecGroup>
 
       {/* Checkbox — Figma 1085:2437 */}
