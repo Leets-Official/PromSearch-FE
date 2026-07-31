@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { PencilIcon } from "lucide-react";
+import { BellIcon, ChevronLeftIcon, MenuIcon, PencilIcon, SearchIcon } from "lucide-react";
 
 import { AppHeader } from "@/components/ui/app-header";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { LoginModal } from "@/components/modals/login/login-modal";
 import { useNicknameCheck } from "@/features/auth/hooks/use-nickname-check";
 
 import { HeaderAuthArea } from "./header-auth-area";
+import { MobileNavDrawer } from "./mobile-nav-drawer";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -22,6 +23,15 @@ const SEARCH_DEBOUNCE_MS = 300;
  * 홈 상단바 — 로고 · 검색 · 업로드 · (인증영역).
  * 검색 입력은 디바운스 후 URL `q` 로 반영한다(입력값이 현재 값과 다를 때만 → 마운트 시 page 리셋 방지).
  * 비회원 로그인 버튼 클릭 시 로그인 모달을 연다.
+ *
+ * 반응형(Figma Header/mobile/* 1214:5885 · 1378:5042):
+ * - desktop : [로고] · [검색바 + 업로드] · [인증영역]
+ * - mobile  : [햄버거 + 워드마크] · [알림, 검색]  ← 검색 아이콘을 누르면 아래 search 모드
+ * - mobile(search 모드): [뒤로가기] · [검색바]
+ * 데스크톱/모바일 구성은 CSS(`sm:`)로 전환한다 — JS 로 뷰포트를 재면 SSR 과 어긋난다.
+ *
+ * 햄버거는 `lg:hidden` 이다. (main) 레이아웃의 사이드바가 `lg:block` 이라
+ * "사이드바가 안 보이는 구간 = 햄버거가 보이는 구간"으로 정확히 맞물린다(사각지대 없음).
  */
 export function GalleryTopBar() {
   const pathname = usePathname();
@@ -30,6 +40,9 @@ export function GalleryTopBar() {
   const { isAuthenticated, user } = useAuthStatus();
   const [keyword, setKeyword] = useState(query.q);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  // 모바일 전용 검색 모드(Header/mobile/search). 데스크톱은 검색바가 상시 노출이라 무관.
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const onHome = pathname === "/home";
 
   useEffect(() => {
@@ -49,35 +62,127 @@ export function GalleryTopBar() {
   return (
     <>
       <AppHeader
-        className="px-20"
+        // 모바일 좌우 여백 16px, 데스크톱 시안 여백 80px
+        className="sm:px-20"
         start={
-          <div className="flex w-50 items-center">
-            <Logo variant="horizontal" />
-          </div>
+          <>
+            {/* mobile: 햄버거 + 워드마크 (검색 모드에서는 뒤로가기) */}
+            <div className="flex items-center gap-4 sm:hidden">
+              {mobileSearchOpen ? (
+                <Button
+                  variant="plain"
+                  size="icon-sm"
+                  aria-label="검색 닫기"
+                  onClick={() => setMobileSearchOpen(false)}
+                >
+                  <ChevronLeftIcon />
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="plain"
+                    size="icon-sm"
+                    aria-label="메뉴 열기"
+                    className="lg:hidden"
+                    onClick={() => setNavOpen(true)}
+                  >
+                    <MenuIcon />
+                  </Button>
+                  <Logo variant="wordmark" />
+                </>
+              )}
+            </div>
+
+            {/* desktop: 로고 + (사이드바 폭에 맞춘 정렬) */}
+            <div className="hidden items-center sm:flex sm:w-50">
+              <Button
+                variant="plain"
+                size="icon"
+                aria-label="메뉴 열기"
+                className="mr-2 lg:hidden"
+                onClick={() => setNavOpen(true)}
+              >
+                <MenuIcon />
+              </Button>
+              <Logo variant="horizontal" />
+            </div>
+          </>
         }
         center={
           <>
-            <SearchBar
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="검색어를 입력해주세요"
-              aria-label="프롬프트 검색"
-              className="max-w-none flex-1"
-            />
-            <Button variant="ghost" size="lg" nativeButton={false} render={<Link href="/upload" />}>
-              <PencilIcon />
-              업로드
-            </Button>
+            {/* mobile: 검색 모드일 때만 검색바 */}
+            {mobileSearchOpen && (
+              <div className="flex min-w-0 flex-1 sm:hidden">
+                <SearchBar
+                  autoFocus
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  placeholder="검색어를 입력해주세요"
+                  aria-label="프롬프트 검색"
+                  className="max-w-none flex-1"
+                />
+              </div>
+            )}
+
+            {/* desktop: 검색바 + 업로드 상시 노출 */}
+            <div className="hidden min-w-0 flex-1 items-center gap-6 sm:flex">
+              <SearchBar
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="검색어를 입력해주세요"
+                aria-label="프롬프트 검색"
+                className="max-w-none flex-1"
+              />
+              <Button
+                variant="ghost"
+                size="lg"
+                nativeButton={false}
+                render={<Link href="/upload" />}
+              >
+                <PencilIcon />
+                업로드
+              </Button>
+            </div>
           </>
         }
-        // 비회원 로그인 버튼 클릭 → 로그인 모달 오픈
         end={
-          <HeaderAuthArea
-            isAuthenticated={isAuthenticated}
-            user={user}
-            onLoginClick={() => setLoginOpen(true)}
-          />
+          <>
+            {/* mobile: 알림 + 검색 (검색 모드에서는 숨김 — 검색바가 폭을 다 쓴다) */}
+            {!mobileSearchOpen && (
+              <div className="flex items-center gap-6 sm:hidden">
+                <Button variant="plain" size="icon-sm" aria-label="알림">
+                  <BellIcon />
+                </Button>
+                <Button
+                  variant="plain"
+                  size="icon-sm"
+                  aria-label="검색"
+                  onClick={() => setMobileSearchOpen(true)}
+                >
+                  <SearchIcon />
+                </Button>
+              </div>
+            )}
+
+            {/* desktop: 알림 + 로그인/프로필. 비회원 로그인 클릭 → 로그인 모달 */}
+            <div className="hidden items-center gap-2 sm:flex">
+              <HeaderAuthArea
+                isAuthenticated={isAuthenticated}
+                user={user}
+                onLoginClick={() => setLoginOpen(true)}
+              />
+            </div>
+          </>
         }
+      />
+
+      {/* 모바일 네비게이션 드로어 (햄버거) */}
+      <MobileNavDrawer
+        open={navOpen}
+        onOpenChange={setNavOpen}
+        isAuthenticated={isAuthenticated}
+        user={user}
+        onLoginClick={() => setLoginOpen(true)}
       />
 
       {/* 로그인 모달 */}

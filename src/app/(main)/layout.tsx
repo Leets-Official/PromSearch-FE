@@ -11,16 +11,20 @@ export const dynamic = "force-dynamic";
  * (main) 공용 셸 — 헤더 + 사이드바 + 본문.
  *
  * 레이아웃 폭: 디자이너 기준 1280px 고정 컨테이너를 중앙 정렬하고, 그보다 넓은 해상도는
- * 좌우를 배경색 여백으로 흘린다(반응형 breakpoint 는 시안 확정 후 그리드에 추가).
+ * 좌우를 배경색 여백으로 흘린다.
  * 홈/상세/마이 등이 이 셸을 공유한다. 루트(/) 랜딩은 이 그룹 밖이라 셸이 적용되지 않는다.
+ *
+ * 사이드바는 lg 미만에서 숨고, 대신 헤더 햄버거 → MobileNavDrawer 로 접근한다.
+ * (GalleryTopBar 의 햄버거도 `lg:hidden` 이라 두 구간이 정확히 맞물린다)
  */
 export default function MainLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-bg-primary">
       <div className="mx-auto flex w-full max-w-7xl flex-col">
         <GalleryTopBar />
-        {/* 시안 좌우 여백 80px(px-20) — 헤더와 동일하게 맞춰 사이드바/콘텐츠가 로고/검색과 정렬된다. */}
-        <div className="flex gap-8 px-20 py-8">
+        {/* 여백: 모바일 16px(시안 375 → 콘텐츠 343), 데스크톱 80px.
+            헤더(GalleryTopBar)와 동일하게 맞춰 사이드바/콘텐츠가 로고/검색과 정렬된다. */}
+        <div className="flex gap-8 px-4 py-4 sm:px-20 sm:py-8">
           <aside className="hidden shrink-0 lg:block">
             <CategoryNav />
           </aside>
