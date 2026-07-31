@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { Chip } from "@/components/ui/chip";
+import { Switch } from "@/components/ui/switch";
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -11,7 +13,7 @@ import {
 } from "@/components/ui/segmented-control";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { SpecGroup, SpecSection } from "./spec";
+import { SpecCell, SpecGroup, SpecSection } from "./spec";
 
 /**
  * Selection 스펙 시트 (Figma Selection 섹션 309:1877).
@@ -57,6 +59,8 @@ export function SelectionSection() {
   const [chips, setChips] = useState<string[]>(["디자인"]);
   const [sort, setSort] = useState("popular");
   const [tab, setTab] = useState("prompt");
+  const [agreed, setAgreed] = useState(true);
+  const [alertOn, setAlertOn] = useState(true);
 
   const toggleChip = (job: string) =>
     setChips((prev) => (prev.includes(job) ? prev.filter((j) => j !== job) : [...prev, job]));
@@ -81,6 +85,32 @@ export function SelectionSection() {
         <DropdownSwatch state="hover" />
         <DropdownSwatch state="active" />
         <DropdownSwatch state="selected" value="선택된 값" />
+      </SpecGroup>
+
+      {/* Checkbox — Figma 1085:2437 */}
+      <SpecGroup title="Checkbox (클릭 → 토글)">
+        <SpecCell label="default / selected">
+          <label className="flex cursor-pointer items-center gap-2">
+            <Checkbox checked={agreed} onCheckedChange={setAgreed} />
+            <span className="text-body-3 text-text-primary">Placeholder</span>
+          </label>
+        </SpecCell>
+        <SpecCell label="indeterminate">
+          <Checkbox indeterminate checked={false} />
+        </SpecCell>
+        <SpecCell label="disabled">
+          <Checkbox disabled />
+        </SpecCell>
+      </SpecGroup>
+
+      {/* Toggle — Figma 1512:6792 */}
+      <SpecGroup title="Toggle (클릭 → on/off)">
+        <SpecCell label={alertOn ? "on" : "off"}>
+          <Switch checked={alertOn} onCheckedChange={setAlertOn} />
+        </SpecCell>
+        <SpecCell label="disabled">
+          <Switch disabled />
+        </SpecCell>
       </SpecGroup>
 
       {/* Segment Control — 클릭해서 전환 (controlled) */}

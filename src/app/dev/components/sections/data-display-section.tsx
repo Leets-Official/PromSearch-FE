@@ -1,8 +1,15 @@
+"use client";
+
+// EditableAvatar 의 onEdit 핸들러를 넘기기 위해 클라이언트 컴포넌트
+// (button-section / selection-section 과 동일한 처리)
+
 import { CircleHelpIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { ContentTypeTag } from "@/components/ui/content-type-tag";
+import { EditableAvatar } from "@/components/ui/editable-avatar";
 import { PromptCard } from "@/components/ui/prompt-card";
 import {
   Table,
@@ -31,6 +38,16 @@ export function DataDisplaySection() {
         <Badge>Placeholder</Badge>
       </SpecGroup>
 
+      {/* Tag/Content Type — Figma 1006:2314 */}
+      <SpecGroup title="Tag / Content Type">
+        <SpecCell label="image">
+          <ContentTypeTag type="image" />
+        </SpecCell>
+        <SpecCell label="text">
+          <ContentTypeTag type="text" />
+        </SpecCell>
+      </SpecGroup>
+
       {/* Card/Info */}
       <SpecGroup title="Card / Info">
         <Card className="w-52 gap-2">
@@ -56,11 +73,17 @@ export function DataDisplaySection() {
         </Card>
       </SpecGroup>
 
-      {/* Card/Prompt */}
+      {/* Card/Prompt — 썸네일 우하단 결과물타입 배지 + 작성자 노출 (Figma 209:3690) */}
       <SpecGroup title="Card / Prompt">
         <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <PromptCard key={i} title="프롬프트 제목을 쓰는 곳입니다" tags={PROMPT_TAGS} />
+          {(["image", "text", "image"] as const).map((type, i) => (
+            <PromptCard
+              key={i}
+              title="프롬프트 제목을 쓰는 곳입니다"
+              tags={PROMPT_TAGS}
+              author={{ name: "작성자이름" }}
+              badge={<ContentTypeTag type={type} />}
+            />
           ))}
         </div>
       </SpecGroup>
@@ -106,6 +129,28 @@ export function DataDisplaySection() {
           <Avatar size="lg">
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
+        </SpecCell>
+        <SpecCell label="xl">
+          <Avatar size="xl">
+            <AvatarFallback>U</AvatarFallback>
+          </Avatar>
+        </SpecCell>
+      </SpecGroup>
+
+      {/* Profile(편집) — Figma 1315:6084 */}
+      <SpecGroup title="Profile (편집 가능, 80px)">
+        <SpecCell label="placeholder">
+          <EditableAvatar onEdit={() => console.log("edit profile image")} />
+        </SpecCell>
+        <SpecCell label="image">
+          <EditableAvatar
+            src="https://i.pravatar.cc/160?img=12"
+            alt="프로필 사진"
+            onEdit={() => console.log("edit profile image")}
+          />
+        </SpecCell>
+        <SpecCell label="편집 없음">
+          <EditableAvatar />
         </SpecCell>
       </SpecGroup>
     </SpecSection>
