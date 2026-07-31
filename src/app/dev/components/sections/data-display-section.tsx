@@ -3,10 +3,11 @@
 // EditableAvatar 의 onEdit 핸들러를 넘기기 위해 클라이언트 컴포넌트
 // (button-section / selection-section 과 동일한 처리)
 
-import { CircleHelpIcon } from "lucide-react";
+import { CircleHelpIcon, PencilIcon } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ContentTypeTag } from "@/components/ui/content-type-tag";
 import { EditableAvatar } from "@/components/ui/editable-avatar";
@@ -29,6 +30,9 @@ import { SpecCell, SpecGroup, SpecSection } from "./spec";
  */
 
 const PROMPT_TAGS = ["직군", "AI모델", "태스크", "결과물 타입"];
+
+/** Card/Profile 시안의 관심사 태그 — 온보딩에서 고른 직군 + 태스크 */
+const PROFILE_TAGS = ["직장인", "기획자", "PPT", "이메일", "이미지 생성"];
 
 export function DataDisplaySection() {
   return (
@@ -60,16 +64,28 @@ export function DataDisplaySection() {
         </Card>
       </SpecGroup>
 
-      {/* Card/Profile */}
+      {/* Card/Profile — 이메일 대신 관심사(직군·태스크) 태그 행 + 우상단 편집 (Figma 271:1323) */}
       <SpecGroup title="Card / Profile">
-        <Card className="w-full max-w-md flex-row items-center gap-4">
+        <Card className="relative w-full max-w-md flex-row items-center gap-4">
           <Avatar size="lg">
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex min-w-0 flex-col gap-2">
             <span className="text-heading-2 text-text-primary">Username</span>
-            <span className="text-body-1 text-text-secondary">email@gmail.com</span>
+            <div className="flex flex-wrap gap-1">
+              {PROFILE_TAGS.map((tag) => (
+                <Badge key={tag}>{tag}</Badge>
+              ))}
+            </div>
           </div>
+          <Button
+            variant="plain"
+            size="icon-sm"
+            aria-label="프로필 수정"
+            className="absolute top-4 right-4"
+          >
+            <PencilIcon />
+          </Button>
         </Card>
       </SpecGroup>
 
