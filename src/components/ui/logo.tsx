@@ -18,6 +18,8 @@ const logoVariants = cva("inline-flex shrink-0 items-center text-brand", {
     variant: {
       // 심볼만: 24x24 정사각 배지
       symbol: "",
+      // 워드마크만: 119x15 레터마크 (Logo/wordmark 401:5976 — 모바일 home 헤더에서 단독 사용)
+      wordmark: "",
       // 심볼 + 워드마크 가로 배치 (헤더 기본형)
       horizontal: "gap-1.5",
       // 심볼 위 · 워드마크 아래 세로 배치
@@ -91,7 +93,7 @@ function Logo({
 }: React.ComponentProps<"span"> & VariantProps<typeof logoVariants>) {
   return (
     <span data-slot="logo" className={cn(logoVariants({ variant, className }))} {...props}>
-      <LogoSymbol />
+      {variant !== "wordmark" && <LogoSymbol />}
       {variant !== "symbol" && <LogoWordmark />}
     </span>
   );
