@@ -2,6 +2,8 @@
  * 마이페이지 목데이터 · 상수.
  * BE 연동 시 MOCK_* 는 API 응답으로 교체한다.
  */
+import { AI_MODELS, OUTPUT_TYPES, TASKS } from "@/features/gallery/categories";
+import type { PromptSummary } from "@/features/gallery/types";
 
 export type PostStatus = "published" | "draft" | "private";
 
@@ -55,3 +57,37 @@ export const POST_STATUS_TABS = [
   { value: "draft", label: "임시저장" },
   { value: "private", label: "비공개" },
 ] as const satisfies ReadonlyArray<{ value: PostStatus; label: string }>;
+
+// 북마크 렌더 확인용 (5페이지 나오도록 30개). 필드는 실제 PromptSummary 에 맞춰 조정.
+export const BOOKMARKED_PROMPTS: PromptSummary[] = Array.from({ length: 30 }, (_, i) => ({
+  id: `bookmark-${i + 1}`,
+  title: "프롬프트 제목을 쓰는 곳입니다",
+  thumbnailUrl: "",
+  outputType: OUTPUT_TYPES[i % OUTPUT_TYPES.length].value,
+  model: AI_MODELS[i % AI_MODELS.length].value,
+  tasks: [TASKS[i % TASKS.length].value],
+  jobCategories: [],
+  tier: "free",
+  author: { name: "작성자이름" },
+  stats: { views: 1821, copies: 132, likes: 1906 },
+  createdAt: "2026-07-12T00:00:00.000Z",
+})) satisfies PromptSummary[];
+
+export interface RevenueSummary {
+  monthly: number;
+  total: number;
+  /** 판매 후보 지표 (툴팁 대상) */
+  salesCandidate: number;
+  views: number;
+  likes: number;
+  copies: number;
+}
+
+export const MOCK_REVENUE: RevenueSummary = {
+  monthly: 1000,
+  total: 12000,
+  salesCandidate: 12000,
+  views: 1847,
+  likes: 1847,
+  copies: 1847,
+};
