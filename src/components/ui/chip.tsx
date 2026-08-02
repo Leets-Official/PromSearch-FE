@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
  * 선택 상태는 `selected` prop으로 제어하며, 접근성을 위해 aria-pressed로도 노출한다.
  */
 const chipVariants = cva(
-  "group/chip inline-flex h-9 w-fit shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border px-3 py-2 text-title-3 whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:border-stroke-disabled disabled:bg-bg-disabled disabled:text-text-disabled [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "group/chip inline-flex w-fit shrink-0 cursor-pointer items-center justify-center gap-1 rounded-md border whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:border-stroke-disabled disabled:bg-bg-disabled disabled:text-text-disabled [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       state: {
@@ -26,9 +26,16 @@ const chipVariants = cva(
         // 선택됨: 브랜드 강조 (배경 red-400/25% · 테두리·글자 brand)
         selected: "border-stroke-brand bg-interaction-neutral-selected text-text-brand",
       },
+      size: {
+        // 기본(Chip 271:218): 36px — px 12 / py 8 / Title 3(14/20)
+        default: "h-9 px-3 py-2 text-title-3",
+        // 바텀시트 필터(1379:5441): 44px — px 16 / py 12 / Body 2(16/20)
+        lg: "h-11 px-4 py-3 text-body-2 leading-5",
+      },
     },
     defaultVariants: {
       state: "default",
+      size: "default",
     },
   },
 );
@@ -36,6 +43,7 @@ const chipVariants = cva(
 function Chip({
   className,
   state,
+  size,
   selected,
   ...props
 }: ButtonPrimitive.Props &
@@ -51,7 +59,7 @@ function Chip({
     <ButtonPrimitive
       data-slot="chip"
       aria-pressed={selected ?? state === "selected"}
-      className={cn(chipVariants({ state: resolvedState, className }))}
+      className={cn(chipVariants({ state: resolvedState, size, className }))}
       {...props}
     />
   );

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 /**
  * 원형 프로필 아바타. base-ui `Avatar` primitive 사용.
  * - Figma Profile(223:154): 44x44 원형(radius/full).
- * - size prop 으로 가변: sm(36) / md(44, 기본) / lg(72, Card/Profile 시안).
+ * - size prop 으로 가변: sm(36) / md(44, 기본) / lg(72, Card/Profile 시안) / xl(80, Profile 시안 1315:6084).
  * - 이미지 로드 실패/미지정 시 fallback(이니셜/아이콘) 노출.
  */
 const avatarVariants = cva(
@@ -17,6 +17,7 @@ const avatarVariants = cva(
         sm: "size-9", // 36px
         md: "size-11", // 44px — Figma Profile 기본
         lg: "size-18", // 72px — Card/Profile 시안
+        xl: "size-20", // 80px — Profile(1315:6084) 시안
       },
     },
     defaultVariants: {

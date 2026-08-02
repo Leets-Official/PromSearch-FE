@@ -1,8 +1,9 @@
 "use client";
 
-import { BellIcon, PencilIcon } from "lucide-react";
+import { BellIcon, BookmarkIcon, FlagIcon, HeartIcon, PencilIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ContentsAction, ContentsActionBar } from "@/components/ui/contents-action-bar";
 import { SocialLoginButton } from "@/components/ui/social-login-button";
 
 import { SpecCell, SpecGroup, SpecSection } from "./spec";
@@ -141,6 +142,24 @@ export function ButtonSection() {
             <BellIcon />
           </Button>
         </SpecCell>
+      </SpecGroup>
+
+      {/* Contents Action (Figma 1006:2286) — 이미지 위에 얹는 액션 바라 dim 배경 */}
+      <SpecGroup title="Contents Action (40 × 40, 이미지 오버레이용)">
+        {/* 실사용 맥락(이미지 위)을 보여주기 위해 회색 판 위에 배치 */}
+        <div className="flex items-center justify-center rounded-md bg-bg-secondary p-6">
+          <ContentsActionBar>
+            <ContentsAction aria-label="좋아요">
+              <HeartIcon />
+            </ContentsAction>
+            <ContentsAction aria-label="저장">
+              <BookmarkIcon />
+            </ContentsAction>
+            <ContentsAction aria-label="신고">
+              <FlagIcon />
+            </ContentsAction>
+          </ContentsActionBar>
+        </div>
       </SpecGroup>
 
       {/* 소셜 로그인 */}
