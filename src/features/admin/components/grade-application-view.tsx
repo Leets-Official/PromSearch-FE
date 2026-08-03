@@ -13,6 +13,8 @@ import {
   AdminRowAction,
   AdminRowStatus,
   AdminTable,
+  AdminTableActionCell,
+  AdminTableActionHead,
   AdminTableBody,
   AdminTableCell,
   AdminTableHead,
@@ -77,9 +79,8 @@ export function GradeApplicationView() {
                 <AdminTableHead className="w-[20%]">게시글</AdminTableHead>
                 <AdminTableHead className="w-[20%]">누적 추천</AdminTableHead>
                 <AdminTableHead className="w-[30%]">신청일자</AdminTableHead>
-                <AdminTableHead className="w-[10%] text-right">
-                  <span className="sr-only">처리</span>
-                </AdminTableHead>
+                {/* 승인 버튼은 오른쪽 끝에 고정된다 */}
+                <AdminTableActionHead />
               </AdminTableRow>
             </AdminTableHeader>
 
@@ -90,22 +91,20 @@ export function GradeApplicationView() {
                   <AdminTableCell>{formatCount(item.postCount)}</AdminTableCell>
                   <AdminTableCell>{formatCount(item.likeCount)}</AdminTableCell>
                   <AdminTableCell>{formatAdminDate(item.appliedAt)}</AdminTableCell>
-                  <AdminTableCell>
-                    <div className="flex items-center justify-end">
-                      {item.status === "approved" ? (
-                        <AdminRowStatus>승인 완료</AdminRowStatus>
-                      ) : (
-                        <AdminRowAction
-                          tone="brand"
-                          disabled={approve.isPending}
-                          aria-label={`${item.userId} 등급 승인`}
-                          onClick={() => approve.mutate(item.id)}
-                        >
-                          승인
-                        </AdminRowAction>
-                      )}
-                    </div>
-                  </AdminTableCell>
+                  <AdminTableActionCell>
+                    {item.status === "approved" ? (
+                      <AdminRowStatus>승인 완료</AdminRowStatus>
+                    ) : (
+                      <AdminRowAction
+                        tone="brand"
+                        disabled={approve.isPending}
+                        aria-label={`${item.userId} 등급 승인`}
+                        onClick={() => approve.mutate(item.id)}
+                      >
+                        승인
+                      </AdminRowAction>
+                    )}
+                  </AdminTableActionCell>
                 </AdminTableRow>
               ))}
             </AdminTableBody>

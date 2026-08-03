@@ -11,6 +11,8 @@ import {
   AdminRowAction,
   AdminRowStatus,
   AdminTable,
+  AdminTableActionCell,
+  AdminTableActionHead,
   AdminTableBody,
   AdminTableCell,
   AdminTableHead,
@@ -68,10 +70,8 @@ export function ReportedContentView({ target }: { target: ReportTarget }) {
                 <AdminTableHead className="w-[40%]">{copy.contentColumn}</AdminTableHead>
                 <AdminTableHead className="w-[15%]">작성자</AdminTableHead>
                 <AdminTableHead className="w-[35%]">신고 사유</AdminTableHead>
-                {/* 시안엔 액션 컬럼 헤더 텍스트가 없다(빈 셀) — 스크린리더용 라벨만 둔다 */}
-                <AdminTableHead className="w-[10%] text-right">
-                  <span className="sr-only">처리</span>
-                </AdminTableHead>
+                {/* 시안엔 액션 컬럼 헤더 텍스트가 없다(빈 셀). 오른쪽 끝에 고정된다 */}
+                <AdminTableActionHead />
               </AdminTableRow>
             </AdminTableHeader>
 
@@ -81,26 +81,22 @@ export function ReportedContentView({ target }: { target: ReportTarget }) {
                   <AdminTableTruncatedCell strong>{item.content}</AdminTableTruncatedCell>
                   <AdminTableCell>{item.author}</AdminTableCell>
                   <AdminTableTruncatedCell>{item.reason}</AdminTableTruncatedCell>
-                  <AdminTableCell>
-                    <div className="flex items-center justify-end gap-1">
-                      {MODERATION_ACTIONS.map((action) =>
-                        item.status === action.value ? (
-                          <AdminRowStatus key={action.value}>{action.label}</AdminRowStatus>
-                        ) : (
-                          <AdminRowAction
-                            key={action.value}
-                            disabled={updateStatus.isPending}
-                            aria-label={`${item.content} ${action.label} 처리`}
-                            onClick={() =>
-                              updateStatus.mutate({ id: item.id, status: action.value })
-                            }
-                          >
-                            {action.label}
-                          </AdminRowAction>
-                        ),
-                      )}
-                    </div>
-                  </AdminTableCell>
+                  <AdminTableActionCell>
+                    {MODERATION_ACTIONS.map((action) =>
+                      item.status === action.value ? (
+                        <AdminRowStatus key={action.value}>{action.label}</AdminRowStatus>
+                      ) : (
+                        <AdminRowAction
+                          key={action.value}
+                          disabled={updateStatus.isPending}
+                          aria-label={`${item.content} ${action.label} 처리`}
+                          onClick={() => updateStatus.mutate({ id: item.id, status: action.value })}
+                        >
+                          {action.label}
+                        </AdminRowAction>
+                      ),
+                    )}
+                  </AdminTableActionCell>
                 </AdminTableRow>
               ))}
             </AdminTableBody>

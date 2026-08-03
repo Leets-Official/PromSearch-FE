@@ -59,6 +59,36 @@ function AdminTableCell({ className, ...props }: React.ComponentProps<typeof Tab
 }
 
 /**
+ * 액션 컬럼(맨 오른쪽 [숨김][유지] / [승인])은 **항상 오른쪽 끝에 붙여 고정**한다.
+ *
+ * 시안처럼 액션이 한눈에 들어와야 하는데, 좁은 화면에서 표가 가로 스크롤되면 액션이 화면
+ * 밖으로 밀려 "가로로 끝까지 스크롤해야 처리할 수 있는" 상태가 된다. sticky 로 고정하고
+ * 불투명 배경 + 좌측 경계선을 줘서 본문이 그 아래로 지나가게 한다.
+ * (헤더/본문 배경이 다르므로 셀 종류별로 배경을 맞춘다)
+ */
+// 시안엔 구분선이 없으므로 경계선 대신 아주 옅은 그림자만 둔다(스크롤 시에만 눈에 띈다).
+const STICKY_ACTION =
+  "sticky right-0 z-10 w-px text-right whitespace-nowrap shadow-[-8px_0_8px_-8px_rgb(35_35_33/0.12)]";
+
+/** 액션 컬럼 헤더 — 시안엔 라벨이 없어 스크린리더용 텍스트만 둔다 */
+function AdminTableActionHead({ className, children, ...props }: React.ComponentProps<"th">) {
+  return (
+    <AdminTableHead className={cn(STICKY_ACTION, "bg-bg-secondary", className)} {...props}>
+      <span className="sr-only">{children ?? "처리"}</span>
+    </AdminTableHead>
+  );
+}
+
+/** 액션 컬럼 본문 셀 */
+function AdminTableActionCell({ className, children, ...props }: React.ComponentProps<"td">) {
+  return (
+    <AdminTableCell className={cn(STICKY_ACTION, "bg-bg-primary", className)} {...props}>
+      <div className="flex items-center justify-end gap-1">{children}</div>
+    </AdminTableCell>
+  );
+}
+
+/**
  * 길어질 수 있는 텍스트 셀(제목·댓글 내용·신고 사유).
  * 줄바꿈 없이 최대 폭까지만 차지하고 넘치면 말줄임 — 표가 무한정 넓어지는 것도 막는다.
  * 전체 문구는 `title` 속성으로 확인할 수 있다.
@@ -128,6 +158,8 @@ export {
   AdminRowAction,
   AdminRowStatus,
   AdminTable,
+  AdminTableActionCell,
+  AdminTableActionHead,
   AdminTableBody,
   AdminTableCell,
   AdminTableHead,
