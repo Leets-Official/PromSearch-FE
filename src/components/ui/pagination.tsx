@@ -22,7 +22,9 @@ import { cn } from "@/lib/utils";
 
 // 버튼 1칸 공통 스타일. selected/default 상태는 cva variant로, pressed/hover는 CSS 상태로 매핑.
 const paginationButtonVariants = cva(
-  "inline-flex size-9 shrink-0 items-center justify-center rounded-[4px] border border-transparent text-title-2 outline-none transition-all select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:text-text-disabled [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
+  // 모바일(Pagination/Button(Mobile) 1206:3243)은 24x24 · radius/sm(6px) · Title 3(14/20),
+  // sm 이상에서 시안 데스크톱 값(36x36 · radius 4px · Title 2)으로 전환. 아이콘은 20px 공통.
+  "inline-flex size-6 shrink-0 items-center justify-center rounded-sm border border-transparent text-title-3 outline-none transition-all select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:text-text-disabled sm:size-9 sm:rounded-[4px] sm:text-title-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
     variants: {
       isActive: {
@@ -120,7 +122,7 @@ function PaginationEllipsis({ className, ...props }: React.ComponentProps<"span"
       data-slot="pagination-ellipsis"
       aria-hidden
       className={cn(
-        "flex size-9 items-center justify-center text-text-secondary [&_svg]:size-5",
+        "flex size-6 items-center justify-center text-text-secondary sm:size-9 [&_svg]:size-5",
         className,
       )}
       {...props}
