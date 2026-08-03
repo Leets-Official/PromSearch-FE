@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MOCK_REVENUE } from "@/mocks/data/mypage";
 
-/** 라벨 + 큰 숫자 + 단위 통계 카드 */
 function StatCard({
   label,
   value,
@@ -15,7 +14,6 @@ function StatCard({
   label: string;
   value: number;
   unit: string;
-  /** 있으면 라벨 옆에 물음표 + 툴팁 노출 */
   hint?: ReactNode;
 }) {
   return (
@@ -53,10 +51,9 @@ export default function RevenuePage() {
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-10">
-        {/* 수익 */}
         <section className="flex flex-col gap-4">
-          <h1 className="text-heading-1 text-text-primary">수익</h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <h1 className="text-heading-2 text-text-primary">수익</h1>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
             <StatCard label="이번 달 수익" value={revenue.monthly} unit="P" />
             <StatCard label="누적 수익" value={revenue.total} unit="P" />
             <StatCard
@@ -67,18 +64,16 @@ export default function RevenuePage() {
                 <span>
                   판매 후보 지표란?
                   <br />
-                  아직 실제 판매는 열리지 않았지만, 이 프롬프트에 대한 유저들의 관심도(열람
-                  시도·복사수 등)를 미리 보여드려요. 프리미엄 판매가 열리면 참고 자료로 활용돼요.
+                  설명설명설명. 설명설명
                 </span>
               }
             />
           </div>
         </section>
 
-        {/* 게시글 인사이트 */}
         <section className="flex flex-col gap-4">
-          <h2 className="text-heading-1 text-text-primary">게시글 인사이트</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <h2 className="text-heading-2 text-text-primary">게시글 인사이트</h2>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
             <StatCard label="누적 조회수" value={revenue.views} unit="회" />
             <StatCard label="누적 추천 수" value={revenue.likes} unit="회" />
             <StatCard label="누적 복사 수" value={revenue.copies} unit="회" />

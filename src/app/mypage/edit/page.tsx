@@ -14,10 +14,8 @@ export default function MyProfileEditPage() {
 
   const [nickname, setNickname] = useState(MOCK_PROFILE.username);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  // TODO: use-nickname-check 훅과 연결. 중립값 리터럴이 "idle"이 아니면 맞춰주세요.
   const [nicknameStatus] = useState<NicknameStatus>("idle");
 
-  // TODO: 초기 선택값은 프로필 API 응답으로 대체
   const [jobs, setJobs] = useState<string[]>(["직장인", "기획자"]);
   const [tasks, setTasks] = useState<string[]>(["PPT", "이메일", "이미지 생성"]);
 
@@ -28,11 +26,11 @@ export default function MyProfileEditPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-heading-1 text-text-primary">프로필</h1>
+      <h1 className="hidden text-heading-2 text-text-primary sm:block">프로필</h1>
 
       <div className="mx-auto flex w-full max-w-[560px] flex-col gap-8">
         <ProfileNicknameField
-          layout="horizontal"
+          layout="responsive"
           nickname={nickname}
           onNicknameChange={setNickname}
           nicknameStatus={nicknameStatus}
