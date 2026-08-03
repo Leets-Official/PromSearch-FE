@@ -29,7 +29,7 @@ const socialLoginButtonVariants = cva(
 );
 
 /** Google 멀티컬러 로고 (self-contained SVG) */
-function GoogleIcon() {
+export function GoogleIcon() {
   return (
     <svg viewBox="0 0 18 18" aria-hidden="true" focusable="false">
       <path
@@ -53,7 +53,7 @@ function GoogleIcon() {
 }
 
 /** Kakao 말풍선 로고 (self-contained SVG) */
-function KakaoIcon() {
+export function KakaoIcon() {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
