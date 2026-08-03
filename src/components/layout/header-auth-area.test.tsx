@@ -19,11 +19,16 @@ describe("HeaderAuthArea", () => {
     expect(onLoginClick).toHaveBeenCalledTimes(1);
   });
 
-  it("회원이면 알림 + 프로필을 노출하고 로그인 버튼은 없다", () => {
+  it("회원이면 알림 + 프로필(마이페이지 링크)을 노출하고 로그인 버튼은 없다", () => {
     render(<HeaderAuthArea isAuthenticated user={{ name: "홍길동" }} />);
 
     expect(screen.getByLabelText("알림")).toBeInTheDocument();
     expect(screen.getByText("홍")).toBeInTheDocument(); // 아바타 fallback 이니셜
+
+    // 프로필은 /mypage 로 가는 링크
+    const myPageLink = screen.getByRole("link", { name: "마이페이지" });
+    expect(myPageLink).toHaveAttribute("href", "/mypage");
+
     // 부정: 회원에겐 로그인 버튼이 없어야 한다
     expect(screen.queryByRole("button", { name: "로그인" })).not.toBeInTheDocument();
   });
