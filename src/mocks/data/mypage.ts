@@ -91,3 +91,58 @@ export const MOCK_REVENUE: RevenueSummary = {
   likes: 1847,
   copies: 1847,
 };
+
+export type AuthProvider = "email" | "google" | "kakao";
+
+export interface AccountSettings {
+  email: string;
+  provider: AuthProvider;
+  /** 최근 비밀번호 변경일 (표시용 포맷) */
+  passwordUpdatedAt: string;
+}
+
+export const MOCK_ACCOUNT: AccountSettings = {
+  email: "promsearch@gmail.com",
+  provider: "email", // "google" | "kakao" 로 바꾸면 소셜 분기 확인
+  passwordUpdatedAt: "2025.08.04(월)",
+};
+
+export interface NotificationSetting {
+  id: string;
+  label: string;
+  description: string;
+  enabled: boolean;
+}
+
+export const MOCK_NOTIFICATIONS: NotificationSetting[] = [
+  {
+    id: "recommend",
+    label: "새 추천 알림",
+    description: "내 게시글이 추천되었을 때",
+    enabled: true,
+  },
+  {
+    id: "bookmark",
+    label: "새 북마크 알림",
+    description: "내 게시글이 북마크되었을 때",
+    enabled: true,
+  },
+  {
+    id: "comment",
+    label: "새 댓글 알림",
+    description: "내 게시글에 댓글이 달렸을 때",
+    enabled: true,
+  },
+  {
+    id: "purchase",
+    label: "프롬프트 구매 알림",
+    description: "내 프롬프트가 판매되었을 때",
+    enabled: true,
+  },
+  {
+    id: "marketing",
+    label: "마케팅 알림",
+    description: "이벤트, 혜택, 새 기능 소식",
+    enabled: false,
+  },
+];
