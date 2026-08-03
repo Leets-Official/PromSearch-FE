@@ -28,9 +28,9 @@ export default function MyProfileEditPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-heading-2 text-text-primary">프로필</h1>
+      <h1 className="text-heading-1 text-text-primary">프로필</h1>
 
-      <div className="flex max-w-[560px] flex-col gap-8">
+      <div className="mx-auto flex w-full max-w-[560px] flex-col gap-8">
         <ProfileNicknameField
           layout="horizontal"
           nickname={nickname}

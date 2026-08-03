@@ -32,16 +32,16 @@ export default function EmailChangePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="text-heading-2 text-text-primary">계정 설정</h1>
+      <h1 className="text-heading-1 text-text-primary">이메일 변경</h1>
 
-      <div className="flex max-w-[520px] flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <span className="text-title-3 text-text-primary">현재 이메일</span>
-          <span className="text-body-3 text-text-secondary">{account.email}</span>
+      <div className="mx-auto flex w-full max-w-[520px] flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <span className="text-title-1 text-text-primary">현재 이메일</span>
+          <span className="text-body-1 text-text-secondary">{account.email}</span>
         </div>
 
         <label className="flex flex-col gap-2">
-          <span className="text-title-3 text-text-primary">새 이메일</span>
+          <span className="text-title-1 text-text-primary">새 이메일</span>
           <Input
             type="email"
             value={email}
