@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { MobileNavDrawer } from "@/features/gallery/components/mobile-nav-drawer";
+import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
 
 // CategoryNav 는 next/navigation(usePathname) + nuqs 필터에 의존한다.
 // 드로어 자체의 동작(열림/닫기/프로필 분기)만 검증하면 되므로 목으로 대체한다.

@@ -14,8 +14,8 @@ import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters"
 import { LoginModal } from "@/components/modals/login/login-modal";
 import { useNicknameCheck } from "@/features/auth/hooks/use-nickname-check";
 
-import { HeaderAuthArea } from "./header-auth-area";
-import { MobileNavDrawer } from "./mobile-nav-drawer";
+import { HeaderAuthArea } from "../../../components/layout/header-auth-area";
+import { MobileNavDrawer } from "../../../components/layout/mobile-nav-drawer";
 
 const SEARCH_DEBOUNCE_MS = 300;
 

@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { AuthUser } from "@/hooks/use-auth-status";
 
-import { CategoryNav } from "./category-nav";
+import { CategoryNav } from "../../features/gallery/components/category-nav";
 
 /**
  * 모바일 네비게이션 드로어 — Figma "홈 - 햄버거 메뉴(사이드바)"(1382:6016 / 1382:6022).

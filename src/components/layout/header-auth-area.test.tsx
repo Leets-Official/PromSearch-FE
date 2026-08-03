@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { HeaderAuthArea } from "@/features/gallery/components/header-auth-area";
+import { HeaderAuthArea } from "@/components/layout/header-auth-area";
 
 describe("HeaderAuthArea", () => {
   it("비회원이면 알림(벨) + 로그인 버튼을 노출하고, 클릭 시 onLoginClick을 호출한다", async () => {
