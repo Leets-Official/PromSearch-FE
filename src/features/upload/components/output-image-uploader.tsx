@@ -102,7 +102,7 @@ function OutputImageUploader({
             "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-bg-secondary",
           )}
         >
-          {isReading ? <Spinner className="size-6" /> : <PlusIcon className="size-6" />}
+          {isReading ? <Spinner className="h-6 w-20" /> : <PlusIcon className="size-6" />}
         </button>
 
         {value.map((src, index) => (

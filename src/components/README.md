@@ -39,9 +39,19 @@ import { SearchIcon } from "@/components/ui/icons";
 
 | 아이콘          | 사용처                                        | 용도                     |
 | --------------- | --------------------------------------------- | ------------------------ |
-| `Loader2`       | `ui/spinner.tsx`                              | 로딩 스피너              |
 | `Minus`         | `ui/checkbox.tsx`                             | 부분 선택(indeterminate) |
 | `Plus`/`Trash2` | `features/upload/…/output-image-uploader.tsx` | 이미지 추가·삭제         |
 | `Sparkles`      | `features/prompt-detail/…/recipe-panel.tsx`   | 포인트로 잠금 해제       |
 
 `components/dev-toolbar/` 는 제품 UI 가 아닌 개발 도구라 의도적으로 디자인 시스템과 분리해 둔다(lucide 유지).
+
+## 로딩 애니메이션
+
+로딩은 아이콘이 아니라 **디자이너가 준 Lottie**(`ui/loading-animation.json`)를 재생한다 —
+`ui/spinner.tsx` 의 `Spinner` 를 그대로 쓰면 된다.
+
+- 원본 `lottie.host/…/G4g7pw51oM.json` 에서 **포인트 컬러만 브랜드(#E63946)로 교체**하고
+  나머지 키프레임은 그대로 뒀다. 색이 JSON 에 박혀 있어 `text-*` 로는 색이 바뀌지 않는다.
+- 점 4개가 가로로 배열된 형태라 **정사각(`size-*`)이 아니라 `h-*`/`w-*` 로** 크기를 준다(기본 `h-4 w-13`).
+- 재생기(`lottie-web` light 빌드)는 동적 import 라 첫 번들에 들어가지 않는다.
+- `prefers-reduced-motion` 에서는 반복 재생 대신 한 프레임만 정지 표시한다.
