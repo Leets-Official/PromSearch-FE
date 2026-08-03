@@ -2,27 +2,160 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* 다크 모드는 디자인 시스템에 정의되어 있지 않아 사용하지 않습니다 (라이트 온리).
+ * `.dark` 클래스를 붙이지 않는 한 `dark:` 유틸리티는 모두 비활성 상태입니다. */
 @custom-variant dark (&:is(.dark *));
 
+/* ================================================================
+ * Design System — Primitive Tokens
+ * 원본: 디자이너 제공 Color (Primitive) / Typography 시안 (2026.07)
+ * ================================================================ */
+@theme {
+  /* Tailwind 기본 gray/red 스케일을 디자인 시스템 값으로 대체 */
+  --color-gray-*: initial;
+  --color-red-*: initial;
+
+  /* Grayscale */
+  --color-gray-50: #fdfdfc;
+  --color-gray-100: #f2f2f2;
+  --color-gray-150: #ececec;
+  --color-gray-200: #e4e4e4;
+  --color-gray-300: #d2d2d0;
+  --color-gray-400: #adaca7;
+  --color-gray-500: #94948f;
+  --color-gray-600: #71716f;
+  --color-gray-700: #52524f;
+  --color-gray-800: #3d3d3b;
+  --color-gray-900: #232321;
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  /* Red (500 = Brand) */
+  --color-red-50: #fff5f6;
+  --color-red-100: #ffe5e8;
+  --color-red-200: #ffcad0;
+  --color-red-300: #ffa4ab;
+  --color-red-400: #ff6e79;
+  --color-red-500: #e63946;
+  --color-red-600: #c41c2a;
+  --color-red-700: #a20c1e;
+  --color-red-800: #7d0d15;
+  --color-red-900: #4e090e;
+
+  /* Opacity */
+  --color-dim: rgb(35 35 33 / 60%); /* gray-900 / 50% */
+
+  /* Typography — Pretendard (KR/EN)
+   * text-display-1 … text-caption-1 유틸리티로 사용 (size·행간·굵기·자간 일괄 적용) */
+  --text-display-1: 2rem;
+  --text-display-1--line-height: 2.25rem;
+  --text-display-1--font-weight: 700;
+  --text-display-1--letter-spacing: -0.005em;
+
+  --text-display-2: 2rem;
+  --text-display-2--line-height: 2.25rem;
+  --text-display-2--font-weight: 500;
+  --text-display-2--letter-spacing: -0.005em;
+
+  --text-heading-1: 1.5rem;
+  --text-heading-1--line-height: 2rem;
+  --text-heading-1--font-weight: 700;
+  --text-heading-1--letter-spacing: -0.005em;
+
+  --text-heading-2: 1.25rem;
+  --text-heading-2--line-height: 1.5rem;
+  --text-heading-2--font-weight: 700;
+
+  --text-title-1: 1rem;
+  --text-title-1--line-height: 1.25rem;
+  /* 시안 Title 1 = Bold(700) (get_design_context 확인). 기존 600 은 오식이었음 */
+  --text-title-1--font-weight: 700;
+
+  --text-title-2: 1rem;
+  --text-title-2--line-height: 1.25rem;
+  /* 시안 Title 2 = SemiBold(600). 기존 500 은 오식이었음 */
+  --text-title-2--font-weight: 600;
+
+  --text-title-3: 0.875rem;
+  --text-title-3--line-height: 1.25rem;
+  --text-title-3--font-weight: 600;
+
+  --text-body-1: 1rem;
+  --text-body-1--line-height: 1.75rem; /* 2026.07.23 수정: 24 → 30 → 28 (본문 행간 재조정) */
+  --text-body-1--font-weight: 400;
+
+  --text-body-2: 1rem; /* 2026.07.14 수정: 14/20/Regular → 16/24/Medium */
+  --text-body-2--line-height: 1.5rem;
+  --text-body-2--font-weight: 500;
+
+  --text-body-3: 0.875rem; /* 2026.07.14 신규: 14/24/Regular (기존 body-2 역할) */
+  --text-body-3--line-height: 1.5rem;
+  --text-body-3--font-weight: 400;
+
+  --text-caption-1: 0.75rem;
+  --text-caption-1--line-height: 1rem;
+  --text-caption-1--font-weight: 600;
+
+  --text-caption-2: 0.75rem;
+  --text-caption-2--line-height: 1rem;
+  --text-caption-2--font-weight: 500;
+}
+
+/* ================================================================
+ * Design System — Semantic Tokens
+ * 원본: Color (Semantic) 시안. primitive 를 참조하는 별칭.
+ * 사용 예: text-text-primary / bg-bg-brand / border-stroke-strong
+ * ================================================================ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --color-brand: var(--color-red-500);
+  --color-brand-tint: rgb(230 57 70 / 10%); /* Opacity/brand — red-500 / 10% */
+
+  /* Text */
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-700);
+  --color-text-disabled: var(--color-gray-400);
+  --color-text-brand: var(--color-brand);
+  --color-text-on-brand: var(--color-white);
+
+  /* Background */
+  --color-bg-primary: var(--color-gray-50);
+  --color-bg-secondary: var(--color-gray-100);
+  --color-bg-elevated: var(--color-white); /* +shadow 는 컴포넌트에서 shadow 유틸로 */
+  --color-bg-brand: var(--color-brand);
+  --color-bg-disabled: var(--color-gray-150); /* Background/disabled #ececec */
+
+  /* Stroke */
+  /* Figma 디자인시스템 Stroke/primary=#e4e4e4(gray-200), secondary=#d2d2d0(gray-300).
+     (스와치 라벨의 gray-50/gray-100 텍스트는 stale — 실제 변수/스와치 색은 gray-200/gray-300) */
+  --color-stroke-primary: var(--color-gray-200);
+  --color-stroke-secondary: var(--color-gray-300);
+  --color-stroke-strong: var(--color-gray-700); /* 2026.07.14 수정: black → gray-700 */
+  --color-stroke-brand: var(--color-brand);
+  --color-stroke-disabled: var(--color-gray-400);
+  --color-stroke-on-brand: var(--color-white);
+  --color-stroke-black: var(--color-black); /* 2026.07.14 추가: 순수 black 이 필요한 곳용 */
+
+  /* Interaction / Brand */
+  --color-interaction-brand: var(--color-red-500);
+  --color-interaction-brand-hover: var(--color-red-400);
+  --color-interaction-brand-pressed: var(--color-red-600);
+  --color-interaction-brand-disabled: var(--color-gray-150); /* = Background/disabled #ececec */
+
+  /* Interaction / Neutral */
+  --color-interaction-neutral: var(--color-gray-200);
+  --color-interaction-neutral-hover: var(--color-white);
+  --color-interaction-neutral-pressed: var(--color-gray-300);
+  --color-interaction-neutral-selected: rgb(255 110 121 / 25%); /* red-400 / 25% */
+  --color-interaction-neutral-disabled: var(--color-gray-150); /* = Background/disabled #ececec */
+
+  /* Font */
+  --font-sans: var(--font-pretendard), "Pretendard Variable", Pretendard, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
+
+  /* shadcn/ui 별칭 — 기존 ui 컴포넌트(button 등)가 디자인 토큰을 따르도록 재배선 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -48,73 +181,27 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* shadcn 별칭 값 (라이트 온리 — 다크 정의는 디자인 시스템에 없음) */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: var(--color-gray-50); /* Background/primary */
+  --foreground: var(--color-gray-900); /* Text/primary */
+  --card: var(--color-white); /* Background/elevated */
+  --card-foreground: var(--color-gray-900);
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-gray-900);
+  --primary: var(--color-red-500); /* Brand */
+  --primary-foreground: var(--color-white); /* Text/on-brand */
+  --secondary: var(--color-gray-100); /* Background/secondary */
+  --secondary-foreground: var(--color-gray-900);
+  --muted: var(--color-gray-100);
+  --muted-foreground: var(--color-gray-700); /* Text/secondary */
+  --accent: var(--color-gray-100);
+  --accent-foreground: var(--color-gray-900);
+  --destructive: var(--color-red-600);
+  --border: var(--color-gray-100); /* Stroke/secondary */
+  --input: var(--color-gray-200);
+  --ring: var(--color-red-500); /* focus ring = Brand */
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {
@@ -126,5 +213,23 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* 미니멀 스크롤바 — 트랙(배경) 없이 얇은 thumb 만. 상세 우측 스크롤 영역 등에 사용. */
+@utility scrollbar-minimal {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-stroke-disabled) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: var(--color-stroke-disabled);
   }
 }

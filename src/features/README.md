@@ -4,12 +4,14 @@
 
 ```
 features/
-  card/        # 프롬프트 카드 (목록·상세)
+  gallery/     # 홈: 사이드바 + 프롬프트 갤러리 (검색·필터·페이지네이션) — 구현됨
   auth/        # 로그인 게이트
-  search/      # 검색·필터
   upload/      # 업로드 폼
   ...
 ```
+
+> `gallery/` 는 홈 화면(PS-29) 구현체다. 자세한 구조·규칙은 `gallery/README.md` 참고.
+> 카드·검색·필터는 홈에서 한 축으로 묶여 `gallery/` 안에 있다.
 
 각 feature 내부 예시:
 

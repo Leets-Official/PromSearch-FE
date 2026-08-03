@@ -38,7 +38,7 @@ pnpm typecheck              # 타입 검사
 
 - `main` — 배포 가능한 안정 브랜치 (보호됨)
 - `develop` — 통합 브랜치, 기본 브랜치 (보호됨)
-- `type/PS-<티켓번호>` — 작업 브랜치 → `develop` 으로 PR
+- `feat/PS-<티켓번호>`, `fix/PS-<티켓번호>` 등 — 작업 브랜치 → `develop` 으로 PR
 
 ## 협업 규칙
 
@@ -47,3 +47,7 @@ pnpm typecheck              # 타입 검사
 - 커밋은 Conventional Commits 형식으로 자동 검사됩니다 (`feat: ...`).
 - 저장 시 Prettier/ESLint 자동 적용, 커밋 시 lint-staged 로 정리.
 - PR을 올리면 연결된 Notion 카드가 자동으로 "진행 중" → 닫히면 "완료"로 갱신됩니다.
+
+## 개발 환경
+
+Node/pnpm 버전, analytics 환경 변수, 브랜치 컨벤션은 [개발 환경 설정](./docs/development-environment.md)을 참고하세요.

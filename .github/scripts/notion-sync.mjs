@@ -22,9 +22,11 @@ const {
 } = process.env;
 
 const NOTION_API = "https://api.notion.com/v1";
+// 2025-09-03 부터 DB가 여러 "데이터 소스(data source)"를 가질 수 있어,
+// 검색은 databases/{id}/query 가 아니라 data_sources/{id}/query 로 해야 한다.
 const HEADERS = {
   Authorization: `Bearer ${NOTION_TOKEN}`,
-  "Notion-Version": "2022-06-28",
+  "Notion-Version": "2025-09-03",
   "Content-Type": "application/json",
 };
 
@@ -56,31 +58,52 @@ console.log(
   `➡️ PR 상태="${PR_STATE}" merged=${MERGED} → Notion 상태="${targetStatus}"`,
 );
 
-// 3) 고유 ID로 카드 검색
-const queryRes = await fetch(`${NOTION_API}/databases/${NOTION_DB_ID}/query`, {
-  method: "POST",
+// 3) DB에 속한 데이터 소스 목록 조회
+const dbRes = await fetch(`${NOTION_API}/databases/${NOTION_DB_ID}`, {
   headers: HEADERS,
-  body: JSON.stringify({
-    filter: {
-      property: NOTION_ID_PROP,
-      unique_id: { equals: ticketNumber },
-    },
-  }),
 });
-
-if (!queryRes.ok) {
-  fail(`Notion 검색 실패 (${queryRes.status}): ${await queryRes.text()}`);
+if (!dbRes.ok) {
+  fail(`Notion DB 조회 실패 (${dbRes.status}): ${await dbRes.text()}`);
 }
+const db = await dbRes.json();
+const dataSources = db.data_sources ?? [];
+if (dataSources.length === 0) {
+  fail(
+    "접근 가능한 데이터 소스가 없음 (integration을 원본 DB에 연결했는지 확인).",
+  );
+}
+console.log(
+  `🗂️ 데이터 소스 ${dataSources.length}개: ${dataSources.map((d) => d.name).join(", ")}`,
+);
 
-const { results } = await queryRes.json();
-if (!results || results.length === 0) {
+// 4) 각 데이터 소스에서 고유 ID로 카드 검색 (찾으면 중단)
+let page = null;
+for (const ds of dataSources) {
+  const queryRes = await fetch(`${NOTION_API}/data_sources/${ds.id}/query`, {
+    method: "POST",
+    headers: HEADERS,
+    body: JSON.stringify({
+      filter: {
+        property: NOTION_ID_PROP,
+        unique_id: { equals: ticketNumber },
+      },
+    }),
+  });
+  // 이 데이터 소스에 "ID" 속성이 없으면 400 → 다음 소스로 넘어감
+  if (!queryRes.ok) continue;
+  const { results } = await queryRes.json();
+  if (results && results.length > 0) {
+    page = results[0];
+    break;
+  }
+}
+if (!page) {
   fail(
     `${TICKET_PREFIX}-${ticketNumber} 카드를 못 찾음 (속성 이름 "${NOTION_ID_PROP}" 확인).`,
   );
 }
-const page = results[0];
 
-// 4) 상태(+선택적으로 PR 링크) 업데이트
+// 5) 상태(+선택적으로 PR 링크) 업데이트
 const properties = {
   [NOTION_STATUS_PROP]: { status: { name: targetStatus } },
 };

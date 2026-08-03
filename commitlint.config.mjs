@@ -1,12 +1,18 @@
 /**
- * 커밋 메시지 컨벤션 검사 (Conventional Commits 기반).
+ * 커밋 메시지 컨벤션 검사.
  * husky 의 commit-msg 훅에서 실행됩니다.
  *
- * 형식:  type: 제목   (예: feat: 로그인 모달 추가)
- * 제목은 한국어로 작성해도 됩니다.
+ * 형식: [type/PS-번호] 제목
+ * 예: [feat/PS-12] 로그인 모달 추가
  */
 const config = {
   extends: ["@commitlint/config-conventional"],
+  parserPreset: {
+    parserOpts: {
+      headerPattern: /^\[(\w+)\/(PS-\d+)\]\s(.+)$/,
+      headerCorrespondence: ["type", "scope", "subject"],
+    },
+  },
   rules: {
     // 우리 라벨(.github/labels.yml)과 동일한 type 목록만 허용.
     "type-enum": [
