@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { PencilIcon, SaveIcon } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
 import { TextField } from "@/components/ui/text-field";
 import { Textarea } from "@/components/ui/textarea";
@@ -334,11 +335,11 @@ function PromptUploadForm() {
               onClick={handleTempSave}
               disabled={saveDraft.isPending}
             >
-              <SaveIcon />
+              {saveDraft.isPending ? <Spinner className="h-5 w-14" /> : <SaveIcon />}
               임시저장
             </Button>
             <Button type="submit" variant="brand" size="lg" disabled={createPrompt.isPending}>
-              <PencilIcon />
+              {createPrompt.isPending ? <Spinner className="h-5 w-14" /> : <PencilIcon />}
               게시하기
             </Button>
           </div>
