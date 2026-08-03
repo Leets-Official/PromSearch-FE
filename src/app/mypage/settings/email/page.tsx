@@ -19,6 +19,7 @@ export default function EmailChangePage() {
 
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const canSubmit = validateEmail(email).status === "valid";
 
   const handleSave = () => {
     if (validateEmail(email).status !== "valid") {
@@ -53,7 +54,13 @@ export default function EmailChangePage() {
           {error && <span className="text-body-3 text-text-brand">{error}</span>}
         </label>
 
-        <Button variant="brand" size="lg" onClick={handleSave} className="mt-2 w-full">
+        <Button
+          variant="brand"
+          size="lg"
+          onClick={handleSave}
+          disabled={!canSubmit}
+          className="mt-2 w-full"
+        >
           저장하기
         </Button>
       </div>
