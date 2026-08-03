@@ -10,13 +10,13 @@ export function FeedbackSection() {
   return (
     <SpecSection id="feedback-spinner" label="Spinner">
       <SpecGroup title="size">
-        <SpecCell label="h-16">
+        <SpecCell label="기본 (h-4 w-13)">
           <Spinner />
         </SpecCell>
-        <SpecCell label="h-24">
+        <SpecCell label="h-6 w-20">
           <Spinner className="h-6 w-20" />
         </SpecCell>
-        <SpecCell label="h-32">
+        <SpecCell label="h-8 w-26">
           <Spinner className="h-8 w-26" />
         </SpecCell>
       </SpecGroup>
