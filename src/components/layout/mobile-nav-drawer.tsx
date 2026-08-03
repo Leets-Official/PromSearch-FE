@@ -2,12 +2,11 @@
 
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { UserIcon, XIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { AuthUser } from "@/hooks/use-auth-status";
-
-import { CategoryNav } from "./category-nav";
 
 /**
  * 모바일 네비게이션 드로어 — Figma "홈 - 햄버거 메뉴(사이드바)"(1382:6016 / 1382:6022).
@@ -18,9 +17,10 @@ import { CategoryNav } from "./category-nav";
  * - 패널  : 좌측 고정, 폭 284px, Background/primary, padding 16/12, 세로 gap 16
  * - 구성  : [닫기 X 24px] → [프로필 40px + 이름/로그인(Heading 2)] → [메뉴]
  *
- * 메뉴는 데스크톱 사이드바와 **같은 CategoryNav 를 그대로 재사용**한다(단일 소스).
- * 다만 시안의 드로어는 항목이 패널 여백에 플러시 정렬되고 폭을 꽉 채우므로,
- * 데스크톱용 좌우 패딩(px-3)·고정폭(w-50)만 아래에서 무력화한다.
+ * 백드롭·프로필·닫기는 공통이고, 메뉴 내용만 children 으로 주입받는다.
+ * (갤러리는 <CategoryNav/>, 마이페이지는 <MyPageSidebar/> 를 넘긴다 — 단일 드로어 재사용)
+ * 시안의 드로어는 항목이 패널 여백에 플러시 정렬되고 폭을 꽉 채우므로,
+ * 데스크톱용 좌우 패딩(px-3)·고정폭(w-50)만 아래 래퍼에서 무력화한다.
  */
 type MobileNavDrawerProps = {
   open: boolean;
@@ -29,6 +29,8 @@ type MobileNavDrawerProps = {
   user: AuthUser | null;
   /** 비회원 프로필 영역 클릭 → 상위에서 로그인 모달을 연다 */
   onLoginClick?: () => void;
+  /** 드로어에 표시할 메뉴 (데스크톱 사이드바와 동일 컴포넌트를 넘긴다) */
+  children: ReactNode;
 };
 
 export function MobileNavDrawer({
@@ -37,6 +39,7 @@ export function MobileNavDrawer({
   isAuthenticated,
   user,
   onLoginClick,
+  children,
 }: MobileNavDrawerProps) {
   return (
     <DrawerPrimitive.Root open={open} onOpenChange={onOpenChange} swipeDirection="left">
@@ -94,9 +97,9 @@ export function MobileNavDrawer({
                 </span>
               </button>
 
-              {/* 메뉴 — 데스크톱 사이드바와 동일. 드로어에서는 플러시 정렬 + 폭 100% */}
+              {/* 메뉴 — 주입된 사이드바. 드로어에서는 플러시 정렬 + 폭 100% */}
               <div className="[&_[data-slot=sidebar-group-label]]:px-0 [&_[data-slot=sidebar-menu-item]]:px-0 [&_[data-slot=sidebar]]:w-full">
-                <CategoryNav />
+                {children}
               </div>
             </DrawerPrimitive.Content>
           </DrawerPrimitive.Popup>
