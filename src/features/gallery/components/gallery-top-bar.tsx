@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BellIcon, ChevronLeftIcon, MenuIcon, PencilIcon, SearchIcon } from "lucide-react";
 
 import { AppHeader } from "@/components/ui/app-header";
@@ -12,10 +12,10 @@ import { SearchBar } from "@/components/ui/search-bar";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters";
 import { LoginModal } from "@/components/modals/login/login-modal";
-import { useNicknameCheck } from "@/features/auth/hooks/use-nickname-check";
 
-import { HeaderAuthArea } from "../../../components/layout/header-auth-area";
-import { MobileNavDrawer } from "../../../components/layout/mobile-nav-drawer";
+import { HeaderAuthArea } from "@/components/layout/header-auth-area";
+import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
+import { CategoryNav } from "@/features/gallery/components/category-nav";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -176,14 +176,16 @@ export function GalleryTopBar() {
         }
       />
 
-      {/* 모바일 네비게이션 드로어 (햄버거) */}
+      {/* 모바일 네비게이션 드로어 (햄버거) — 갤러리 사이드바 주입 */}
       <MobileNavDrawer
         open={navOpen}
         onOpenChange={setNavOpen}
         isAuthenticated={isAuthenticated}
         user={user}
         onLoginClick={() => setLoginOpen(true)}
-      />
+      >
+        <CategoryNav />
+      </MobileNavDrawer>
 
       {/* 로그인 모달 */}
       <LoginModal
