@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Input as InputPrimitive } from "@base-ui/react/input";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon } from "@/components/ui/icons";
 
 import { cn } from "@/lib/utils";
 

@@ -1,6 +1,8 @@
 "use client";
 
-import { Lock, Sparkles } from "lucide-react";
+// Sparkles 는 디자인 시스템 세트에 없어 lucide 를 유지한다(시안 추가 시 icons.tsx 로 이동).
+import { Sparkles } from "lucide-react";
+import { LockIcon } from "@/components/ui/icons";
 
 import { track } from "@/analytics/track";
 import type { UserStatus } from "@/analytics/events";
@@ -57,7 +59,7 @@ export function RecipePanel({
   const isAnonymous = access.reason === "anonymous";
   const showTeaser = isAnonymous; // 비회원만 프리뷰 노출
   const cta = isAnonymous
-    ? { label: "로그인하고 프롬프트 보기", icon: <Lock />, reason: "anonymous" as const }
+    ? { label: "로그인하고 프롬프트 보기", icon: <LockIcon />, reason: "anonymous" as const }
     : { label: "포인트로 전문 보기", icon: <Sparkles />, reason: "premium" as const };
 
   return (

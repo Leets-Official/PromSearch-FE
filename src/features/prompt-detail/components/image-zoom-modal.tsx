@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/components/ui/icons";
 import { useEffect, useState } from "react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
@@ -15,7 +15,7 @@ type ImageZoomModalProps = {
 
 /**
  * 이미지 확대 모달 (Figma 893:2423) — 페이지 전체 dim(gray-900/60%) 위에 큰 이미지.
- * - 좌상단 `현재/전체` 카운트, 우상단 닫기(X).
+ * - 좌상단 `현재/전체` 카운트, 우상단 닫기(XIcon).
  * - 좌우 캐러셀 화살표(dim 배경 + 흰 화살표) + ←/→ 키.
  * - 휠/트랙패드/핀치 줌 + 드래그 팬(react-zoom-pan-pinch).
  * - 하단 썸네일 스트립: 현재는 밝게(+링), 나머지는 흐리게. 클릭 시 전환.
@@ -57,7 +57,7 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
         onClick={onClose}
         className="absolute top-4 right-4 z-10 flex size-11 items-center justify-center rounded-md text-white hover:bg-white/10"
       >
-        <X className="size-6" />
+        <XIcon className="size-6" />
       </button>
 
       {/* 좌우 화살표 */}
@@ -69,7 +69,7 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
             onClick={() => go(-1)}
             className="absolute top-1/2 left-4 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-md bg-dim text-white transition-colors hover:bg-dim/80"
           >
-            <ChevronLeft className="size-6" />
+            <ChevronLeftIcon className="size-6" />
           </button>
           <button
             type="button"
@@ -77,7 +77,7 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
             onClick={() => go(1)}
             className="absolute top-1/2 right-4 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-md bg-dim text-white transition-colors hover:bg-dim/80"
           >
-            <ChevronRight className="size-6" />
+            <ChevronRightIcon className="size-6" />
           </button>
         </>
       ) : null}

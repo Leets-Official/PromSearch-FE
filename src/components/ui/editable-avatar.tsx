@@ -1,7 +1,7 @@
 "use client";
 
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
-import { PencilIcon, UserIcon } from "lucide-react";
+import { PencilIcon, UserIcon } from "@/components/ui/icons";
 
 import { cn } from "@/lib/utils";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { XIcon } from "lucide-react";
+import { XIcon } from "@/components/ui/icons";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";

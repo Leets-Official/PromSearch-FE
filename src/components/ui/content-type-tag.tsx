@@ -1,4 +1,4 @@
-import { ImageIcon, TypeIcon } from "lucide-react";
+import { ImageIcon, TextIcon } from "@/components/ui/icons";
 
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ type ContentType = "image" | "text";
 
 const CONTENT_TYPE_META = {
   image: { Icon: ImageIcon, label: "이미지 결과물" },
-  text: { Icon: TypeIcon, label: "텍스트 결과물" },
+  text: { Icon: TextIcon, label: "텍스트 결과물" },
 } as const;
 
 type ContentTypeTagProps = React.ComponentProps<"span"> & {

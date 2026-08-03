@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy } from "lucide-react";
+import { CopyIcon } from "@/components/ui/icons";
 import { useEffect, useRef, useState } from "react";
 
 import { track } from "@/analytics/track";
@@ -90,7 +90,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
           <DetailTabs active={tab} onSelect={setTab} />
           {showCopy ? (
             <Button variant="neutral" size="sm" onClick={handleCopy}>
-              <Copy data-icon="inline-start" />
+              <CopyIcon data-icon="inline-start" />
               {copied ? "복사됨" : "복사하기"}
             </Button>
           ) : null}

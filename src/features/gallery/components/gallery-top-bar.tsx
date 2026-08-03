@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { BellIcon, ChevronLeftIcon, MenuIcon, PencilIcon, SearchIcon } from "lucide-react";
+import { BellIcon, ChevronLeftIcon, MenuIcon, PencilIcon, SearchIcon } from "@/components/ui/icons";
 
 import { AppHeader } from "@/components/ui/app-header";
 import { Button } from "@/components/ui/button";

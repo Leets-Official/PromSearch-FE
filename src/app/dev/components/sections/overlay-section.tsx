@@ -1,6 +1,8 @@
 "use client";
 
-import { ArrowUpDownIcon, MoreVerticalIcon } from "lucide-react";
+// 데모용 정렬 아이콘 — 디자인 시스템 세트에 없어 lucide 를 유지한다.
+import { ArrowUpDownIcon } from "lucide-react";
+import { MoreIcon } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -79,7 +81,7 @@ import {
 
 // 게시글 관리 메뉴 (마이페이지 > 내 게시글)
 <DropdownMenu>
-  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="더보기"><MoreVerticalIcon /></Button>} />
+  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="더보기"><MoreIcon /></Button>} />
   <DropdownMenuContent align="end">
     <DropdownMenuItem>수정</DropdownMenuItem>
     <DropdownMenuSeparator />
@@ -167,7 +169,7 @@ export function OverlaySection() {
           <DropdownMenuTrigger
             render={
               <Button variant="ghost" size="icon" aria-label="더보기">
-                <MoreVerticalIcon />
+                <MoreIcon />
               </Button>
             }
           />

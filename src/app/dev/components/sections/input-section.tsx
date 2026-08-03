@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CheckIcon, CircleAlertIcon } from "lucide-react";
+import { AlertIcon, CheckIcon } from "@/components/ui/icons";
 
 import { Input } from "@/components/ui/input";
 import { SearchBar } from "@/components/ui/search-bar";
@@ -53,7 +53,7 @@ export function InputSection() {
         <Field label="error">
           <div className="relative">
             <Input aria-invalid defaultValue="Placeholder" className="pr-11" />
-            <CircleAlertIcon className="absolute top-1/2 right-4 size-5 -translate-y-1/2 text-red-500" />
+            <AlertIcon className="absolute top-1/2 right-4 size-5 -translate-y-1/2 text-red-500" />
           </div>
         </Field>
         <Field label="success">
