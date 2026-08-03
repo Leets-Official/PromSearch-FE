@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { GoogleIcon, KakaoIcon } from "@/components/ui/social-login-button";
+import { GoogleIcon, KakaoIcon } from "@/components/ui/brand-icons";
 import { MOCK_ACCOUNT, MOCK_NOTIFICATIONS, type AuthProvider } from "@/mocks/data/mypage";
 
 const PROVIDER_ICON: Partial<Record<AuthProvider, React.ReactNode>> = {
@@ -41,7 +41,12 @@ export default function SettingsPage() {
           </div>
 
           {isEmailAccount ? (
-            <Button variant="neutral" size="sm" render={<Link href="/mypage/settings/email" />}>
+            <Button
+              variant="neutral"
+              size="sm"
+              nativeButton={false}
+              render={<Link href="/mypage/settings/email" />}
+            >
               이메일 변경하기
             </Button>
           ) : (
@@ -61,7 +66,12 @@ export default function SettingsPage() {
                 최근 변경: {account.passwordUpdatedAt}
               </span>
             </div>
-            <Button variant="neutral" size="sm" render={<Link href="/mypage/settings/password" />}>
+            <Button
+              variant="neutral"
+              size="sm"
+              nativeButton={false}
+              render={<Link href="/mypage/settings/password" />}
+            >
               변경하기
             </Button>
           </div>
