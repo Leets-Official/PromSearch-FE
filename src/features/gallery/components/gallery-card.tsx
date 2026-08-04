@@ -1,6 +1,6 @@
 "use client";
 
-import { ImageIcon, Type } from "lucide-react";
+import { ImageIcon, TextIcon } from "@/components/ui/icons";
 import Link from "next/link";
 
 import { track } from "@/analytics/track";
@@ -23,7 +23,7 @@ function OutputTypeBadge({ type }: { type: OutputType }) {
       aria-label={OUTPUT_TYPE_LABEL[type]}
       className="flex items-center rounded-[4px] bg-interaction-brand p-1 text-text-on-brand"
     >
-      {type === "image" ? <ImageIcon className="size-4" /> : <Type className="size-4" />}
+      {type === "image" ? <ImageIcon className="size-4" /> : <TextIcon className="size-4" />}
     </span>
   );
 }

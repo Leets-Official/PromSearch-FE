@@ -84,6 +84,8 @@ export function DevToolbar() {
           options={[
             { value: "anonymous", label: "비로그인" },
             { value: "authenticated", label: "로그인" },
+            // 어드민 화면(/admin/*)은 이 값일 때만 열린다.
+            { value: "admin", label: "어드민" },
           ]}
         />
       </Field>

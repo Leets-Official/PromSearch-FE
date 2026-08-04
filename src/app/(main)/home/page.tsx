@@ -4,7 +4,11 @@ import { JOB_CATEGORY_LABEL } from "@/features/gallery/categories";
 import { GalleryFilters } from "@/features/gallery/components/gallery-filters";
 import { GalleryGrid } from "@/features/gallery/components/gallery-grid";
 import { GalleryPagination } from "@/features/gallery/components/gallery-pagination";
-import { GalleryError, GallerySkeleton } from "@/features/gallery/components/gallery-states";
+import {
+  GalleryError,
+  GalleryInlineLoading,
+  GallerySkeleton,
+} from "@/features/gallery/components/gallery-states";
 import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters";
 import { usePromptList } from "@/features/gallery/hooks/use-prompt-list";
 import type { GalleryQuery } from "@/features/gallery/types";
@@ -21,7 +25,7 @@ function galleryHeading(query: GalleryQuery): string {
 export default function HomePage() {
   const { query, reset } = useGalleryFilters();
   const { status } = useAuthStatus();
-  const { data, isPending, isError, refetch } = usePromptList(query);
+  const { data, isPending, isFetching, isError, refetch } = usePromptList(query);
 
   return (
     <div className="flex flex-col gap-6">
@@ -36,6 +40,8 @@ export default function HomePage() {
       ) : (
         <>
           <GalleryGrid prompts={data.items} userStatus={status} onResetFilters={reset} />
+          {/* 페이지 이동·필터 변경 재조회 중(이전 결과는 유지) — 최초 로딩은 위 스켈레톤 */}
+          {isFetching ? <GalleryInlineLoading /> : null}
           <GalleryPagination page={data.page} totalPages={data.totalPages} />
         </>
       )}

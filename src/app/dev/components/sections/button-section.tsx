@@ -1,6 +1,6 @@
 "use client";
 
-import { BellIcon, BookmarkIcon, FlagIcon, HeartIcon, PencilIcon } from "lucide-react";
+import { BellIcon, BookmarkIcon, FlagIcon, HeartIcon, PencilIcon } from "@/components/ui/icons";
 
 import { Button } from "@/components/ui/button";
 import { ContentsAction, ContentsActionBar } from "@/components/ui/contents-action-bar";

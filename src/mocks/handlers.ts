@@ -1,9 +1,12 @@
 import { delay, http, HttpResponse } from "msw";
 
 import type { UserStatus } from "@/analytics/events";
+import type { GradeTab, ReportedItem, ReportTab } from "@/features/admin/types";
 import { MOCK_VIEWER_HEADER } from "@/features/prompt-detail/api/prompt-detail";
 import type { AiModel, GalleryNav, JobCategory, OutputType, Task } from "@/features/gallery/types";
 import type { PromptDraft, PromptFormValues } from "@/features/upload/types";
+import { queryGradeApplications, queryReports } from "@/mocks/admin-query";
+import { adminStore, approveGrade, setReportStatus } from "@/mocks/data/admin";
 import { buildComments } from "@/mocks/data/comments";
 import { PROMPT_SEED } from "@/mocks/data/prompts";
 import { findPromptDetail } from "@/mocks/prompt-detail-query";
@@ -161,7 +164,87 @@ export const handlers = [
     bookmarkedState.set(id, bookmarked);
     return HttpResponse.json({ bookmarked });
   }),
+
+  // ── 어드민 ────────────────────────────────────────────────────────────
+  // 신고 게시글 목록 (PS-49)
+  http.get("/api/admin/reports/posts", async ({ request }) => {
+    return adminReportListResponse(request, adminStore.posts);
+  }),
+
+  // 신고 댓글 목록
+  http.get("/api/admin/reports/comments", async ({ request }) => {
+    return adminReportListResponse(request, adminStore.comments);
+  }),
+
+  // 신고 게시글 처리(숨김/유지)
+  http.patch("/api/admin/reports/posts/:id", async ({ params, request }) => {
+    return adminModerate(adminStore.posts, String(params.id), request);
+  }),
+
+  // 신고 댓글 처리(숨김/유지)
+  http.patch("/api/admin/reports/comments/:id", async ({ params, request }) => {
+    return adminModerate(adminStore.comments, String(params.id), request);
+  }),
+
+  // 유저 등급 신청 목록
+  http.get("/api/admin/users/grade-applications", async ({ request }) => {
+    const edge = readDevEdge(request);
+    const forced = await forceEdge(edge);
+    if (forced) return forced;
+
+    const params = new URL(request.url).searchParams;
+    const tab = (params.get("tab") as GradeTab) ?? "pending";
+    if (edge === "empty") {
+      return HttpResponse.json({ items: [], page: 1, totalPages: 1, totalCount: 0 });
+    }
+
+    return HttpResponse.json(
+      queryGradeApplications(adminStore.gradeApplications, {
+        tab,
+        q: params.get("q") ?? "",
+        page: Number(params.get("page") ?? "1"),
+      }),
+    );
+  }),
+
+  // 등급 승인
+  http.post("/api/admin/users/grade-applications/:id/approve", ({ params }) => {
+    const ok = approveGrade(adminStore.gradeApplications, String(params.id));
+    if (!ok) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json({ ok: true });
+  }),
 ];
+
+/** 신고 목록 응답 — 게시글/댓글이 같은 계약이라 한 곳에서 처리한다. */
+async function adminReportListResponse(request: Request, records: ReportedItem[]) {
+  const edge = readDevEdge(request);
+  const forced = await forceEdge(edge);
+  if (forced) return forced;
+  if (edge === "empty") {
+    return HttpResponse.json({ items: [], page: 1, totalPages: 1, totalCount: 0 });
+  }
+
+  const params = new URL(request.url).searchParams;
+  return HttpResponse.json(
+    queryReports(records, {
+      tab: (params.get("tab") as ReportTab) ?? "all",
+      q: params.get("q") ?? "",
+      page: Number(params.get("page") ?? "1"),
+    }),
+  );
+}
+
+/** 신고 처리(숨김/유지) — 본문 status 를 검증하고 인메모리 상태를 갱신한다. */
+async function adminModerate(records: ReportedItem[], id: string, request: Request) {
+  const body = (await request.json()) as { status?: string };
+  if (body.status !== "hidden" && body.status !== "kept") {
+    return new HttpResponse(null, { status: 400 });
+  }
+  if (!setReportStatus(records, id, body.status)) {
+    return new HttpResponse(null, { status: 404 });
+  }
+  return HttpResponse.json({ id, status: body.status });
+}
 
 // 토글 인메모리 상태(목 전용). id → 현재 사용자의 좋아요/북마크 여부
 const likedState = new Map<string, boolean>();

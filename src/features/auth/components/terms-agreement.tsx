@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon } from "@/components/ui/icons";
 
 import { cn } from "@/lib/utils";
 import {

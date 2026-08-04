@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { GALLERY_PAGE_SIZE } from "@/features/gallery/constants";
 
 /** 최초 로딩 — 카드 자리 스켈레톤 그리드 */
-export function GallerySkeleton({ count = 9 }: { count?: number }) {
+export function GallerySkeleton({ count = GALLERY_PAGE_SIZE }: { count?: number }) {
   return (
     <div
       data-slot="gallery-skeleton"

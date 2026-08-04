@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUp, MoreVertical } from "lucide-react";
+import { ChevronUpIcon, MoreIcon } from "@/components/ui/icons";
 import { useState } from "react";
 
 import type { PromptComment } from "@/features/prompt-detail/types";
@@ -37,7 +37,7 @@ function CommentBody({ comment }: { comment: PromptComment }) {
         <p className="text-body-2 whitespace-pre-wrap text-text-secondary">{comment.body}</p>
       </div>
       <button type="button" aria-label="댓글 메뉴" className="shrink-0 text-text-disabled">
-        <MoreVertical className="size-5" />
+        <MoreIcon className="size-5" />
       </button>
     </div>
   );
@@ -59,7 +59,9 @@ export function CommentItem({ comment }: { comment: PromptComment }) {
             onClick={() => setExpanded((v) => !v)}
             className="flex items-center gap-1 text-body-3 text-text-secondary"
           >
-            <ChevronUp className={`size-5 transition-transform ${expanded ? "" : "rotate-180"}`} />
+            <ChevronUpIcon
+              className={`size-5 transition-transform ${expanded ? "" : "rotate-180"}`}
+            />
             {replyCount}개의 답글
           </button>
 

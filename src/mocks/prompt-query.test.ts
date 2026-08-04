@@ -222,13 +222,13 @@ describe("queryPrompts", () => {
       }),
     );
 
-    it("기본 size(12) 로 첫 페이지를 자른다", () => {
+    it("기본 size(DEFAULT_PAGE_SIZE) 로 첫 페이지를 자른다", () => {
       const result = queryPrompts(many, params({ page: 1 }));
 
       expect(result.items).toHaveLength(DEFAULT_PAGE_SIZE);
       expect(result.page).toBe(1);
       expect(result.totalCount).toBe(30);
-      expect(result.totalPages).toBe(3); // ceil(30/12)
+      expect(result.totalPages).toBe(Math.ceil(30 / DEFAULT_PAGE_SIZE));
       expect(result.items[0].id).toBe("p-00"); // 최신
     });
 
@@ -245,9 +245,11 @@ describe("queryPrompts", () => {
 
     it("범위를 넘는 page 는 마지막 페이지로 클램프한다", () => {
       const result = queryPrompts(many, params({ page: 999 }));
+      const lastPage = Math.ceil(30 / DEFAULT_PAGE_SIZE);
 
-      expect(result.page).toBe(3);
-      expect(result.items).toHaveLength(30 - DEFAULT_PAGE_SIZE * 2); // 마지막 6개
+      // 페이지 크기를 바꿔도 깨지지 않도록 상수에서 유도한다
+      expect(result.page).toBe(lastPage);
+      expect(result.items).toHaveLength(30 - DEFAULT_PAGE_SIZE * (lastPage - 1));
     });
 
     it("결과가 없어도 totalPages 는 최소 1", () => {

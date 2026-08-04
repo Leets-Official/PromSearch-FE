@@ -2,7 +2,7 @@
 
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
-import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, MoreIcon } from "@/components/ui/icons";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -127,7 +127,8 @@ function PaginationEllipsis({ className, ...props }: React.ComponentProps<"span"
       )}
       {...props}
     >
-      <MoreHorizontalIcon />
+      {/* 디자인 시스템에는 세로 점 3개(icon=more)만 있어 90도 회전해 가로 말줄임으로 쓴다 */}
+      <MoreIcon className="rotate-90" />
       <span className="sr-only">더 많은 페이지</span>
     </span>
   );
