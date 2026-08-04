@@ -14,11 +14,8 @@ import type { PageMeta } from "@/lib/api";
 /** 결과물 타입. FE 는 소문자(`image`/`text`)를 쓰므로 매핑이 필요하다. */
 export type ApiOutputType = "IMAGE" | "TEXT";
 
-/**
- * 콘텐츠 등급. Swagger 예시에는 FREE/PREMIUM 만 등장하지만 FE 기획에는 마스터 등급이 있어
- * MASTER 도 함께 받아둔다(오면 매핑되고, 안 와도 무해).
- */
-export type ApiContentType = "FREE" | "PREMIUM" | "MASTER";
+/** 콘텐츠 등급. 두 값뿐인 것이 BE 회신으로 확정(2026-08-05, 요청서 7-2) — 마스터 등급은 없다. */
+export type ApiContentType = "FREE" | "PREMIUM";
 
 /** 태그 축. 하나의 `tags` 배열에 세 축이 섞여 오고 `tagType` 으로 구분한다. */
 export type ApiTagType = "JOB" | "TASK" | "AI_MODEL";
@@ -43,7 +40,10 @@ export type ApiCardStatistics = {
   copyCount: number;
 };
 
-/** 로그인 사용자의 상호작용 상태. 비로그인 응답에서는 없거나 전부 false 다. */
+/**
+ * 로그인 사용자의 상호작용 상태.
+ * 비로그인이어도 `null` 이 아니라 전부 `false` 인 객체가 온다(BE 회신 2026-08-05, 요청서 7-5).
+ */
 export type ApiViewerInteraction = {
   liked: boolean;
   bookmarked: boolean;
@@ -58,7 +58,7 @@ export type ApiPromptCard = {
   pricePoint: number;
   author: ApiCardAuthor;
   statistics: ApiCardStatistics;
-  viewerInteraction?: ApiViewerInteraction | null;
+  viewerInteraction: ApiViewerInteraction;
   tags: ApiTag[];
   /**
    * AI 모델 "기타"로 올린 경우의 자유 입력 모델명(예: `"GPT 4.1 Mini"`).

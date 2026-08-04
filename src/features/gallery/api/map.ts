@@ -39,7 +39,6 @@ const OUTPUT_TYPE_BY_API: Record<ApiOutputType, OutputType> = {
 const TIER_BY_API: Record<ApiContentType, ContentTier> = {
   FREE: "free",
   PREMIUM: "premium",
-  MASTER: "master",
 };
 
 /** 특정 축의 태그만 골라 enum 배열로. 매핑에 없는 이름은 제외. */

@@ -25,7 +25,6 @@ const OUTPUT_TYPE_TO_API: Record<OutputType, ApiOutputType> = { image: "IMAGE", 
 const TIER_TO_API: Record<ContentTier, ApiContentType> = {
   free: "FREE",
   premium: "PREMIUM",
-  master: "MASTER",
 };
 
 /**

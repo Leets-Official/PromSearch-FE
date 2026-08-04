@@ -42,15 +42,8 @@ describe("resolveRecipeAccess", () => {
     });
   });
 
-  it("access 없음 + 로그인 + premium → premium 잠금(전체 블러, previewLength 없음)", () => {
+  it("access 없음 + 로그인 + premium → premium 잠금", () => {
     expect(resolveRecipeAccess(detail({ tier: "premium" }), authenticated)).toEqual({
-      locked: true,
-      reason: "premium",
-    });
-  });
-
-  it("access 없음 + 로그인 + master → premium 잠금(마스터도 전체 블러)", () => {
-    expect(resolveRecipeAccess(detail({ tier: "master" }), authenticated)).toEqual({
       locked: true,
       reason: "premium",
     });
