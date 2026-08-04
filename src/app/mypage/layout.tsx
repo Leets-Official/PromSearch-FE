@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { MyPageTopBar } from "@/features/mypage/components/mypage-top-bar";
 import { MyPageSidebar } from "@/features/mypage/components/mypage-sidebar";
-import { MobileBackHeader } from "@/features/mypage/components/mobile-back-header";
+import { MobileBackHeader } from "@/components/layout/mobile-back-header";
 
 export const dynamic = "force-dynamic";
 
