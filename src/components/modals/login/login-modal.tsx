@@ -154,8 +154,8 @@ function LoginModal({
 
         {/* 소셜 로그인 — 모바일 세로 풀폭 / sm+ 가로 아이콘 */}
         <div className="flex w-full min-w-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:justify-center sm:gap-4">
-          <SocialLoginButton provider="google" onClick={onGoogleLogin} />
-          <SocialLoginButton provider="kakao" onClick={onKakaoLogin} />
+          <SocialLoginButton provider="google" shape="responsive" onClick={onGoogleLogin} />
+          <SocialLoginButton provider="kakao" shape="responsive" onClick={onKakaoLogin} />
         </div>
       </DialogContent>
     </Dialog>
