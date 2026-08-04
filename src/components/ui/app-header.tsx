@@ -53,9 +53,13 @@ function AppHeader({ className, start, center, end, children, ...props }: AppHea
           {/* 중앙: 검색/네비 등 유연 영역 */}
           {center != null && <div className="flex min-w-0 flex-1 items-center gap-6">{center}</div>}
 
-          {/* 우측: 알림/프로필 등 액션 — 모바일 시안은 아이콘 간격 24px, 데스크톱은 8px */}
+          {/*
+            우측: 알림/프로필 등 액션.
+            시안의 아이콘 간격은 24px(아이콘 박스 24px 기준)인데, 실제 버튼은 36px(icon-sm)이라
+            좌우 6px씩 패딩이 붙는다. 그래서 gap 은 24-12=12px(gap-3) 이어야 시안과 같아 보인다.
+          */}
           {end != null && (
-            <div className="ml-auto flex shrink-0 items-center gap-6 sm:gap-2">{end}</div>
+            <div className="ml-auto flex shrink-0 items-center gap-3 sm:gap-2">{end}</div>
           )}
         </>
       )}

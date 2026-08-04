@@ -29,7 +29,7 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
       data-slot="dialog-overlay"
       className={cn(
         // Opacity/dim 토큰 (gray-900 / 50%) — 디자인 시스템의 딤 처리
-        "fixed inset-0 isolate z-50 bg-dim duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "overlay-fill isolate z-50 bg-dim duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className,
       )}
       {...props}
