@@ -61,13 +61,25 @@ export function maskRecipeBody(
 /**
  * id + 뷰어 상태로 상세 1건을 만든다. 없거나 status !== active 면 null(404).
  */
+/**
+ * 라우트 id → 시드 id 정규화.
+ *
+ * 홈 목록은 이제 실 BE 스펙대로 **숫자 `promptId`** 를 내려주는데(`mocks/home-prompt-cards.ts`),
+ * 상세·댓글 목은 아직 시드 문자열 id(`prompt-001`)를 키로 쓴다. 카드를 눌러 들어온 `/prompts/1` 이
+ * 404 가 되지 않도록 여기서 이어 붙인다. 상세까지 실 API 로 옮기면 이 함수는 사라진다.
+ */
+export function toSeedId(id: string): string {
+  return /^\d+$/.test(id) ? `prompt-${id.padStart(3, "0")}` : id;
+}
+
 export function findPromptDetail(
   records: PromptRecord[],
   id: string,
   viewerStatus: UserStatus,
   content: DevContent = "default",
 ): PromptDetail | null {
-  const record = records.find((r) => r.id === id);
+  const seedId = toSeedId(id);
+  const record = records.find((r) => r.id === seedId);
   if (!record || record.status !== "active") return null;
 
   const access = resolveRecipeAccess({ tier: record.tier }, { status: viewerStatus });

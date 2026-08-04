@@ -9,7 +9,8 @@ import { queryGradeApplications, queryReports } from "@/mocks/admin-query";
 import { adminStore, approveGrade, setReportStatus } from "@/mocks/data/admin";
 import { buildComments } from "@/mocks/data/comments";
 import { PROMPT_SEED } from "@/mocks/data/prompts";
-import { findPromptDetail } from "@/mocks/prompt-detail-query";
+import { jobCards, paginate, popularCards } from "@/mocks/home-prompt-cards";
+import { findPromptDetail, toSeedId } from "@/mocks/prompt-detail-query";
 import { queryPrompts } from "@/mocks/prompt-query";
 import {
   DEV_CONTENT_HEADER,
@@ -48,6 +49,11 @@ async function forceEdge(edge: DevEdge): Promise<Response | null> {
   return null;
 }
 
+/** BE 공통 응답 봉투로 감싼다(`api.*` 헬퍼가 `result` 만 꺼내 쓴다). */
+function jsonEnvelope<T>(result: T) {
+  return HttpResponse.json({ success: true, code: "COMMON-200", message: "성공했습니다.", result });
+}
+
 // 콤마 구분 멀티값 파싱 (?tasks=ppt,report)
 function parseList<T extends string>(value: string | null): T[] {
   if (!value) return [];
@@ -60,6 +66,42 @@ function parseList<T extends string>(value: string | null): T[] {
 export const handlers = [
   // 동작 확인용 샘플
   http.get("/api/health", () => HttpResponse.json({ ok: true })),
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // ⚠️ 임시 목 — BE 장애 대응 (2026-08-05)
+  //
+  // 실서버(`api.promsearch.kr`)가 TCP 는 받지만 HTTP 응답을 주지 않아(`socket hang up`)
+  // 홈 화면을 확인할 수 없어 실 엔드포인트를 그대로 흉내 낸다.
+  // **BE 복구 시 아래 두 핸들러와 `mocks/home-prompt-cards.ts` 를 삭제**하면 실서버로 붙는다.
+  // 응답은 공통 봉투(`{ success, code, message, result }`)까지 서버와 동일하게 맞춘다.
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // [HOME-001] 인기 프롬프트(좋아요순)
+  http.get("/api/v1/home/prompts/popular", async ({ request }) => {
+    const edge = readDevEdge(request);
+    const forced = await forceEdge(edge);
+    if (forced) return forced;
+
+    const params = new URL(request.url).searchParams;
+    const page = Number(params.get("page") ?? "0");
+    const size = Number(params.get("size") ?? "12");
+
+    return jsonEnvelope(paginate(edge === "empty" ? [] : popularCards(), page, size));
+  }),
+
+  // [HOME-002] 직군별 프롬프트(최신순)
+  http.get("/api/v1/home/prompts/jobs/:jobTagId", async ({ params: pathParams, request }) => {
+    const edge = readDevEdge(request);
+    const forced = await forceEdge(edge);
+    if (forced) return forced;
+
+    const params = new URL(request.url).searchParams;
+    const page = Number(params.get("page") ?? "0");
+    const size = Number(params.get("size") ?? "12");
+    const cards = edge === "empty" ? [] : jobCards(Number(pathParams.jobTagId));
+
+    return jsonEnvelope(paginate(cards, page, size));
+  }),
 
   // 홈 갤러리 목록 — 필터/정렬/페이지네이션 (F-1.1)
   http.get("/api/prompts", async ({ request }) => {
@@ -145,13 +187,14 @@ export const handlers = [
     const forced = await forceEdge(edge);
     if (forced) return forced;
     if (edge === "empty") return HttpResponse.json([]);
-    return HttpResponse.json(buildComments(String(params.id), readDevContent(request)));
+    // 상세가 세는 commentCount 와 같은 키를 봐야 해서 시드 id 로 맞춘다
+    return HttpResponse.json(buildComments(toSeedId(String(params.id)), readDevContent(request)));
   }),
 
   // 좋아요(추천) 토글 — 인메모리 상태로 liked/카운트를 뒤집어 돌려준다(낙관적 롤백 테스트용)
   http.post("/api/prompts/:id/like", ({ params }) => {
     const id = String(params.id);
-    const base = PROMPT_SEED.find((r) => r.id === id)?.stats.likes ?? 0;
+    const base = PROMPT_SEED.find((r) => r.id === toSeedId(id))?.stats.likes ?? 0;
     const liked = !(likedState.get(id) ?? false);
     likedState.set(id, liked);
     return HttpResponse.json({ liked, likeCount: base + (liked ? 1 : 0) });
