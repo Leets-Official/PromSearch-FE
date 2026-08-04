@@ -77,6 +77,17 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
 
   const handleReport = () => setReportOpen(true);
 
+  /**
+   * 좋아요 토글 — 요청 중이면 무시한다.
+   *
+   * 서버가 등록(POST)/취소(DELETE)로 갈려 있어 "누른 순간의 상태"를 인자로 넘기는데,
+   * detail.liked 는 렌더 시점 값이라 리렌더보다 빠른 연타는 같은 값을 두 번 보낸다(409).
+   */
+  const handleToggleLike = () => {
+    if (like.isPending) return;
+    like.mutate(detail.liked);
+  };
+
   /** 레시피 잠금 CTA — 비회원은 로그인 모달, 프리미엄은 포인트 결제 모달 */
   const handleUnlock = (reason: "anonymous" | "premium") => {
     if (reason === "anonymous") setLoginOpen(true);
@@ -111,7 +122,8 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
               size="icon-sm"
               aria-label="추천"
               aria-pressed={detail.liked}
-              onClick={() => like.mutate(detail.liked)}
+              disabled={like.isPending}
+              onClick={handleToggleLike}
             >
               {detail.liked ? <HeartFilledIcon /> : <HeartIcon />}
             </Button>
@@ -136,7 +148,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
           images={detail.images}
           title={detail.title}
           liked={detail.liked}
-          onToggleLike={() => like.mutate(detail.liked)}
+          onToggleLike={handleToggleLike}
           bookmarked={detail.bookmarked}
           onToggleBookmark={() => bookmark.mutate()}
           onReport={handleReport}

@@ -968,14 +968,39 @@ FE 업로드 플로우(Presigned 방식 — 파일은 BE 를 거치지 않고 �
 
 <a id="7-10"></a>
 
-### 7-10. 작성자가 자기 게시물을 **수정 화면에 불러올** 경로
+### 7-10. 게시물 수정 화면용 조회 — ✅ **회신 완료: 전용 API 신설 (2026-08-05)**
 
-`PROMPT-001`(상세)은 `access.reason = AUTHOR` 로 본문을 주지만,
-수정 폼을 채우려면 **`jobTagIds` / `taskTagIds` / `aiModelTagIds` / `visibility` / `customAiModel`** 이 필요한데
-상세 응답에는 태그가 `{tagId, tagType, name}` 형태로만 오고 `visibility` 는 없습니다.
+**`GET /api/v1/prompts/{promptId}/edit`** 를 만들고 `visibility` 도 포함하기로 확정.
+수정 폼에 필요한 값이 태그 **ID 형태로** 그대로 와서 FE 변환이 필요 없습니다.
 
-- 상세 응답에 `visibility` 를 추가해 주시면 FE가 `tags` 에서 ID를 뽑아 쓰겠습니다. (가장 간단)
-- 또는 작성자 전용 조회 API(`GET /prompts/{promptId}/edit`)를 주셔도 됩니다.
+```json
+{
+  "promptId": 10,
+  "title": "먹음직스러운 파스타 사진 생성",
+  "description": "파스타의 결감을 살린 이미지 생성 프롬프트입니다.",
+  "outputType": "IMAGE",
+  "jobTagIds": [1, 2],
+  "taskTagIds": [10, 11],
+  "aiModelTagId": 20,
+  "customAiModel": null,
+  "contentType": "PREMIUM",
+  "promptBody": "cinematic food photography ...",
+  "visibility": "PUBLIC",
+  "images": [
+    { "imageId": "123e4567-...", "imageUrl": "https://...", "sortOrder": 0, "thumbnail": true }
+  ],
+  "status": "ACTIVE",
+  "pricePoint": 500,
+  "updatedAt": "2026-08-05T10:30:00Z"
+}
+```
+
+- `aiModelTagId` 가 **단수**로 온다 — [7-4](#7-4) 에서 합의한 단일 선택과 일치합니다 👍
+- `images[].imageUrl` 이 함께 와서 [U-1](#u-1)(업로드 이미지 조회용 URL) 문제도 **수정 화면 한정으로는** 해결됩니다.
+  다만 **임시저장 불러오기**(`PROMPT-006`)에는 여전히 `imageUrl` 이 없어 U-1 은 그대로 필요합니다.
+
+> 남은 것: 이 API 로 폼을 채운 뒤 저장할 **수정 엔드포인트**([U-2](#u-2) `PUT /prompts/{promptId}`) 도 함께 부탁드립니다.
+> 조회만 있고 저장이 없으면 수정 화면을 완성할 수 없습니다.
 
 <a id="7-11"></a>
 
@@ -1037,4 +1062,6 @@ FE 업로드 플로우(Presigned 방식 — 파일은 BE 를 거치지 않고 �
 - [ ] [7-8](#7-8) 소셜 로그인 (provider / redirectUri / 신규 가입 여부)
 - [x] ~~[7-9](#7-9) 이미지 status enum~~ ✅ `READY`/`FAILED` 에서 폴링 종료.
       남은 것: **`failureCode` 값 목록** + 폴링 주기 권장값
-- [ ] [7-10](#7-10) 게시물 수정 조회 경로 · [7-11](#7-11) username/nickname/name
+- [x] ~~[7-10](#7-10) 게시물 수정 조회 경로~~ ✅ `GET /prompts/{id}/edit` 신설 확정.
+      남은 것: 저장할 **수정 엔드포인트**([U-2](#u-2))도 함께 필요
+- [ ] [7-11](#7-11) username/nickname/name
