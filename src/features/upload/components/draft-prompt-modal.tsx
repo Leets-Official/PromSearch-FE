@@ -1,20 +1,17 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 
 /**
- * 임시저장 복원 모달.
- * 진입 시 임시저장된 글이 있으면 띄운다. 두 가지 선택:
- * - 불러오기: 임시저장 내용을 폼에 채운다.
- * - 새로 작성하기: 임시저장을 삭제하고 빈 폼으로 시작(되돌릴 수 없음 → 문구로 경고).
+ * 임시저장 복원 모달 — Figma Modal(desktop 1517:8779 / mobile 1517:9077).
+ *
+ * 공용 Modal 규격(ConfirmModal)을 그대로 쓴다:
+ * - desktop : 430px, 좌측 정렬, 버튼 우측 정렬(48px)
+ * - mobile  : 311px, 화면 중앙, 가운데 정렬, 버튼 5:5(36px)
+ *
+ * 선택지 두 가지:
+ * - 불러오기(brand)      : 임시저장 내용을 폼에 채운다.
+ * - 새로 작성하기(neutral): 임시저장을 삭제하고 빈 폼으로 시작(되돌릴 수 없어 문구로 경고).
  */
 type DraftPromptModalProps = {
   open: boolean;
@@ -27,14 +24,13 @@ type DraftPromptModalProps = {
   discarding?: boolean;
 };
 
+/** 시안 표기: `2026.07.29 15:00` */
 function formatSavedAt(iso?: string): string | null {
   if (!iso) return null;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function DraftPromptModal({
@@ -48,35 +44,31 @@ function DraftPromptModal({
   const savedLabel = formatSavedAt(savedAt);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="gap-6">
-        <DialogHeader>
-          <DialogTitle>임시저장된 글이 있어요</DialogTitle>
-          <DialogDescription>
-            이어서 작성할까요?
-            {savedLabel ? (
-              <>
-                <br />
-                <span className="text-text-secondary">최근 저장: {savedLabel}</span>
-              </>
-            ) : null}
-            <br />
-            <span className="text-text-brand">
-              ‘새로 작성하기’를 선택하면 임시저장된 내용은 삭제돼요.
-            </span>
-          </DialogDescription>
-        </DialogHeader>
-
-        <DialogFooter>
-          <Button variant="ghost" size="lg" onClick={onDiscard} disabled={discarding}>
-            새로 작성하기
-          </Button>
-          <Button variant="brand" size="lg" onClick={onLoad} disabled={discarding}>
-            불러오기
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ConfirmModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="임시저장된 글이 있어요"
+      description={
+        <>
+          이어서 작성하시겠어요?
+          {savedLabel ? (
+            <>
+              <br />
+              최근 저장: {savedLabel}
+            </>
+          ) : null}
+          <br />
+          <span className="font-bold text-text-brand">
+            ‘새로 작성하기’를 선택하실 경우 임시저장된 글은 삭제돼요.
+          </span>
+        </>
+      }
+      cancelLabel="새로 작성하기"
+      confirmLabel="불러오기"
+      confirmDisabled={discarding}
+      onCancel={onDiscard}
+      onConfirm={onLoad}
+    />
   );
 }
 
