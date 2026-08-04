@@ -1,55 +1,50 @@
 /**
- * 업로드/임시저장 API — 프로젝트 컨벤션(상대경로 fetch + res.ok 검사 + 타입 JSON)을 따른다.
- * BE 확정 전까지 MSW 목(`/api/prompts`, `/api/prompts/draft`)이 응답한다.
+ * 프롬프트 게시 / 임시저장 API.
  *
- * 임시저장은 단일 슬롯이라 draft 엔드포인트는 id 없이 계정 1건을 다룬다.
+ * - `[PROMPT-008] POST   /prompts`        게시
+ * - `[PROMPT-005] PUT    /prompts/draft`  임시저장 생성·교체(계정당 1슬롯)
+ * - `[PROMPT-006] GET    /prompts/draft`  임시저장 조회 (없으면 404)
+ * - `[PROMPT-007] DELETE /prompts/draft`  임시저장 삭제
+ *
+ * 임시저장은 **계정당 하나**라 엔드포인트에 id 가 없다(요청서 7-6 확정).
  */
 
-import { devPreviewFetchHeaders } from "@/lib/dev-preview";
+import { api, isApiError } from "@/lib/api";
 
-import type {
-  CreatePromptRequest,
-  CreatePromptResponse,
-  DraftResponse,
-  PromptDraft,
-  PromptFormValues,
-} from "../types";
+import type { ApiDraftResult, ApiPromptWriteResult } from "./dto";
+import { toPromptDraft, toWriteRequest } from "./map";
+import type { CreatePromptResponse, DraftResponse, PromptDraft, PromptFormValues } from "../types";
 
-const JSON_HEADERS = { "Content-Type": "application/json" };
-
-/** 프롬프트 게시(생성) */
-export async function createPrompt(body: CreatePromptRequest): Promise<CreatePromptResponse> {
-  const res = await fetch("/api/prompts", {
-    method: "POST",
-    headers: JSON_HEADERS,
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`프롬프트 게시 실패: ${res.status}`);
-  return (await res.json()) as CreatePromptResponse;
+/** 프롬프트 게시 — 성공하면 상세로 이동할 id 를 돌려준다. */
+export async function createPrompt(values: PromptFormValues): Promise<CreatePromptResponse> {
+  const result = await api.post<ApiPromptWriteResult>("/prompts", toWriteRequest(values));
+  return { id: String(result.promptId) };
 }
 
-/** 임시저장 조회 — 없으면 draft: null (읽기 요청이라 dev 프리뷰 헤더 부착) */
+/**
+ * 임시저장 조회.
+ *
+ * **초안이 없으면 서버가 404 를 준다.** 이건 오류가 아니라 "없음"이므로 `draft: null` 로 바꾼다
+ * (그대로 두면 화면이 에러 상태로 빠진다).
+ */
 export async function fetchDraft(): Promise<DraftResponse> {
-  const res = await fetch("/api/prompts/draft", {
-    headers: devPreviewFetchHeaders(),
-  });
-  if (!res.ok) throw new Error(`임시저장 조회 실패: ${res.status}`);
-  return (await res.json()) as DraftResponse;
+  try {
+    const result = await api.get<ApiDraftResult>("/prompts/draft");
+    return { draft: toPromptDraft(result) };
+  } catch (error) {
+    if (isApiError(error) && error.status === 404) return { draft: null };
+    throw error;
+  }
 }
 
-/** 임시저장(단일 슬롯 덮어쓰기) */
-export async function saveDraft(values: PromptFormValues): Promise<PromptDraft> {
-  const res = await fetch("/api/prompts/draft", {
-    method: "PUT",
-    headers: JSON_HEADERS,
-    body: JSON.stringify(values),
-  });
-  if (!res.ok) throw new Error(`임시저장 실패: ${res.status}`);
-  return (await res.json()) as PromptDraft;
+/** 임시저장(단일 슬롯 덮어쓰기). 부분 작성이라 폼 값이 비어 있을 수 있다. */
+export async function saveDraft(values: Partial<PromptFormValues>): Promise<PromptDraft> {
+  const result = await api.put<ApiPromptWriteResult>("/prompts/draft", toWriteRequest(values));
+  // 응답은 확정된 메타만 준다 → 화면 캐시는 보낸 값 + 서버 시각으로 채운다.
+  return { ...values, updatedAt: result.updatedAt };
 }
 
-/** 임시저장 삭제(새로 작성하기 / 게시 완료 시 정리) */
-export async function deleteDraft(): Promise<void> {
-  const res = await fetch("/api/prompts/draft", { method: "DELETE" });
-  if (!res.ok) throw new Error(`임시저장 삭제 실패: ${res.status}`);
+/** 임시저장 삭제("새로 작성하기" / 게시 완료 정리) */
+export function deleteDraft(): Promise<void> {
+  return api.delete("/prompts/draft");
 }

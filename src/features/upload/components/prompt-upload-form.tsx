@@ -315,17 +315,13 @@ function PromptUploadForm() {
           control={control}
           name="images"
           render={({ field, fieldState }) => (
-            <div className="flex w-full flex-col gap-1">
-              <OutputImageUploader
-                label="결과물 이미지"
-                hint="프롬프트로 생성한 결과물의 이미지를 첨부해주세요. 호버하면 삭제할 수 있어요."
-                value={field.value}
-                onChange={field.onChange}
-              />
-              {fieldState.error ? (
-                <span className="text-body-3 text-red-500">{fieldState.error.message}</span>
-              ) : null}
-            </div>
+            <OutputImageUploader
+              label="결과물 이미지"
+              hint="프롬프트로 생성한 결과물의 이미지를 첨부해주세요. 호버하면 삭제할 수 있어요."
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+            />
           )}
         />
 

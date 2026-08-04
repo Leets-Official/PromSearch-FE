@@ -2,84 +2,67 @@
 
 import * as React from "react";
 // 추가/삭제 아이콘은 디자인 시스템 세트에 없어 lucide 를 유지한다(시안 추가 시 icons.tsx 로 이동).
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { ImageIcon, PlusIcon, Trash2Icon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
+
+import { MAX_IMAGES, useImageUpload } from "../hooks/use-image-upload";
+import type { PromptImageValue } from "../schema";
 
 /**
  * 결과물 이미지 업로더 (시안 793:2361).
  * - 144×81 타일. 첫 타일은 추가(+) 버튼, 이후 업로드한 이미지 썸네일.
  * - 썸네일 호버 시 딤 + 휴지통 아이콘으로 삭제.
- * - 모바일(시안 1360:8994)은 정사각 타일 3열 그리드(375 기준 109px)이고,
- *   호버가 없는 터치 환경이라 삭제 버튼을 항상 노출한다.
- * - 최대 10장, 중복(같은 파일) 제외. 파일 읽는 동안 + 타일에 로딩 스피너 노출.
- * - 목 단계라 파일을 data URL 로 읽어 보관한다(BE 연동 시 업로드 후 URL 로 교체).
+ * - 모바일(시안 1360:8994)은 정사각 타일 3열 그리드이고, 호버가 없는 터치 환경이라
+ *   삭제 버튼을 항상 노출한다.
+ * - 최대 10장.
+ *
+ * 파일은 **S3 로 직접** 올라간다(Presigned). 그래서 타일은 단순 미리보기가 아니라
+ * 진행 상태를 함께 보여준다: 업로드 중 → (워터마크) 처리 중 → 완료 / 실패.
+ * 실패한 타일은 남겨서 사용자가 지우고 다시 시도할 수 있게 한다.
  */
 type OutputImageUploaderProps = {
   label: string;
   hint?: string;
-  value: string[];
-  onChange: (next: string[]) => void;
+  value: PromptImageValue[];
+  onChange: (next: PromptImageValue[]) => void;
+  /** 검증 에러 메시지 */
+  error?: string;
   className?: string;
 };
-
-/** 결과물 이미지 최대 장수 */
-const MAX_IMAGES = 10;
 
 // mobile: 폭을 3등분한 정사각(그리드 셀 채움) / sm~: 시안 데스크톱 값 144x81 고정
 const TILE = "aspect-square w-full rounded-md sm:aspect-auto sm:h-[81px] sm:w-[144px] sm:shrink-0";
 
-function readAsDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
+/** 상태별 오버레이 문구. ready 면 없음(이미지만 보임) */
+const STATUS_LABEL: Partial<Record<PromptImageValue["status"], string>> = {
+  uploading: "업로드 중",
+  processing: "처리 중",
+  failed: "실패",
+};
 
 function OutputImageUploader({
   label,
   hint,
   value,
   onChange,
+  error,
   className,
 }: OutputImageUploaderProps) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
-  const [isReading, setIsReading] = React.useState(false);
+  const {
+    addFiles,
+    removeAt,
+    isUploading,
+    error: uploadError,
+  } = useImageUpload({
+    value,
+    onChange,
+  });
 
   const isFull = value.length >= MAX_IMAGES;
-
-  const handleFiles = async (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
-    const files = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
-    if (files.length === 0) return;
-
-    setIsReading(true);
-    try {
-      const dataUrls = await Promise.all(files.map(readAsDataURL));
-      // 중복 제거(기존 value + 이번 배치 내), 최대 10장까지만 반영
-      const seen = new Set(value);
-      const additions: string[] = [];
-      for (const url of dataUrls) {
-        if (seen.has(url)) continue;
-        seen.add(url);
-        additions.push(url);
-      }
-      if (additions.length > 0) {
-        onChange([...value, ...additions].slice(0, MAX_IMAGES));
-      }
-    } finally {
-      setIsReading(false);
-      // 같은 파일 재선택 허용(값 초기화)
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  };
-
-  const removeAt = (index: number) => {
-    onChange(value.filter((_, i) => i !== index));
-  };
+  const message = error ?? uploadError;
 
   return (
     <div className={cn("flex w-full flex-col gap-3", className)}>
@@ -95,7 +78,7 @@ function OutputImageUploader({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={isReading || isFull}
+          disabled={isUploading || isFull}
           aria-label={
             isFull ? `이미지는 최대 ${MAX_IMAGES}장까지 첨부할 수 있어요` : "결과물 이미지 추가"
           }
@@ -105,17 +88,37 @@ function OutputImageUploader({
             "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-bg-secondary",
           )}
         >
-          {isReading ? <Spinner className="h-6 w-20" /> : <PlusIcon className="size-6" />}
+          {isUploading ? <Spinner className="h-6 w-20" /> : <PlusIcon className="size-6" />}
         </button>
 
-        {value.map((src, index) => (
-          <div key={`${index}-${src.slice(0, 16)}`} className={cn(TILE, "group relative")}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- data URL 미리보기(목) */}
-            <img
-              src={src}
-              alt={`결과물 이미지 ${index + 1}`}
-              className="pointer-events-none absolute inset-0 size-full rounded-md border border-stroke-primary object-cover"
-            />
+        {value.map((image, index) => (
+          <div key={image.imageId} className={cn(TILE, "group relative")}>
+            {image.previewUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element -- 로컬 objectURL 미리보기 */
+              <img
+                src={image.previewUrl}
+                alt={`결과물 이미지 ${index + 1}`}
+                className="pointer-events-none absolute inset-0 size-full rounded-md border border-stroke-primary object-cover"
+              />
+            ) : (
+              /* 임시저장에서 복원한 이미지 — 응답에 조회용 URL 이 없어 자리표시만 둔다(요청서 U-1) */
+              <div className="absolute inset-0 flex items-center justify-center rounded-md border border-stroke-primary bg-bg-secondary text-text-disabled">
+                <ImageIcon className="size-6" />
+              </div>
+            )}
+
+            {/* 진행 상태 — 완료된 이미지에는 아무것도 덮지 않는다 */}
+            {STATUS_LABEL[image.status] ? (
+              <div
+                className={cn(
+                  "absolute inset-0 flex items-center justify-center rounded-md text-caption-1 text-text-on-brand",
+                  image.status === "failed" ? "bg-red-500/70" : "bg-dim",
+                )}
+              >
+                {STATUS_LABEL[image.status]}
+              </div>
+            ) : null}
+
             {/*
               sm~ : 호버 시에만 딤 + 중앙 휴지통 즉시 노출(transition 없음).
               mobile: 호버가 없으므로 딤 없이 우상단 삭제 버튼을 상시 노출(이미지를 가리지 않게).
@@ -134,13 +137,19 @@ function OutputImageUploader({
         ))}
       </div>
 
+      {message ? <span className="text-body-3 text-red-500">{message}</span> : null}
+
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png"
         multiple
         hidden
-        onChange={(e) => void handleFiles(e.target.files)}
+        onChange={(e) => {
+          void addFiles(e.target.files);
+          // 같은 파일 재선택 허용(값 초기화)
+          e.target.value = "";
+        }}
       />
     </div>
   );

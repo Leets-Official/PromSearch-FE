@@ -22,7 +22,8 @@ function values(overrides: Partial<PromptFormValues> = {}): PromptFormValues {
 describe("createPrompt (MSW 목 연동)", () => {
   it("게시하면 새 프롬프트 id 를 받는다", async () => {
     const res = await createPrompt(values());
-    expect(res.id).toMatch(/^prompt-new-/);
+    // 서버는 숫자 promptId 를 준다 → 라우팅용 문자열로 변환해 돌려준다
+    expect(res.id).toMatch(/^\d+$/);
   });
 });
 

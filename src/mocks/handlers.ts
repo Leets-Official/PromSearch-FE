@@ -2,7 +2,11 @@ import { delay, http, HttpResponse } from "msw";
 
 import type { GradeTab, ReportedItem, ReportTab } from "@/features/admin/types";
 import type { AiModel, GalleryNav, JobCategory, OutputType, Task } from "@/features/gallery/types";
-import type { PromptDraft, PromptFormValues } from "@/features/upload/types";
+import type {
+  ApiDraftResult,
+  ApiImageStatus,
+  ApiPromptWriteRequest,
+} from "@/features/upload/api/dto";
 import { queryGradeApplications, queryReports } from "@/mocks/admin-query";
 import { adminStore, approveGrade, setReportStatus } from "@/mocks/data/admin";
 import { PROMPT_SEED } from "@/mocks/data/prompts";
@@ -162,37 +166,98 @@ export const handlers = [
     return HttpResponse.json(response);
   }),
 
-  // 프롬프트 게시(생성) — 성공 시 새 id 반환. 검증은 프론트 zod 담당.
-  http.post("/api/prompts", async ({ request }) => {
+  // ── 업로드 (임시 목 — BE 장애 대응) ──────────────────────────────────────
+
+  // [PROMPT-008] 프롬프트 게시 — 검증은 프론트 zod 담당, 목은 id 만 발급한다.
+  http.post("/api/v1/prompts", async ({ request }) => {
     const forced = await forceEdge(readDevEdge(request));
     if (forced) return forced;
-    await request.json().catch(() => null); // 본문 소비(목은 저장하지 않고 id 만 발급)
+    await request.json().catch(() => null);
     createdCount += 1;
-    const id = `prompt-new-${String(createdCount).padStart(3, "0")}`;
-    return HttpResponse.json({ id }, { status: 201 });
+    return jsonEnvelope(writeResult(1000 + createdCount, "ACTIVE"), 201);
   }),
 
-  // 임시저장 조회 — 단일 슬롯. 없으면 draft: null.
-  // ⚠️ 반드시 "/api/prompts/:id" 보다 먼저 등록해야 draft 가 :id(=“draft”)로 새지 않는다.
+  // [PROMPT-006] 임시저장 조회 — 단일 슬롯. **없으면 404**(서버 계약).
+  // ⚠️ 반드시 "/api/v1/prompts/:id" 보다 먼저 등록해야 draft 가 :id(="draft")로 새지 않는다.
   // dev 툴바 "임시저장" 축(seeded/none)으로 초안 유무를 강제할 수 있다.
-  http.get("/api/prompts/draft", async ({ request }) => {
+  http.get("/api/v1/prompts/draft", async ({ request }) => {
     const forced = await forceEdge(readDevEdge(request));
     if (forced) return forced;
-    if (readDevDraft(request) === "none") return HttpResponse.json({ draft: null });
-    return HttpResponse.json({ draft: draftState });
+    if (readDevDraft(request) === "none" || !draftState) {
+      return errorEnvelope(404, "COMMON-404", "임시저장이 없습니다.");
+    }
+    return jsonEnvelope(draftState);
   }),
 
-  // 임시저장(덮어쓰기) — 단일 슬롯
-  http.put("/api/prompts/draft", async ({ request }) => {
-    const values = (await request.json()) as PromptFormValues;
-    draftState = { ...values, updatedAt: new Date().toISOString() };
-    return HttpResponse.json(draftState);
+  // [PROMPT-005] 임시저장 생성·교체
+  http.put("/api/v1/prompts/draft", async ({ request }) => {
+    const body = (await request.json()) as ApiPromptWriteRequest;
+    if (!body.title?.trim()) {
+      return errorEnvelope(400, "COMMON-400", "제목을 입력해주세요.");
+    }
+    draftState = {
+      ...body,
+      title: body.title,
+      promptId: 1,
+      status: "DRAFT",
+      pricePoint: body.contentType === "PREMIUM" ? 100 : 0,
+      updatedAt: new Date().toISOString(),
+    };
+    return jsonEnvelope(writeResult(1, "DRAFT"));
   }),
 
-  // 임시저장 삭제("새로 작성하기" / 게시 완료 정리)
-  http.delete("/api/prompts/draft", () => {
+  // [PROMPT-007] 임시저장 삭제
+  http.delete("/api/v1/prompts/draft", () => {
+    if (!draftState) return errorEnvelope(404, "COMMON-404", "임시저장이 없습니다.");
     draftState = null;
-    return new HttpResponse(null, { status: 204 });
+    return jsonEnvelope("삭제되었습니다.");
+  }),
+
+  // [PROMPT-002] 업로드 URL 발급 — 목이라 S3 대신 로컬 스텁 URL 을 준다.
+  http.post("/api/v1/prompt-images/upload-urls", async ({ request }) => {
+    const body = (await request.json()) as { images: { fileName: string }[] };
+    return jsonEnvelope({
+      images: body.images.map((_, index) => {
+        const imageId = `mock-image-${++imageCounter}-${index}`;
+        imageStatusState.set(imageId, "UPLOADING");
+        return {
+          imageId,
+          uploadUrl: `https://mock-s3.local/upload/${imageId}`,
+          expiresAt: new Date(Date.now() + 10 * 60_000).toISOString(),
+        };
+      }),
+    });
+  }),
+
+  // S3 직접 업로드(PUT) 스텁 — 실제로는 우리 서버가 아니라 S3 로 나간다.
+  http.put("https://mock-s3.local/upload/:imageId", ({ params }) => {
+    imageStatusState.set(String(params.imageId), "UPLOADED");
+    return new HttpResponse(null, { status: 200 });
+  }),
+
+  // [PROMPT-003] 업로드 완료 검증
+  http.post("/api/v1/prompt-images/:imageId/complete", ({ params }) => {
+    const imageId = String(params.imageId);
+    imageStatusState.set(imageId, "PROCESSING");
+    // 워터마크 처리를 흉내 내 잠시 뒤 READY 로 바꾼다(폴링 경로를 실제로 태우기 위함).
+    setTimeout(() => imageStatusState.set(imageId, "READY"), 2_000);
+    return jsonEnvelope({ imageId, status: "UPLOADED", uploadedAt: new Date().toISOString() });
+  }),
+
+  // [PROMPT-004] 상태 일괄 조회 — 요청 순서대로 돌려준다
+  http.get("/api/v1/prompt-images/statuses", ({ request }) => {
+    const ids = (new URL(request.url).searchParams.get("imageIds") ?? "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    return jsonEnvelope({
+      images: ids.map((imageId) => ({
+        imageId,
+        status: imageStatusState.get(imageId) ?? "READY",
+        failureCode: null,
+      })),
+    });
   }),
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -376,22 +441,41 @@ async function adminModerate(records: ReportedItem[], id: string, request: Reque
 // 게시 생성 카운터(목 전용) — 새 id 발급용
 let createdCount = 0;
 
+/** 업로드 이미지 상태(목 전용). imageId → 처리 단계 */
+const imageStatusState = new Map<string, ApiImageStatus>();
+let imageCounter = 0;
+
+/** 게시/임시저장 공통 응답 */
+function writeResult(promptId: number, status: "ACTIVE" | "DRAFT") {
+  return {
+    promptId,
+    status,
+    visibility: "PUBLIC" as const,
+    pricePoint: 0,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 /**
- * 임시저장 단일 슬롯(목 전용).
- * 초기값으로 예시 드래프트를 넣어 진입 시 "불러오기/새로작성" 모달을 바로 확인할 수 있게 한다.
- * (dev 툴바 edge=empty 로 "없음" 상태도 확인 가능)
+ * 임시저장 단일 슬롯(목 전용) — **서버 응답 모양**(ApiDraftResult)으로 보관한다.
+ * 진입 시 "불러오기/새로작성" 모달을 바로 확인할 수 있게 초기값을 넣어 둔다.
+ * (dev 툴바 임시저장 축 none 으로 "없음"(404) 상태도 확인 가능)
  */
-const SEEDED_DRAFT: PromptDraft = {
+const SEEDED_DRAFT: ApiDraftResult = {
+  promptId: 1,
   title: "임시저장된 블로그 글쓰기 프롬프트",
   description: "블로그 초안을 빠르게 잡아주는 프롬프트입니다.",
-  outputType: "text",
-  jobCategories: ["worker", "planner"],
-  tasks: ["report", "document"],
-  model: "chatgpt",
-  modelEtcName: "",
-  tier: "free",
-  body: "너는 전문 블로그 작가야. 아래 주제에 대해 목차와 초안을 작성해줘: ",
+  outputType: "TEXT",
+  jobTagIds: [2, 4],
+  taskTagIds: [8, 10],
+  aiModelTagId: 13,
+  customAiModel: null,
+  contentType: "FREE",
+  promptBody: "너는 전문 블로그 작가야. 아래 주제에 대해 목차와 초안을 작성해줘: ",
+  visibility: "PUBLIC",
   images: [],
+  status: "DRAFT",
+  pricePoint: 0,
   updatedAt: "2026-07-27T09:30:00.000Z",
 };
-let draftState: PromptDraft | null = SEEDED_DRAFT;
+let draftState: ApiDraftResult | null = SEEDED_DRAFT;
