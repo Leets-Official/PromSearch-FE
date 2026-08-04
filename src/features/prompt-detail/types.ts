@@ -4,7 +4,7 @@
  * 기획 확정값(테크 스펙 PS-37 / 2026-07-21) 기준:
  * - 레시피(본문) 잠금 판정은 BE 응답 `access` 를 신뢰한다(프론트는 렌더만).
  *   응답에 access 가 없을 때만 tier + 인증으로 폴백 계산한다(access.ts).
- * - 댓글은 표시 전용(작성/삭제/신고는 후속). 대댓글은 1-depth.
+ * - 대댓글은 1-depth.
  * - 아웃풋 이미지는 다중(캐러셀).
  *
  * 공용 요약 타입(PromptSummary)·라벨은 gallery 에서 가져와 단일 출처를 유지한다.
@@ -30,15 +30,19 @@ export type RecipeAccess = {
 
 /** 상세 응답 1건 */
 export type PromptDetail = PromptSummary & {
-  /** 아웃풋 이미지들(워터마크 합성본). 최소 1장 */
+  /** 작성자 식별자 — 프로필 이동·본인 게시글 판정 */
+  authorId: number;
+  /** 아웃풋 이미지들(워터마크 합성본). sortOrder 순 */
   images: string[];
-  /** 설명 탭 본문(리치 텍스트/마크다운) */
+  /** 설명 탭 본문 */
   descriptionBody: string;
-  /** 레시피 탭 본문(잠금 대상). locked 면 프리뷰/마스킹된 값만 신뢰 */
+  /** 레시피 탭 본문(잠금 대상). locked 면 서버가 잘라 보낸 만큼만 들어 있다 */
   recipeBody: string;
   /** 잠금 판정(BE). 없으면 프론트 폴백 계산 */
   access?: RecipeAccess | null;
-  /** 현재 사용자가 좋아요(추천)했는지 — 좋아요 토글 = 추천수 증감 */
+  /** 프리미엄 열람에 필요한 포인트. free 는 0 */
+  pricePoint: number;
+  /** 현재 사용자가 좋아요했는지 */
   liked: boolean;
   /** 현재 사용자가 북마크했는지 */
   bookmarked: boolean;
@@ -46,22 +50,37 @@ export type PromptDetail = PromptSummary & {
   commentCount: number;
 };
 
-/** 댓글 1개(대댓글 1-depth 포함) */
+/**
+ * 댓글 상태 — BE `ACTIVE`/`HIDDEN`/`DELETED` 와 1:1 (요청서 7-7 회신).
+ * `hidden`·`deleted` 는 본문·작성자·메뉴를 감추고 안내 문구만 렌더한다.
+ */
+export type CommentStatus = "active" | "hidden" | "deleted";
+
+/** 댓글 1개. 대댓글 목록은 별도 API 라 여기 없고 개수(replyCount)만 온다. */
 export type PromptComment = {
   id: string;
   author: PromptAuthor;
   body: string;
   /** ISO 문자열 */
   createdAt: string;
+  status: CommentStatus;
   /** 게시글 작성자 배지 */
   isAuthor: boolean;
-  /** 블라인드 처리 → 본문 대신 안내문 렌더 */
-  isBlinded: boolean;
-  /** 대댓글(1-depth). 최상위 댓글에만 존재 */
-  replies: PromptComment[];
+  /** 로그인 사용자 본인의 댓글 → 수정·삭제 노출 */
+  isMine: boolean;
+  /** 활성 대댓글 수. 최상위 댓글만 가진다(대댓글은 0) */
+  replyCount: number;
 };
 
-/** 좋아요(추천) 토글 응답 */
+/** 커서 페이지 1장 — 최상위 댓글/대댓글이 같은 모양을 쓴다. */
+export type CommentPage = {
+  comments: PromptComment[];
+  /** 다음 페이지 커서. 마지막이면 null */
+  nextCursor: number | null;
+  hasNext: boolean;
+};
+
+/** 좋아요 토글 응답 */
 export type LikeToggleResponse = {
   liked: boolean;
   likeCount: number;

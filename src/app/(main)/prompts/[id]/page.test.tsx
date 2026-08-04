@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import PromptDetailPage from "./page";
 
-let mockId = "prompt-001";
+let mockId = "1";
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: mockId }),
   // 모바일 헤더(MobilePageHeader)의 뒤로가기
@@ -31,14 +31,14 @@ function renderPage() {
 
 describe("PromptDetailPage", () => {
   it("존재하는 id → 상세를 렌더한다", async () => {
-    mockId = "prompt-001";
+    mockId = "1"; // 목 시드 1번 = ACTIVE
     renderPage();
 
     await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument());
   });
 
   it("없는/비공개 id → 404 안내", async () => {
-    mockId = "prompt-005"; // 시드상 hidden → 404
+    mockId = "5"; // 시드상 hidden → 404
     renderPage();
 
     await waitFor(() => expect(screen.getByText("프롬프트를 찾을 수 없어요")).toBeInTheDocument());

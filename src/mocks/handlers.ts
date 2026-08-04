@@ -1,21 +1,31 @@
 import { delay, http, HttpResponse } from "msw";
 
-import type { UserStatus } from "@/analytics/events";
 import type { GradeTab, ReportedItem, ReportTab } from "@/features/admin/types";
-import { MOCK_VIEWER_HEADER } from "@/features/prompt-detail/api/prompt-detail";
 import type { AiModel, GalleryNav, JobCategory, OutputType, Task } from "@/features/gallery/types";
 import type { PromptDraft, PromptFormValues } from "@/features/upload/types";
 import { queryGradeApplications, queryReports } from "@/mocks/admin-query";
 import { adminStore, approveGrade, setReportStatus } from "@/mocks/data/admin";
-import { buildComments } from "@/mocks/data/comments";
 import { PROMPT_SEED } from "@/mocks/data/prompts";
+import {
+  addComment,
+  addReply,
+  editComment,
+  listComments,
+  listReplies,
+  promptDetail,
+  removeComment,
+  toggleBookmarkState,
+  toggleLikeState,
+} from "@/mocks/detail-api";
 import { jobCards, paginate, popularCards } from "@/mocks/home-prompt-cards";
-import { findPromptDetail, toSeedId } from "@/mocks/prompt-detail-query";
 import { queryPrompts } from "@/mocks/prompt-query";
 import {
   DEV_CONTENT_HEADER,
   DEV_DRAFT_HEADER,
   DEV_EDGE_HEADER,
+  DEV_PREVIEW_COOKIE,
+  parseDevPreview,
+  type DevAuth,
   type DevContent,
   type DevDraft,
   type DevEdge,
@@ -36,6 +46,21 @@ function readDevDraft(request: Request): DevDraft {
 }
 
 /**
+ * 뷰어 인증 상태 — dev 툴바 쿠키에서 읽는다.
+ *
+ * 실서버는 `Authorization` 헤더로 판정하지만 목 단계에는 토큰이 없다. 툴바 인증 축을 그대로
+ * 쓰면 디자이너/기획자가 비회원↔회원 잠금 화면을 토글해 확인할 수 있다(목 전용 경로).
+ */
+function readDevAuth(request: Request): DevAuth {
+  const cookie = request.headers.get("cookie") ?? "";
+  const entry = cookie
+    .split("; ")
+    .find((c) => c.startsWith(`${DEV_PREVIEW_COOKIE}=`))
+    ?.slice(DEV_PREVIEW_COOKIE.length + 1);
+  return parseDevPreview(entry).auth;
+}
+
+/**
  * 엣지 상태(loading/error)를 응답 앞단에서 강제한다. 해당하면 Response 를, 아니면 null 을 반환.
  * (empty 는 응답 형태가 엔드포인트마다 달라 각 핸들러에서 개별 처리)
  */
@@ -50,8 +75,16 @@ async function forceEdge(edge: DevEdge): Promise<Response | null> {
 }
 
 /** BE 공통 응답 봉투로 감싼다(`api.*` 헬퍼가 `result` 만 꺼내 쓴다). */
-function jsonEnvelope<T>(result: T) {
-  return HttpResponse.json({ success: true, code: "COMMON-200", message: "성공했습니다.", result });
+function jsonEnvelope<T>(result: T, status = 200) {
+  return HttpResponse.json(
+    { success: true, code: "COMMON-200", message: "성공했습니다.", result },
+    { status },
+  );
+}
+
+/** 실패 응답도 같은 봉투 규격을 지킨다(`success: false`) — 클라이언트 에러 정규화 경로 검증용. */
+function errorEnvelope(status: number, code: string, message: string) {
+  return HttpResponse.json({ success: false, code, message }, { status });
 }
 
 // 콤마 구분 멀티값 파싱 (?tasks=ppt,report)
@@ -162,51 +195,100 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  // 상세 조회 — 잠금(access) 판정 포함 (F-2). 뷰어 상태는 목 전용 헤더로 받는다.
-  http.get("/api/prompts/:id", async ({ params, request }) => {
+  // ──────────────────────────────────────────────────────────────────────────
+  // ⚠️ 임시 목 — BE 장애 대응 (2026-08-05). 실 엔드포인트를 그대로 흉내 낸다.
+  // BE 복구 시 아래 상세·댓글 핸들러와 `mocks/detail-api.ts` 를 삭제하면 실서버로 붙는다.
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // [PROMPT-001] 상세 조회 — 잠금(access) 판정과 본문 절삭까지 서버처럼 처리한다.
+  http.get("/api/v1/prompts/:id", async ({ params, request }) => {
     const forced = await forceEdge(readDevEdge(request));
     if (forced) return forced;
 
-    const id = String(params.id);
-    const viewerStatus = (request.headers.get(MOCK_VIEWER_HEADER) as UserStatus) ?? "anonymous";
-
-    const detail = findPromptDetail(PROMPT_SEED, id, viewerStatus, readDevContent(request));
-    if (!detail) {
-      return new HttpResponse(null, { status: 404 });
-    }
-    return HttpResponse.json({
-      ...detail,
-      liked: likedState.get(id) ?? false,
-      bookmarked: bookmarkedState.get(id) ?? false,
-    });
+    const detail = promptDetail(Number(params.id), readDevAuth(request), readDevContent(request));
+    if (!detail) return errorEnvelope(404, "COMMON-404", "요청한 리소스를 찾을 수 없습니다.");
+    return jsonEnvelope(detail);
   }),
 
-  // 상세 댓글 — 표시 전용
-  http.get("/api/prompts/:id/comments", async ({ params, request }) => {
+  // [COMMENT-001] 최상위 댓글 — 최신순 커서 페이지
+  http.get("/api/v1/prompts/:id/comments", async ({ params, request }) => {
     const edge = readDevEdge(request);
     const forced = await forceEdge(edge);
     if (forced) return forced;
-    if (edge === "empty") return HttpResponse.json([]);
-    // 상세가 세는 commentCount 와 같은 키를 봐야 해서 시드 id 로 맞춘다
-    return HttpResponse.json(buildComments(toSeedId(String(params.id)), readDevContent(request)));
+
+    const query = new URL(request.url).searchParams;
+    const cursor = query.get("cursor") ? Number(query.get("cursor")) : null;
+    const size = Number(query.get("size") ?? "20");
+
+    if (edge === "empty") {
+      return jsonEnvelope({ comments: [], nextCursor: null, hasNext: false });
+    }
+    return jsonEnvelope(listComments(Number(params.id), cursor, size));
   }),
 
-  // 좋아요(추천) 토글 — 인메모리 상태로 liked/카운트를 뒤집어 돌려준다(낙관적 롤백 테스트용)
-  http.post("/api/prompts/:id/like", ({ params }) => {
-    const id = String(params.id);
-    const base = PROMPT_SEED.find((r) => r.id === toSeedId(id))?.stats.likes ?? 0;
-    const liked = !(likedState.get(id) ?? false);
-    likedState.set(id, liked);
-    return HttpResponse.json({ liked, likeCount: base + (liked ? 1 : 0) });
+  // [COMMENT-002] 댓글 작성
+  http.post("/api/v1/prompts/:id/comments", async ({ params, request }) => {
+    const { content } = (await request.json()) as { content: string };
+    return jsonEnvelope(addComment(Number(params.id), content), 201);
   }),
 
-  // 북마크 토글 — 인메모리 상태로 bookmarked 를 뒤집어 돌려준다
-  http.post("/api/prompts/:id/bookmark", ({ params }) => {
-    const id = String(params.id);
-    const bookmarked = !(bookmarkedState.get(id) ?? false);
-    bookmarkedState.set(id, bookmarked);
-    return HttpResponse.json({ bookmarked });
+  // [COMMENT-006] 대댓글 — 오래된순 커서 페이지
+  http.get("/api/v1/comments/:commentId/replies", async ({ params, request }) => {
+    const forced = await forceEdge(readDevEdge(request));
+    if (forced) return forced;
+
+    const query = new URL(request.url).searchParams;
+    const cursor = query.get("cursor") ? Number(query.get("cursor")) : null;
+    const size = Number(query.get("size") ?? "20");
+
+    const result = listReplies(Number(params.commentId), cursor, size);
+    if (!result) return errorEnvelope(404, "COMMON-404", "요청한 리소스를 찾을 수 없습니다.");
+    return jsonEnvelope(result);
   }),
+
+  // [COMMENT-005] 대댓글 작성 — 대댓글에 다시 달면 400
+  http.post("/api/v1/comments/:commentId/replies", async ({ params, request }) => {
+    const { content } = (await request.json()) as { content: string };
+    const created = addReply(Number(params.commentId), content);
+    if (!created) return errorEnvelope(400, "COMMON-400", "잘못된 요청입니다.");
+    return jsonEnvelope(created, 201);
+  }),
+
+  // [COMMENT-003] 댓글 수정 — 본인만
+  http.patch("/api/v1/comments/:commentId", async ({ params, request }) => {
+    const { content } = (await request.json()) as { content: string };
+    const result = editComment(Number(params.commentId), content);
+    if (result === null)
+      return errorEnvelope(404, "COMMON-404", "요청한 리소스를 찾을 수 없습니다.");
+    if (result === "forbidden")
+      return errorEnvelope(403, "COMMON-403", "허용되지 않는 요청입니다.");
+    return jsonEnvelope(result);
+  }),
+
+  // [COMMENT-004] 댓글 삭제 — 본인만, 논리 삭제
+  http.delete("/api/v1/comments/:commentId", ({ params }) => {
+    const result = removeComment(Number(params.commentId));
+    if (result === null)
+      return errorEnvelope(404, "COMMON-404", "요청한 리소스를 찾을 수 없습니다.");
+    if (result === "forbidden")
+      return errorEnvelope(403, "COMMON-403", "허용되지 않는 요청입니다.");
+    return jsonEnvelope("삭제되었습니다.");
+  }),
+
+  // [COMMUNITY-001/002] 좋아요 등록·취소 — 서버처럼 메서드로 갈린다
+  http.post("/api/v1/prompts/:id/likes", ({ params }) => {
+    const promptId = Number(params.id);
+    return jsonEnvelope({ promptId, liked: true, likeCount: toggleLikeState(promptId, true) }, 201);
+  }),
+  http.delete("/api/v1/prompts/:id/likes", ({ params }) => {
+    const promptId = Number(params.id);
+    return jsonEnvelope({ promptId, liked: false, likeCount: toggleLikeState(promptId, false) });
+  }),
+
+  // 북마크 토글 — **BE 에 API 가 없어 목 유지**(요청서 D-1). 상세 목과 상태를 공유한다.
+  http.post("/api/prompts/:id/bookmark", ({ params }) =>
+    HttpResponse.json({ bookmarked: toggleBookmarkState(Number(params.id)) }),
+  ),
 
   // ── 어드민 ────────────────────────────────────────────────────────────
   // 신고 게시글 목록 (PS-49)
@@ -290,8 +372,6 @@ async function adminModerate(records: ReportedItem[], id: string, request: Reque
 }
 
 // 토글 인메모리 상태(목 전용). id → 현재 사용자의 좋아요/북마크 여부
-const likedState = new Map<string, boolean>();
-const bookmarkedState = new Map<string, boolean>();
 
 // 게시 생성 카운터(목 전용) — 새 id 발급용
 let createdCount = 0;

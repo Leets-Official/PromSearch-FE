@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useBookmark } from "@/features/prompt-detail/hooks/use-bookmark";
-import { useComments } from "@/features/prompt-detail/hooks/use-comments";
 import { useDetailTab } from "@/features/prompt-detail/hooks/use-detail-tab";
 import { useLikePrompt } from "@/features/prompt-detail/hooks/use-like-prompt";
 import type { PromptDetail } from "@/features/prompt-detail/types";
@@ -41,7 +40,6 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const { tab, setTab } = useDetailTab();
   const like = useLikePrompt(detail.id);
   const bookmark = useBookmark(detail.id);
-  const comments = useComments(detail.id);
   const [copied, setCopied] = useState(false);
   // 신고 / 로그인 / 포인트 결제 모달
   const [reportOpen, setReportOpen] = useState(false);
@@ -113,7 +111,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
               size="icon-sm"
               aria-label="추천"
               aria-pressed={detail.liked}
-              onClick={() => like.mutate()}
+              onClick={() => like.mutate(detail.liked)}
             >
               {detail.liked ? <HeartFilledIcon /> : <HeartIcon />}
             </Button>
@@ -138,7 +136,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
           images={detail.images}
           title={detail.title}
           liked={detail.liked}
-          onToggleLike={() => like.mutate()}
+          onToggleLike={() => like.mutate(detail.liked)}
           bookmarked={detail.bookmarked}
           onToggleBookmark={() => bookmark.mutate()}
           onReport={handleReport}
@@ -184,7 +182,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
             />
           ) : null}
           {tab === "comments" ? (
-            <CommentPanel comments={comments.data ?? []} className="min-h-0 flex-1" />
+            <CommentPanel promptId={detail.id} className="min-h-0 flex-1" />
           ) : null}
         </div>
       </div>
@@ -216,12 +214,13 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
         }}
       />
 
-      {/* 잠금 CTA — 프리미엄 포인트 결제 확인 */}
+      {/* 잠금 CTA — 프리미엄 포인트 결제 확인. 가격은 상세 응답의 pricePoint 를 그대로 쓴다. */}
       <PointUnlockModal
         open={pointOpen}
         onOpenChange={setPointOpen}
+        requiredPoints={detail.pricePoint}
         onConfirm={() => {
-          // TODO: 포인트 차감 API 연동 후 상세 재조회
+          // TODO: 포인트 열람 API 연동 후 상세 재조회 (요청서 D-2 — 엔드포인트 대기)
           setPointOpen(false);
         }}
       />

@@ -10,18 +10,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDetailDate } from "@/features/prompt-detail/format";
-import type { PromptComment } from "@/features/prompt-detail/types";
+import { useCommentReplies } from "@/features/prompt-detail/hooks/use-comments";
+import type { CommentStatus, PromptComment } from "@/features/prompt-detail/types";
 import { cn } from "@/lib/utils";
 import { ProfileAvatar } from "./profile-avatar";
 
+/** 본문을 감추는 상태별 안내 문구(요청서 7-7). active 면 없음 → 본문 렌더 */
+const PLACEHOLDER_BY_STATUS: Partial<Record<CommentStatus, string>> = {
+  hidden: "블라인드 처리된 댓글입니다.",
+  deleted: "삭제된 댓글입니다.",
+};
+
 /**
- * 댓글 액션 메뉴(⋯) — 답글 / 신고하기.
+ * 댓글 액션 메뉴(⋯) — 답글 / 수정하기 / 삭제하기 / 신고하기.
  *
- * 대댓글(= 이미 1-depth)에는 답글 항목이 없다. 디자인상 스레드 깊이가 1이라
- * 답글의 답글을 받으면 접히는 단위가 무너지기 때문(관련 UX 판단은 CommentPanel 주석 참고).
- * 블라인드 댓글은 본문이 없으므로 메뉴 자체를 달지 않는다.
+ * - 대댓글(= 이미 1-depth)에는 답글이 없다. 스레드 깊이가 1이라 답글의 답글을 받으면
+ *   접히는 단위가 무너진다(관련 UX 판단은 CommentPanel 주석 참고).
+ * - **수정·삭제는 본인 댓글에만** 노출한다. 서버도 작성자만 허용(403)하므로 여기서 감추는 건
+ *   UX 이고 권한 경계는 BE 다.
+ * - 본인 댓글에는 신고를 노출하지 않는다(자기 글 신고는 의미가 없다).
  */
-function CommentMenu({ onReply, onReport }: { onReply?: () => void; onReport: () => void }) {
+function CommentMenu({
+  isMine,
+  onReply,
+  onEdit,
+  onDelete,
+  onReport,
+}: {
+  isMine: boolean;
+  onReply?: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onReport: () => void;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -42,35 +63,63 @@ function CommentMenu({ onReply, onReport }: { onReply?: () => void; onReport: ()
             답글
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuItem
-          className="cursor-pointer px-3 py-2 text-body-2 text-text-brand focus:bg-bg-secondary focus:text-text-brand"
-          onClick={onReport}
-        >
-          신고하기
-        </DropdownMenuItem>
+
+        {isMine ? (
+          <>
+            <DropdownMenuItem
+              className="cursor-pointer px-3 py-2 text-body-2 focus:bg-bg-secondary focus:text-text-primary"
+              onClick={onEdit}
+            >
+              수정하기
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="cursor-pointer px-3 py-2 text-body-2 text-text-brand focus:bg-bg-secondary focus:text-text-brand"
+              onClick={onDelete}
+            >
+              삭제하기
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <DropdownMenuItem
+            className="cursor-pointer px-3 py-2 text-body-2 text-text-brand focus:bg-bg-secondary focus:text-text-brand"
+            onClick={onReport}
+          >
+            신고하기
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-function CommentBody({
-  comment,
-  onReply,
-  onReport,
-  highlighted,
-}: {
+type CommentBodyProps = {
   comment: PromptComment;
   /** 미지정이면 메뉴에 "답글"이 빠진다(= 대댓글) */
   onReply?: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
   onReport: () => void;
-  /** 답글 작성 대상으로 지목된 댓글 — 어디에 답글을 다는지 시각적으로 묶어 준다 */
+  /** 답글/수정 작업 대상으로 지목된 댓글 — 무엇을 다루는 중인지 시각적으로 묶어 준다 */
   highlighted?: boolean;
-}) {
-  if (comment.isBlinded) {
+};
+
+function CommentBody({
+  comment,
+  onReply,
+  onEdit,
+  onDelete,
+  onReport,
+  highlighted,
+}: CommentBodyProps) {
+  const placeholder = PLACEHOLDER_BY_STATUS[comment.status];
+
+  // 블라인드/삭제 — 본문·작성자·메뉴를 감추고 안내 문구만 남긴다.
+  // (대댓글이 달린 댓글도 자리는 유지돼야 스레드가 끊기지 않는다)
+  if (placeholder) {
     return (
       <div className="flex items-center gap-2 text-body-3 text-text-disabled">
         <ProfileAvatar name="" size="sm" />
-        <span>블라인드 처리된 댓글입니다.</span>
+        <span>{placeholder}</span>
       </div>
     );
   }
@@ -104,40 +153,57 @@ function CommentBody({
           {comment.body}
         </p>
       </div>
-      <CommentMenu onReply={onReply} onReport={onReport} />
+      <CommentMenu
+        isMine={comment.isMine}
+        onReply={onReply}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onReport={onReport}
+      />
     </div>
   );
 }
 
-/** 댓글 1개 — 작성자 배지·블라인드·대댓글(1-depth) 펼침 */
-export function CommentItem({
-  comment,
-  onReply,
-  onReport,
-  replyingToId,
-}: {
+type CommentItemProps = {
   comment: PromptComment;
   /** "답글" 선택 — 상위(CommentPanel)가 하단 입력창을 답글 모드로 바꾼다 */
   onReply: (comment: PromptComment) => void;
+  /** "수정하기" 선택 — 상위가 하단 입력창을 수정 모드로 바꾼다 */
+  onEdit: (comment: PromptComment) => void;
+  onDelete: (comment: PromptComment) => void;
   onReport: (comment: PromptComment) => void;
-  /** 현재 답글 작성 대상 id(자기 자신 또는 자기 대댓글이면 스레드를 펼쳐 둔다) */
-  replyingToId: string | null;
-}) {
+  /** 현재 답글/수정 작업 대상 id(자기 자신이면 스레드를 펼쳐 둔다) */
+  activeId: string | null;
+};
+
+/** 댓글 1개 — 작성자 배지 · 상태별 렌더 · 대댓글(1-depth) 지연 조회 */
+export function CommentItem({
+  comment,
+  onReply,
+  onEdit,
+  onDelete,
+  onReport,
+  activeId,
+}: CommentItemProps) {
   const [expanded, setExpanded] = useState(false);
-  const replyCount = comment.replies.length;
-  // 이 스레드에 답글을 다는 중이면 접혀 있어도 펼쳐서 맥락을 보여준다
-  const openThread = expanded || replyingToId === comment.id;
+  // 이 스레드를 작업 중이면 접혀 있어도 펼쳐서 맥락을 보여준다
+  const openThread = expanded || activeId === comment.id;
+
+  // 대댓글은 최상위 응답에 없다 → 펼칠 때 비로소 조회한다(접었다 펴면 캐시 재사용)
+  const replies = useCommentReplies(comment.id, openThread && comment.replyCount > 0);
 
   return (
     <li className="flex flex-col gap-3">
       <CommentBody
         comment={comment}
         onReply={() => onReply(comment)}
+        onEdit={() => onEdit(comment)}
+        onDelete={() => onDelete(comment)}
         onReport={() => onReport(comment)}
-        highlighted={replyingToId === comment.id}
+        highlighted={activeId === comment.id}
       />
 
-      {replyCount > 0 ? (
+      {comment.replyCount > 0 ? (
         <div className="pl-9">
           <button
             type="button"
@@ -148,21 +214,59 @@ export function CommentItem({
             <ChevronUpIcon
               className={`size-5 transition-transform ${openThread ? "" : "rotate-180"}`}
             />
-            {replyCount}개의 답글
+            {comment.replyCount}개의 답글
           </button>
 
           {openThread ? (
-            <ul className="mt-3 flex flex-col gap-3">
-              {comment.replies.map((reply) => (
-                <li key={reply.id}>
-                  {/* 대댓글은 신고만 — onReply 를 넘기지 않는다 */}
-                  <CommentBody comment={reply} onReport={() => onReport(reply)} />
-                </li>
-              ))}
-            </ul>
+            <ReplyList
+              query={replies}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onReport={onReport}
+              activeId={activeId}
+            />
           ) : null}
         </div>
       ) : null}
     </li>
+  );
+}
+
+/** 펼친 스레드 본문 — 로딩/실패도 자리를 지켜 레이아웃이 튀지 않게 한다. */
+function ReplyList({
+  query,
+  onEdit,
+  onDelete,
+  onReport,
+  activeId,
+}: {
+  query: ReturnType<typeof useCommentReplies>;
+  onEdit: (comment: PromptComment) => void;
+  onDelete: (comment: PromptComment) => void;
+  onReport: (comment: PromptComment) => void;
+  activeId: string | null;
+}) {
+  if (query.isPending) {
+    return <p className="mt-3 text-body-3 text-text-disabled">답글을 불러오는 중이에요.</p>;
+  }
+  if (query.isError || !query.data) {
+    return <p className="mt-3 text-body-3 text-text-disabled">답글을 불러오지 못했어요.</p>;
+  }
+
+  return (
+    <ul className="mt-3 flex flex-col gap-3">
+      {query.data.comments.map((reply) => (
+        <li key={reply.id}>
+          {/* 대댓글에는 답글이 없다 — onReply 를 넘기지 않는다 */}
+          <CommentBody
+            comment={reply}
+            onEdit={() => onEdit(reply)}
+            onDelete={() => onDelete(reply)}
+            onReport={() => onReport(reply)}
+            highlighted={activeId === reply.id}
+          />
+        </li>
+      ))}
+    </ul>
   );
 }

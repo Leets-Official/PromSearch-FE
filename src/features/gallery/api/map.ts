@@ -41,6 +41,16 @@ const TIER_BY_API: Record<ApiContentType, ContentTier> = {
   PREMIUM: "premium",
 };
 
+/** 서버 결과물 타입 → FE enum. 모르는 값이 와도 화면이 죽지 않게 text 로 떨어뜨린다. */
+export function toOutputType(value: ApiOutputType): OutputType {
+  return OUTPUT_TYPE_BY_API[value] ?? "text";
+}
+
+/** 서버 콘텐츠 등급 → FE enum. 모르는 값은 free(잠금 없음)로 본다. */
+export function toContentTier(value: ApiContentType): ContentTier {
+  return TIER_BY_API[value] ?? "free";
+}
+
 /** 특정 축의 태그만 골라 enum 배열로. 매핑에 없는 이름은 제외. */
 function pickTags<T extends string>(
   tags: ApiTag[],
@@ -53,6 +63,9 @@ function pickTags<T extends string>(
     .filter((value): value is T => value !== undefined);
 }
 
+export const pickJobTags = (tags: ApiTag[]) => pickTags<JobCategory>(tags, "JOB", JOB_BY_NAME);
+export const pickTaskTags = (tags: ApiTag[]) => pickTags<Task>(tags, "TASK", TASK_BY_NAME);
+
 /**
  * 대표 AI 모델 — AI_MODEL 태그 첫 번째를 쓴다.
  *
@@ -60,29 +73,32 @@ function pickTags<T extends string>(
  * `customAiModel` 을 `modelEtcName` 으로 넘겨 카드/상세가 입력값 그대로 노출하게 한다.
  * `customAiModel` 이 비어 있으면(BE 배포 전 응답) `modelEtcName` 없이 "기타"로만 뜬다.
  */
-function resolveModel(card: ApiPromptCard): { model: AiModel; modelEtcName?: string } {
-  const tag = card.tags.find((t) => t.tagType === "AI_MODEL");
+export function resolveModel(
+  tags: ApiTag[],
+  customAiModel?: string | null,
+): { model: AiModel; modelEtcName?: string } {
+  const tag = tags.find((t) => t.tagType === "AI_MODEL");
   const known = tag ? AI_MODEL_BY_NAME[tag.name] : undefined;
 
   if (known && known !== "etc") return { model: known };
 
   // 태그가 없거나(기타) 매핑에 없는 이름이면 자유 입력값 → 태그 원문 순으로 표시명을 찾는다.
-  return { model: "etc", modelEtcName: card.customAiModel ?? tag?.name ?? undefined };
+  return { model: "etc", modelEtcName: customAiModel ?? tag?.name ?? undefined };
 }
 
 export function toPromptSummary(card: ApiPromptCard): PromptSummary {
-  const { model, modelEtcName } = resolveModel(card);
+  const { model, modelEtcName } = resolveModel(card.tags, card.customAiModel);
 
   return {
     id: String(card.promptId),
     title: card.title,
     thumbnailUrl: card.thumbnailImageUrl ?? undefined,
-    outputType: OUTPUT_TYPE_BY_API[card.outputType] ?? "text",
+    outputType: toOutputType(card.outputType),
     model,
     modelEtcName,
-    tasks: pickTags<Task>(card.tags, "TASK", TASK_BY_NAME),
-    jobCategories: pickTags<JobCategory>(card.tags, "JOB", JOB_BY_NAME),
-    tier: TIER_BY_API[card.contentType] ?? "free",
+    tasks: pickTaskTags(card.tags),
+    jobCategories: pickJobTags(card.tags),
+    tier: toContentTier(card.contentType),
     author: {
       name: card.author.nickname,
       avatarUrl: card.author.profileImageUrl ?? undefined,

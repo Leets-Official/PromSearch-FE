@@ -945,10 +945,26 @@ FE 는 상태별로 이렇게 렌더합니다.
 
 <a id="7-9"></a>
 
-### 7-9. `PROMPT-004` 이미지 `status` enum 값 목록과 폴링 종료 조건
+### 7-9. 이미지 `status` enum 과 폴링 종료 조건 — ✅ **회신 완료 (2026-08-05)**
 
-예시에 `PROCESSING` 만 보입니다. 전체 값과 "언제 폴링을 멈춰도 되는지"(최종 상태)를 알려주세요.
-`failureCode` 값 목록도 함께 주시면 실패 안내 문구를 맞추겠습니다.
+`UPLOADING` → `UPLOADED` → `PROCESSING` → **`READY`** / **`FAILED`**.
+**`READY` 또는 `FAILED` 에서 폴링을 종료**합니다.
+
+FE 업로드 플로우(Presigned 방식 — 파일은 BE 를 거치지 않고 브라우저에서 S3 로 직접 감):
+
+```
+1. POST /prompt-images/upload-urls          → { imageId, uploadUrl, expiresAt }
+2. PUT  {uploadUrl}  (body = File)          → S3 직접 업로드(요청과 같은 Content-Type)
+3. POST /prompt-images/{imageId}/complete   → 업로드 검증, UPLOADED
+4. GET  /prompt-images/statuses?imageIds=…  → READY/FAILED 까지 폴링
+5. POST /prompts  (images: [{ imageId, sortOrder, thumbnail }])
+```
+
+> 아직 못 받은 것: **`failureCode` 값 목록**입니다 (`WATERMARK_RENDER_FAILED` 만 예시에 보입니다).
+> 실패 안내 문구를 코드별로 맞추려면 필요하고, 안 주시면 공통 문구 하나로 처리하겠습니다.
+>
+> 추가 확인: **폴링 주기·타임아웃 권장값**이 있을까요? 워터마크 처리에 보통 몇 초쯤 걸리는지 알려주시면
+> 그에 맞춰 간격을 잡겠습니다(현재는 1.5초 간격 · 최대 60초로 잡을 예정).
 
 <a id="7-10"></a>
 
@@ -1019,4 +1035,6 @@ FE 는 상태별로 이렇게 렌더합니다.
 - [x] ~~[7-4](#7-4) 응답에 `customAiModel` 추가~~ ✅ **합의 완료 (2026-08-05)** → FE 반영 완료.
       홈 목록 + 상세 모두 포함. 남은 것: **배포 시점 공유**(FE 타입을 옵셔널 → 필수로 좁히는 시점)
 - [ ] [7-8](#7-8) 소셜 로그인 (provider / redirectUri / 신규 가입 여부)
-- [ ] [7-9](#7-9) 이미지 status enum · [7-10](#7-10) 게시물 수정 조회 경로 · [7-11](#7-11) username/nickname/name
+- [x] ~~[7-9](#7-9) 이미지 status enum~~ ✅ `READY`/`FAILED` 에서 폴링 종료.
+      남은 것: **`failureCode` 값 목록** + 폴링 주기 권장값
+- [ ] [7-10](#7-10) 게시물 수정 조회 경로 · [7-11](#7-11) username/nickname/name
