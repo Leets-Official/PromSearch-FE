@@ -7,7 +7,11 @@ import { describe, expect, it, vi } from "vitest";
 import PromptDetailPage from "./page";
 
 let mockId = "prompt-001";
-vi.mock("next/navigation", () => ({ useParams: () => ({ id: mockId }) }));
+vi.mock("next/navigation", () => ({
+  useParams: () => ({ id: mockId }),
+  // 모바일 헤더(MobilePageHeader)의 뒤로가기
+  useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
+}));
 vi.mock("@/analytics/track", () => ({ track: vi.fn() }));
 vi.mock("@/hooks/use-auth-status", () => ({
   useAuthStatus: () => ({ status: "authenticated", isAuthenticated: true, user: null }),
