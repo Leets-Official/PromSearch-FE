@@ -885,6 +885,14 @@ FE 반영 완료(`api/dto.ts`, `api/map.ts`). 표시 우선순위는 다음과 �
 
 적용 범위는 요청·수락 모두 **홈 목록(`HOME-001/002/003`) + 상세(`PROMPT-001`)** 기준입니다.
 
+**후속 회신 (2026-08-05)**
+
+- **`aiModelTagIds` → `aiModelTagId` 단수로 변경** — AI 모델이 단일 선택인 것이 확인되어
+  `PROMPT-008`(생성) 요청 본문의 배열을 단수 필드로 바꾸기로 했습니다.
+  업로드 API 는 아직 연동 전이라 FE 코드 영향은 없고, 연동 시 단수로 보냅니다.
+- **`customAiModel` 컬럼 길이 = 50자** — FE 입력창에 `maxLength` + zod `.max(50)` 반영 완료
+  (`upload/schema.ts` 의 `MODEL_ETC_NAME_MAX`).
+
 > FE 타입은 배포 전 응답도 안전하게 다루려고 당분간 **옵셔널**(`customAiModel?: string | null`)로 두었습니다.
 > 배포 완료되면 `string | null` 로 좁히겠습니다. **배포 시점만 알려주세요.**
 

@@ -18,8 +18,11 @@
 
 import { z } from "zod";
 
-/** 제목 최대 글자 수 — 유일한 글자 수 제한 */
+/** 제목 최대 글자 수 */
 export const TITLE_MAX = 100;
+
+/** AI 모델 "기타" 자유 입력 최대 글자 수 — BE `customAiModel` 컬럼 길이(2026-08-05 회신) */
+export const MODEL_ETC_NAME_MAX = 50;
 
 // gallery 도메인 유니온과 1:1 (src/features/gallery/types.ts)
 // 단일 선택(필수) — 미선택 시 노출할 메시지를 enum 에 지정
@@ -51,7 +54,9 @@ export const promptFormSchema = z
     jobCategories: z.array(jobCategoryEnum).min(1, "직군을 하나 이상 선택해주세요."),
     tasks: z.array(taskEnum).min(1, "태스크를 하나 이상 선택해주세요."),
     model: aiModelEnum,
-    modelEtcName: z.string(),
+    modelEtcName: z
+      .string()
+      .max(MODEL_ETC_NAME_MAX, `모델명은 최대 ${MODEL_ETC_NAME_MAX}자까지 입력할 수 있어요.`),
     tier: tierEnum,
     body: z.string().trim().min(1, "프롬프트 본문을 입력해주세요."),
     images: z.array(z.string()).min(1, "결과물 이미지를 최소 1장 첨부해주세요."),

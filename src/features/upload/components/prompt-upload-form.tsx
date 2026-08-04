@@ -18,7 +18,7 @@ import {
   SegmentedControlList,
 } from "@/components/ui/segmented-control";
 
-import { promptFormSchema, TITLE_MAX } from "../schema";
+import { MODEL_ETC_NAME_MAX, promptFormSchema, TITLE_MAX } from "../schema";
 import type { PromptDraft, PromptFormValues } from "../types";
 import { AI_MODELS, CONTENT_TIER_OPTIONS, JOB_CATEGORIES, OUTPUT_TYPES, TASKS } from "../options";
 import { usePromptDraft } from "../hooks/use-prompt-draft";
@@ -247,6 +247,7 @@ function PromptUploadForm() {
                           여러 개를 나열하면 그 문자열이 통째로 모델명이 된다. */}
                       <Input
                         placeholder="예: GPT 4.1 Mini"
+                        maxLength={MODEL_ETC_NAME_MAX}
                         value={etcField.value}
                         onChange={etcField.onChange}
                         onBlur={etcField.onBlur}
