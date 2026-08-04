@@ -11,6 +11,8 @@ import { Spinner } from "@/components/ui/spinner";
  * 결과물 이미지 업로더 (시안 793:2361).
  * - 144×81 타일. 첫 타일은 추가(+) 버튼, 이후 업로드한 이미지 썸네일.
  * - 썸네일 호버 시 딤 + 휴지통 아이콘으로 삭제.
+ * - 모바일(시안 1360:8994)은 정사각 타일 3열 그리드(375 기준 109px)이고,
+ *   호버가 없는 터치 환경이라 삭제 버튼을 항상 노출한다.
  * - 최대 10장, 중복(같은 파일) 제외. 파일 읽는 동안 + 타일에 로딩 스피너 노출.
  * - 목 단계라 파일을 data URL 로 읽어 보관한다(BE 연동 시 업로드 후 URL 로 교체).
  */
@@ -25,7 +27,8 @@ type OutputImageUploaderProps = {
 /** 결과물 이미지 최대 장수 */
 const MAX_IMAGES = 10;
 
-const TILE = "h-[81px] w-[144px] shrink-0 rounded-md";
+// mobile: 폭을 3등분한 정사각(그리드 셀 채움) / sm~: 시안 데스크톱 값 144x81 고정
+const TILE = "aspect-square w-full rounded-md sm:aspect-auto sm:h-[81px] sm:w-[144px] sm:shrink-0";
 
 function readAsDataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -88,7 +91,7 @@ function OutputImageUploader({
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -113,15 +116,18 @@ function OutputImageUploader({
               alt={`결과물 이미지 ${index + 1}`}
               className="pointer-events-none absolute inset-0 size-full rounded-md border border-stroke-primary object-cover"
             />
-            {/* 호버 시에만 딤 + 휴지통 즉시 노출(transition 없음). 마우스가 벗어나면 바로 사라진다. */}
-            <div className="absolute inset-0 flex items-center justify-center rounded-md bg-dim opacity-0 group-hover:opacity-100">
+            {/*
+              sm~ : 호버 시에만 딤 + 중앙 휴지통 즉시 노출(transition 없음).
+              mobile: 호버가 없으므로 딤 없이 우상단 삭제 버튼을 상시 노출(이미지를 가리지 않게).
+            */}
+            <div className="absolute inset-0 flex items-start justify-end rounded-md p-1 sm:items-center sm:justify-center sm:bg-dim sm:p-0 sm:opacity-0 sm:group-hover:opacity-100">
               <button
                 type="button"
                 onClick={() => removeAt(index)}
                 aria-label={`결과물 이미지 ${index + 1} 삭제`}
-                className="flex size-9 items-center justify-center rounded-md text-text-on-brand focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                className="flex size-7 items-center justify-center rounded-full bg-dim text-text-on-brand focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:size-9 sm:rounded-md sm:bg-transparent"
               >
-                <Trash2Icon className="size-6" />
+                <Trash2Icon className="size-4 sm:size-6" />
               </button>
             </div>
           </div>

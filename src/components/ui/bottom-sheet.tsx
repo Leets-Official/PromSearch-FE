@@ -31,13 +31,15 @@ function BottomSheet({ open, onOpenChange, title, children, className }: BottomS
         <DrawerPrimitive.Backdrop
           data-slot="bottom-sheet-overlay"
           // 스와이프 진행도에 따라 딤이 옅어진다
-          className="fixed inset-0 z-50 bg-dim opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0 data-swiping:duration-0"
+          className="overlay-fill z-50 bg-dim opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0 data-swiping:duration-0"
         />
         <DrawerPrimitive.Viewport className="fixed inset-0 z-50 flex items-end justify-center">
           <DrawerPrimitive.Popup
             data-slot="bottom-sheet"
             className={cn(
-              "relative flex max-h-[85dvh] w-full flex-col gap-6 overflow-y-auto overscroll-contain rounded-t-[16px] bg-bg-primary px-4 pt-8 pb-4 outline-none",
+              // 하단 여백: 모바일 브라우저 주소창/제스처 바에 마지막 항목이 가리지 않도록
+              // 넉넉히 두고(56px), 안전영역이 있으면 그만큼 더한다. 내용이 길면 시트 안에서 스크롤.
+              "relative flex max-h-[85dvh] w-full flex-col gap-6 overflow-y-auto overscroll-contain rounded-t-[16px] bg-bg-primary px-4 pt-8 pb-[calc(3.5rem+env(safe-area-inset-bottom))] outline-none",
               "[transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-200 ease-out data-swiping:select-none",
               "data-ending-style:[transform:translateY(100%)] data-starting-style:[transform:translateY(100%)]",
               className,

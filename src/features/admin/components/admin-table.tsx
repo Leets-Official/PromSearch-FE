@@ -41,21 +41,16 @@ function AdminTableRow({ className, ...props }: React.ComponentProps<typeof Tabl
   return <TableRow className={cn("border-0 hover:bg-transparent", className)} {...props} />;
 }
 
-/** 헤더 셀 — 회색 배경 + Title 2(좁은 폭 Title 3) */
+/** 헤더 셀 — 회색 배경 + Title 2 (좁은 폭에서 14px 로 줄어드는 건 전역 모바일 스케일이 처리) */
 function AdminTableHead({ className, ...props }: React.ComponentProps<typeof TableHead>) {
   return (
-    <TableHead
-      className={cn("bg-bg-secondary px-3 text-title-3 sm:px-4 sm:text-title-2", className)}
-      {...props}
-    />
+    <TableHead className={cn("bg-bg-secondary px-3 text-title-2 sm:px-4", className)} {...props} />
   );
 }
 
-/** 본문 셀 — Body 2(좁은 폭 Body 3) · text/secondary */
+/** 본문 셀 — Body 2 · text/secondary */
 function AdminTableCell({ className, ...props }: React.ComponentProps<typeof TableCell>) {
-  return (
-    <TableCell className={cn("px-3 text-body-3 sm:px-4 sm:text-body-2", className)} {...props} />
-  );
+  return <TableCell className={cn("px-3 text-body-2 sm:px-4", className)} {...props} />;
 }
 
 /**
@@ -112,7 +107,7 @@ function AdminTableTruncatedCell({
         title={children}
         className={cn(
           "block max-w-40 truncate sm:max-w-64 lg:max-w-80",
-          strong && "text-title-3 text-text-primary sm:text-title-2",
+          strong && "text-title-2 text-text-primary",
           className,
         )}
       >

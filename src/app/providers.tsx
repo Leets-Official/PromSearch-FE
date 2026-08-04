@@ -1,7 +1,6 @@
 "use client";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 import { getQueryClient } from "@/lib/query-client";
@@ -31,7 +30,8 @@ export default function Providers({
         </MswProvider>
         <DevToolbar />
       </DevPreviewProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {/* ReactQueryDevtools 제거 — 좌하단 플로팅 버튼이 모바일 업로드 FAB(우하단)·
+          상세 플로팅 액션과 겹쳐 실기기 확인을 방해했다. 필요하면 일시적으로만 되살릴 것. */}
     </QueryClientProvider>
   );
 }

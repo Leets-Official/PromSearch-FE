@@ -34,6 +34,8 @@ type ConfirmModalProps = {
   onConfirm: () => void;
   /** 취소 클릭(선택). 미지정 시 닫기만 한다. */
   onCancel?: () => void;
+  /** 확인 버튼 비활성(예: 포인트 부족) */
+  confirmDisabled?: boolean;
   className?: string;
 };
 
@@ -46,6 +48,7 @@ function ConfirmModal({
   cancelLabel = "취소",
   onConfirm,
   onCancel,
+  confirmDisabled,
   className,
 }: ConfirmModalProps) {
   return (
@@ -54,34 +57,43 @@ function ConfirmModal({
         <AlertDialogPrimitive.Backdrop
           data-slot="confirm-modal-overlay"
           // dialog.tsx 와 동일한 딤(Opacity/dim) + 페이드
-          className="fixed inset-0 isolate z-50 bg-dim duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
+          className="overlay-fill isolate z-50 bg-dim duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
         />
         <AlertDialogPrimitive.Popup
           data-slot="confirm-modal"
           className={cn(
-            // 위치 + 등장 애니메이션(dialog.tsx 패턴 동일)
-            "fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 duration-100 outline-none",
+            // 위치 — mobile 화면 중앙 / desktop 시안(1517:8879·1517:8779)은 상단에서 48px
+            "fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 sm:top-12 sm:translate-y-0",
+            // 등장 애니메이션(dialog.tsx 패턴 동일)
+            "duration-100 outline-none",
             "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             // 컨테이너 — radius/lg(16px), Background/primary, Interaction drop-shadow
             "flex flex-col rounded-[16px] bg-bg-primary shadow-[0_4px_8px_rgb(35_35_33/0.13)]",
-            // mobile: 311px 고정폭(화면이 더 좁으면 여백 확보), padding 16/16/12
-            "w-[311px] max-w-[calc(100vw-2rem)] gap-4 px-4 pt-4 pb-3",
-            // desktop: 430px, padding 24/24/16, gap 24
-            "sm:w-[430px] sm:gap-6 sm:px-6 sm:pt-6 sm:pb-4",
+            // mobile: 시안(375 기준 311px)의 **좌우 여백 32px** 을 유지해 화면 폭에 따라 늘어난다.
+            //         375 → 311(시안 그대로) / 440 → 376 / 그 이상은 400 에서 멈춘다.
+            //         100vw 가 아니라 100%(=fixed 요소의 ICB) 인 이유: 스크롤바 거터가 있으면
+            //         100vw 와 left-1/2 의 기준이 달라져 좌우 여백이 어긋난다(실측 32 vs 47).
+            "w-[calc(100%-4rem)] max-w-[400px] gap-4 px-4 pt-4 pb-3",
+            // desktop: 430px, padding 24/24/16, gap 24 (모바일 상한 400 을 풀어 준다)
+            "sm:w-[430px] sm:max-w-none sm:gap-6 sm:px-6 sm:pt-6 sm:pb-4",
             className,
           )}
         >
-          {/* 텍스트 블록 — mobile 가운데 정렬 / desktop 좌측 정렬 */}
-          <div className="flex flex-col gap-1 text-center break-words sm:text-left">
+          {/*
+            텍스트 블록 — mobile 가운데 정렬 / desktop 좌측 정렬.
+            break-keep : 한국어를 어절 단위로만 끊는다(단어 중간에서 깨지지 않게).
+            text-balance: 줄 길이를 고르게 나눠 마지막 줄에 두세 글자만 남는 것을 막는다.
+          */}
+          <div className="flex flex-col gap-1 text-center text-balance break-keep sm:text-left">
             <AlertDialogPrimitive.Title
-              // mobile 20/32 Bold, desktop Heading 1(24/32 Bold)
-              className="text-heading-2 leading-8 text-text-primary sm:text-heading-1"
+              // Heading 1 — 크기는 전역 모바일 스케일(24→20), 행간은 두 모드 모두 32
+              className="text-heading-1 text-text-primary"
             >
               {title}
             </AlertDialogPrimitive.Title>
             {description ? (
               <AlertDialogPrimitive.Description
-                // mobile 14/20, desktop Body 3(14/24)
+                // Body 3 — 크기는 전역 스케일(14→12). 행간만 모바일 20 / 데스크톱 24
                 className="text-body-3 leading-5 text-text-secondary sm:leading-6"
               >
                 {description}
@@ -89,14 +101,18 @@ function ConfirmModal({
             ) : null}
           </div>
 
-          {/* 버튼 — mobile 5:5 분할 / desktop 우측 정렬 + 콘텐츠 폭 */}
+          {/*
+            버튼 — mobile 5:5 분할(높이 36) / desktop 우측 정렬 + 콘텐츠 폭(높이 48).
+            basis-0: 라벨 길이가 서로 달라도("새로 작성하기" vs "불러오기") 정확히 반반으로 나뉜다.
+            라벨은 Button 기본값(whitespace-nowrap)이라 버튼 안에서 줄바꿈되지 않는다.
+          */}
           <div className="flex items-center justify-end gap-2 sm:gap-3">
             <AlertDialogPrimitive.Close
               render={
                 <Button
                   variant="neutral"
                   size="sm"
-                  className="flex-1 sm:h-12 sm:flex-none sm:px-4 sm:text-title-1"
+                  className="flex-1 basis-0 sm:h-12 sm:flex-none sm:basis-auto sm:px-4 sm:text-title-1"
                 />
               }
               onClick={onCancel}
@@ -106,7 +122,8 @@ function ConfirmModal({
             <Button
               variant="brand"
               size="sm"
-              className="flex-1 sm:h-12 sm:flex-none sm:px-4 sm:text-title-1"
+              className="flex-1 basis-0 sm:h-12 sm:flex-none sm:basis-auto sm:px-4 sm:text-title-1"
+              disabled={confirmDisabled}
               onClick={onConfirm}
             >
               {confirmLabel}

@@ -10,6 +10,8 @@ import { PromptDetailView } from "@/features/prompt-detail/components/prompt-det
 import { makeDetail } from "@/features/prompt-detail/test-fixtures";
 
 vi.mock("@/analytics/track", () => ({ track: vi.fn() }));
+// 모바일 헤더(MobilePageHeader)의 뒤로가기
+vi.mock("next/navigation", () => ({ useRouter: () => ({ back: vi.fn(), push: vi.fn() }) }));
 vi.mock("@/hooks/use-auth-status", () => ({
   useAuthStatus: () => ({ status: "authenticated", isAuthenticated: true, user: null }),
 }));

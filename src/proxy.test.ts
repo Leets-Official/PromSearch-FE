@@ -56,6 +56,18 @@ describe("보호 라우트", () => {
   });
 });
 
+describe("dev 프리뷰 인증", () => {
+  // 실제 auth 전까지 화면의 로그인 상태는 dev 툴바 쿠키로 결정된다.
+  // 툴바가 꺼진 환경(테스트 기본)에서는 쿠키가 있어도 무시돼야 한다 — 프로덕션 보호가 풀리면 안 되므로.
+  it("툴바가 꺼져 있으면 dev 프리뷰 쿠키는 무시한다", () => {
+    const target = redirectTarget(
+      proxy(requestFor("/upload", { ps_dev_preview: "authenticated.default.normal.seeded" })),
+    );
+
+    expect(target?.pathname).toBe("/home");
+  });
+});
+
 describe("guest-only 라우트", () => {
   it("로그인 상태로 회원가입에 들어가면 홈으로 되돌린다", () => {
     const target = redirectTarget(
