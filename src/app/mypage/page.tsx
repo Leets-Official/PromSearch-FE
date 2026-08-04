@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRightIcon, PencilIcon } from "lucide-react";
+import { ChevronRightIcon, PencilIcon } from "@/components/ui/icons";
 
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

@@ -1,6 +1,14 @@
 "use client";
 
-import { Bookmark, ChevronLeft, ChevronRight, Flag, Heart } from "lucide-react";
+import {
+  BookmarkFilledIcon,
+  BookmarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  FlagIcon,
+  HeartFilledIcon,
+  HeartIcon,
+} from "@/components/ui/icons";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -87,15 +95,21 @@ export function OutputCarousel({
           label="추천"
           active={liked}
           onClick={onToggleLike}
-          icon={<Heart className={cn("size-6", liked && "fill-current")} />}
+          icon={liked ? <HeartFilledIcon className="size-6" /> : <HeartIcon className="size-6" />}
         />
         <OverlayAction
           label="북마크"
           active={bookmarked}
           onClick={onToggleBookmark}
-          icon={<Bookmark className={cn("size-6", bookmarked && "fill-current")} />}
+          icon={
+            bookmarked ? (
+              <BookmarkFilledIcon className="size-6" />
+            ) : (
+              <BookmarkIcon className="size-6" />
+            )
+          }
         />
-        <OverlayAction label="신고" onClick={onReport} icon={<Flag className="size-6" />} />
+        <OverlayAction label="신고" onClick={onReport} icon={<FlagIcon className="size-6" />} />
       </div>
 
       {hasMultiple ? (
@@ -112,7 +126,7 @@ export function OutputCarousel({
             onClick={() => go(-1)}
             className="absolute top-1/2 left-3 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80"
           >
-            <ChevronLeft className="size-6" />
+            <ChevronLeftIcon className="size-6" />
           </button>
           <button
             type="button"
@@ -120,7 +134,7 @@ export function OutputCarousel({
             onClick={() => go(1)}
             className="absolute top-1/2 right-3 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80"
           >
-            <ChevronRight className="size-6" />
+            <ChevronRightIcon className="size-6" />
           </button>
         </>
       ) : null}

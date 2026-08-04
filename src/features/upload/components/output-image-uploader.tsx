@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+// 추가/삭제 아이콘은 디자인 시스템 세트에 없어 lucide 를 유지한다(시안 추가 시 icons.tsx 로 이동).
 import { PlusIcon, Trash2Icon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -101,7 +102,7 @@ function OutputImageUploader({
             "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-bg-secondary",
           )}
         >
-          {isReading ? <Spinner className="size-6" /> : <PlusIcon className="size-6" />}
+          {isReading ? <Spinner className="h-6 w-20" /> : <PlusIcon className="size-6" />}
         </button>
 
         {value.map((src, index) => (

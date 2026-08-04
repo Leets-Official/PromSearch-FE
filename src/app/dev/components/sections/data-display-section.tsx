@@ -3,7 +3,7 @@
 // EditableAvatar 의 onEdit 핸들러를 넘기기 위해 클라이언트 컴포넌트
 // (button-section / selection-section 과 동일한 처리)
 
-import { CircleHelpIcon, PencilIcon } from "lucide-react";
+import { HelpIcon, PencilIcon } from "@/components/ui/icons";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +56,7 @@ export function DataDisplaySection() {
       <SpecGroup title="Card / Info">
         <Card className="w-52 gap-2">
           <span className="flex items-center gap-1 text-title-3 text-text-secondary">
-            보유 포인트 <CircleHelpIcon className="size-4 text-text-disabled" />
+            보유 포인트 <HelpIcon className="size-4 text-text-disabled" />
           </span>
           <span className="text-heading-1 text-text-primary">
             1,000 <span className="text-title-2 text-text-secondary">P</span>

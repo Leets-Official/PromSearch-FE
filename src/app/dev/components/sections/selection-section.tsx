@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon } from "@/components/ui/icons";
 
 import { BottomSheet, BottomSheetGroup } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";

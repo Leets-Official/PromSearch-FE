@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import { UserIcon } from "@/components/ui/icons";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -14,7 +14,7 @@ export function ProfileAvatar({ name, src, size = "md" }: ProfileAvatarProps) {
   return (
     <Avatar size={size}>
       {src ? <AvatarImage src={src} alt={name} /> : null}
-      <AvatarFallback>{initial || <User />}</AvatarFallback>
+      <AvatarFallback>{initial || <UserIcon />}</AvatarFallback>
     </Avatar>
   );
 }

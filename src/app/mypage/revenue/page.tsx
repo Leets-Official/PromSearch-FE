@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { HelpCircleIcon } from "lucide-react";
+import { HelpIcon } from "@/components/ui/icons";
 
 import { Card } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -29,7 +29,7 @@ function StatCard({
                   aria-label={`${label} 설명`}
                   className="flex items-center justify-center rounded-full text-text-disabled transition-colors hover:text-text-secondary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
-                  <HelpCircleIcon className="size-4" />
+                  <HelpIcon className="size-4" />
                 </button>
               }
             />

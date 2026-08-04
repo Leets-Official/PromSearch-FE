@@ -14,9 +14,10 @@
  * - q: 제목/설명에 대소문자 무시 부분일치
  * - 정렬: nav=popular → 좋아요(likes) 내림차순, 그 외 → createdAt 내림차순(최신)
  *   (BE 회의 확정: 인기 기준은 좋아요. 조회수는 추후 검토)
- * - 페이지네이션: 1-based, 기본 size=12
+ * - 페이지네이션: 1-based, 기본 size=6 (한 화면에 최대 6장)
  */
 
+import { GALLERY_PAGE_SIZE } from "@/features/gallery/constants";
 import type { PromptRecord } from "@/mocks/data/prompts";
 import type {
   AiModel,
@@ -28,7 +29,8 @@ import type {
   Task,
 } from "@/features/gallery/types";
 
-export const DEFAULT_PAGE_SIZE = 12;
+// 화면(스켈레톤)과 같은 값을 봐야 하므로 갤러리 상수를 그대로 쓴다.
+export const DEFAULT_PAGE_SIZE = GALLERY_PAGE_SIZE;
 
 export type PromptQueryParams = {
   nav: GalleryNav;

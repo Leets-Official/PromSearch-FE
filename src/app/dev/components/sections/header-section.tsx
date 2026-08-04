@@ -7,7 +7,7 @@ import {
   MenuIcon,
   PencilIcon,
   SearchIcon,
-} from "lucide-react";
+} from "@/components/ui/icons";
 
 import { AppHeader } from "@/components/ui/app-header";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";

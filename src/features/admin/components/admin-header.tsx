@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { AppHeader } from "@/components/ui/app-header";
 import { Logo } from "@/components/ui/logo";
-import { HeaderAuthArea } from "@/features/gallery/components/header-auth-area";
+import { HeaderAuthArea } from "@/components/layout/header-auth-area";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 
 /**
