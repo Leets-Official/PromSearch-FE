@@ -1,9 +1,18 @@
 /**
  * 어드민 API.
  *
- * 현재는 MSW 목(`/api/admin/*`)을 호출한다. BE 스펙 확정 시 이 파일의 경로/응답 매핑만 교체한다.
+ * - `[ADMIN-REPORT-001/002]` 신고 목록 조회 · 처리(숨김/유지)
+ * - `[ADMIN-GRADE-001/002]`  등급업 신청 목록 조회 · 승인
+ *
+ * ⚠️ 네 API 모두 BE **미구현**이다(계약만 존재). 구현되면 그대로 붙도록 계약대로 작성했고,
+ * 그때까지는 같은 경로의 임시 목이 응답한다.
+ *
+ * 서버가 지원하지 않는 축이 둘 있다(요청서 A-1 · A-3).
+ * - 검색어(`q`) 파라미터가 없다 → 받아온 페이지 안에서 클라이언트 필터
+ * - 신고 목록에 대상 내용/작성자가 없다 → 표에 자리표시(`map.ts`)
  */
 
+import { ADMIN_PAGE_SIZE } from "@/features/admin/constants";
 import type {
   AdminListQuery,
   GradeListResponse,
@@ -13,83 +22,120 @@ import type {
   ReportTab,
   ReportTarget,
 } from "@/features/admin/types";
+import { api } from "@/lib/api";
 
-/** 신고 대상 → 목록/처리 엔드포인트. posts/comments 두 화면이 같은 계약을 쓴다. */
-const REPORT_PATH: Record<ReportTarget, string> = {
-  post: "/api/admin/reports/posts",
-  comment: "/api/admin/reports/comments",
+import type { ApiAdminPage, ApiGradeRequest, ApiReport, ApiReportTargetType } from "./dto";
+import {
+  gradeStatusParam,
+  reportStatusParam,
+  toAdminListResponse,
+  toApiReportStatus,
+  toGradeApplication,
+  toReportedItem,
+} from "./map";
+
+/** 신고 대상 → 서버 targetType */
+const TARGET_TYPE: Record<ReportTarget, ApiReportTargetType> = {
+  post: "POST",
+  comment: "COMMENT",
 };
 
 /**
- * 어드민 목록 조회 파라미터 → 쿼리스트링.
- * 기본값(첫 탭·빈 검색어·page 1)은 생략해 URL 을 깔끔하게 유지한다(갤러리와 동일 규칙).
+ * 검색어가 걸려 있으면 서버 페이지네이션을 쓸 수 없다(서버가 q 를 모른다).
+ * 한 번에 넉넉히 받아 클라이언트에서 거르고 잘라야 페이지 수가 맞는다.
+ * 서버 검색(A-3)이 붙으면 이 경로는 사라진다.
  */
-export function toAdminSearchParams<Tab extends string>(
-  query: AdminListQuery<Tab>,
-  defaultTab: Tab,
-): URLSearchParams {
-  const params = new URLSearchParams();
+const CLIENT_SEARCH_SIZE = 100;
 
-  if (query.tab !== defaultTab) params.set("tab", query.tab);
-  if (query.q.trim()) params.set("q", query.q.trim());
-  if (query.page > 1) params.set("page", String(query.page));
-
-  return params;
+function hasSearch(query: { q: string }): boolean {
+  return query.q.trim().length > 0;
 }
 
-async function getJson<T>(path: string, params: URLSearchParams): Promise<T> {
-  const qs = params.toString();
-  const res = await fetch(`${path}${qs ? `?${qs}` : ""}`);
+/** 받아온 목록을 검색어로 거른 뒤 화면 페이지 크기로 자른다. */
+function sliceBySearch<Item>(
+  items: Item[],
+  query: { q: string; page: number },
+  matches: (item: Item, keyword: string) => boolean,
+) {
+  const keyword = query.q.trim().toLowerCase();
+  const filtered = items.filter((item) => matches(item, keyword));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ADMIN_PAGE_SIZE));
+  const page = Math.min(Math.max(query.page, 1), totalPages);
+  const start = (page - 1) * ADMIN_PAGE_SIZE;
 
-  if (!res.ok) {
-    throw new Error(`어드민 목록 조회 실패: ${res.status}`);
-  }
-
-  return (await res.json()) as T;
+  return {
+    items: filtered.slice(start, start + ADMIN_PAGE_SIZE),
+    page,
+    totalPages,
+    totalCount: filtered.length,
+  };
 }
 
-/** 신고 게시글/댓글 목록 */
-export function fetchReports(
+/** [ADMIN-REPORT-001] 신고 게시글/댓글 목록 */
+export async function fetchReports(
   target: ReportTarget,
   query: AdminListQuery<ReportTab>,
 ): Promise<ReportListResponse> {
-  return getJson<ReportListResponse>(REPORT_PATH[target], toAdminSearchParams(query, "all"));
-}
+  const searching = hasSearch(query);
 
-/** 신고 처리(숨김/유지) */
-export async function updateReportStatus(
-  target: ReportTarget,
-  id: string,
-  status: Exclude<ModerationStatus, "pending">,
-): Promise<void> {
-  const res = await fetch(`${REPORT_PATH[target]}/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status }),
+  const result = await api.get<ApiAdminPage<ApiReport>>("/admin/reports", {
+    params: {
+      targetType: TARGET_TYPE[target],
+      status: reportStatusParam(query.tab),
+      page: searching ? 0 : query.page - 1,
+      size: searching ? CLIENT_SEARCH_SIZE : ADMIN_PAGE_SIZE,
+    },
   });
 
-  if (!res.ok) {
-    throw new Error(`신고 처리 실패: ${res.status}`);
-  }
-}
+  const mapped = toAdminListResponse(result, toReportedItem);
+  if (!searching) return mapped;
 
-/** 유저 등급 신청 목록 */
-export function fetchGradeApplications(
-  query: AdminListQuery<GradeTab>,
-): Promise<GradeListResponse> {
-  return getJson<GradeListResponse>(
-    "/api/admin/users/grade-applications",
-    toAdminSearchParams(query, "pending"),
+  // 내용·작성자로 찾는다(표에 보이는 두 컬럼).
+  return sliceBySearch(
+    mapped.items,
+    query,
+    (item, keyword) =>
+      item.content.toLowerCase().includes(keyword) || item.author.toLowerCase().includes(keyword),
   );
 }
 
-/** 등급 신청 승인 */
-export async function approveGradeApplication(id: string): Promise<void> {
-  const res = await fetch(`/api/admin/users/grade-applications/${id}/approve`, {
-    method: "POST",
+/** [ADMIN-REPORT-002] 신고 처리(숨김/유지) */
+export async function updateReportStatus(
+  _target: ReportTarget,
+  id: string,
+  status: Exclude<ModerationStatus, "pending">,
+): Promise<void> {
+  // 처리 경로는 대상 종류와 무관하게 reportId 하나로 갈린다(서버가 신고 단위로 처리).
+  await api.patch(`/admin/reports/${id}`, { status: toApiReportStatus(status) });
+}
+
+/** [ADMIN-GRADE-001] 유저 등급 신청 목록 */
+export async function fetchGradeApplications(
+  query: AdminListQuery<GradeTab>,
+): Promise<GradeListResponse> {
+  const searching = hasSearch(query);
+
+  const result = await api.get<ApiAdminPage<ApiGradeRequest>>("/admin/grade-requests", {
+    params: {
+      status: gradeStatusParam(query.tab),
+      page: searching ? 0 : query.page - 1,
+      size: searching ? CLIENT_SEARCH_SIZE : ADMIN_PAGE_SIZE,
+    },
   });
 
-  if (!res.ok) {
-    throw new Error(`등급 승인 실패: ${res.status}`);
-  }
+  const mapped = toAdminListResponse(result, toGradeApplication);
+  if (!searching) return mapped;
+
+  // 아이디 또는 닉네임으로 찾는다(시안 문구 기준).
+  return sliceBySearch(
+    mapped.items,
+    query,
+    (item, keyword) =>
+      item.userId.toLowerCase().includes(keyword) || item.nickname.toLowerCase().includes(keyword),
+  );
+}
+
+/** [ADMIN-GRADE-002] 등급 신청 승인 */
+export async function approveGradeApplication(id: string): Promise<void> {
+  await api.patch(`/admin/grade-requests/${id}`, { decision: "APPROVED" });
 }
