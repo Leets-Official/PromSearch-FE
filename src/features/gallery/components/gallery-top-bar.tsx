@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { BellIcon, ChevronLeftIcon, MenuIcon, PencilIcon, SearchIcon } from "@/components/ui/icons";
 
+import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/ui/app-header";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
@@ -63,12 +64,20 @@ export function GalleryTopBar() {
   return (
     <>
       <AppHeader
-        // 모바일 좌우 여백 16px, 데스크톱 시안 여백 80px
-        className="sm:px-20"
+        // 모바일 좌우 여백 16px, 데스크톱 시안 여백 80px.
+        // 모바일 시안에서 상단바(로고·검색·알림)는 **홈에만** 있다. 상세/업로드는
+        // 뒤로가기 헤더(MobilePageHeader)를 페이지 내부에서 렌더하므로 sm 미만에서 숨긴다.
+        className={cn(
+          "sm:px-20",
+          !onHome && "hidden sm:flex",
+          // 검색 모드: 아래 본문을 덮는 스크림 위로 헤더를 올린다(화면 최상단 고정)
+          mobileSearchOpen && "sticky top-0 z-50 bg-bg-primary",
+        )}
         start={
           <>
-            {/* mobile: 햄버거 + 워드마크 (검색 모드에서는 뒤로가기) */}
-            <div className="flex items-center gap-4 sm:hidden">
+            {/* mobile: 햄버거 + 워드마크 (검색 모드에서는 뒤로가기).
+                시안 간격 16px = gap 10px(gap-2.5) + 버튼 우측 패딩 6px. -ml-1.5 로 좌측 플러시. */}
+            <div className="-ml-1.5 flex items-center gap-2.5 sm:hidden">
               {mobileSearchOpen ? (
                 <Button
                   variant="plain"
@@ -111,7 +120,7 @@ export function GalleryTopBar() {
         }
         center={
           <>
-            {/* mobile: 검색 모드일 때만 검색바 */}
+            {/* mobile: 검색 모드일 때만 검색바(시안 1378:4726 — 뒤로가기 + 폭을 채운 검색바) */}
             {mobileSearchOpen && (
               <div className="flex min-w-0 flex-1 sm:hidden">
                 <SearchBar
@@ -120,7 +129,7 @@ export function GalleryTopBar() {
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="검색어를 입력해주세요"
                   aria-label="프롬프트 검색"
-                  className="max-w-none flex-1"
+                  className="h-11 max-w-none flex-1"
                 />
               </div>
             )}
@@ -149,8 +158,11 @@ export function GalleryTopBar() {
         end={
           <>
             {/* mobile: 알림 + 검색 (검색 모드에서는 숨김 — 검색바가 폭을 다 쓴다) */}
+            {/* 시안(1214:5885)의 아이콘 간격은 24px(24px 아이콘 박스 기준)인데 버튼은 36px(icon-sm)이라
+                좌우 6px씩 패딩이 붙는다 → gap 은 24-12=12px(gap-3). -mr-1.5 로 마지막 아이콘을
+                화면 여백 16px 에 플러시. */}
             {!mobileSearchOpen && (
-              <div className="flex items-center gap-6 sm:hidden">
+              <div className="-mr-1.5 flex items-center gap-3 sm:hidden">
                 <Button variant="plain" size="icon-sm" aria-label="알림">
                   <BellIcon />
                 </Button>
@@ -177,6 +189,19 @@ export function GalleryTopBar() {
         }
       />
 
+      {/*
+        모바일 검색 화면(시안 1378:4726) — 검색바 아래는 빈 화면이다.
+        검색어가 비어 있는 동안만 본문을 덮고, 입력이 생기면 걷어내 **검색 결과**가 보이게 한다.
+        (헤더 높이 56px 아래부터 화면 끝까지)
+      */}
+      {mobileSearchOpen && keyword.trim() === "" ? (
+        <div
+          data-slot="mobile-search-scrim"
+          aria-hidden
+          className="fixed inset-x-0 top-14 bottom-0 z-40 bg-bg-primary sm:hidden"
+        />
+      ) : null}
+
       {/* 모바일 네비게이션 드로어 (햄버거) — 갤러리 사이드바 주입 */}
       <MobileNavDrawer
         open={navOpen}
@@ -185,7 +210,7 @@ export function GalleryTopBar() {
         user={user}
         onLoginClick={() => setLoginOpen(true)}
       >
-        <CategoryNav />
+        <CategoryNav variant="drawer" />
       </MobileNavDrawer>
 
       {/* 로그인 모달 */}

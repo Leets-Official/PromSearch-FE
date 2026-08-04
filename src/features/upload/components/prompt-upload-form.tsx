@@ -6,6 +6,7 @@ import { Controller, useForm, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PencilIcon, SaveIcon } from "@/components/ui/icons";
 
+import { MobilePageHeader } from "@/components/layout/mobile-page-header";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Input } from "@/components/ui/input";
@@ -120,10 +121,13 @@ function PromptUploadForm() {
   };
 
   return (
-    <div className="flex w-full max-w-160 flex-col gap-8">
+    <div className="flex w-full max-w-160 flex-col gap-6 sm:gap-8">
+      {/* 모바일 시안(1360:8945)은 상단바 대신 뒤로가기 헤더 */}
+      <MobilePageHeader className="mb-0" />
+
       <h1 className="text-heading-1 text-text-primary">프롬프트 업로드</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 sm:gap-8">
         {/* 제목 — 유일한 글자 수 제한(100자) */}
         <Controller
           control={control}
@@ -327,7 +331,7 @@ function PromptUploadForm() {
           ) : saveDraft.isSuccess ? (
             <p className="text-body-3 text-text-secondary">임시저장되었어요.</p>
           ) : null}
-          <div className="flex gap-4">
+          <div className="flex gap-2 sm:gap-4">
             <Button
               type="button"
               variant="ghost"

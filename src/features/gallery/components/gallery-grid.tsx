@@ -23,7 +23,11 @@ export function GalleryGrid({ prompts, userStatus, onResetFilters }: GalleryGrid
   }
 
   return (
-    <ul data-slot="gallery-grid" className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    // 모바일 시안(1206:3574)은 1열 · 카드 간격 32px, 데스크톱은 24px
+    <ul
+      data-slot="gallery-grid"
+      className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
+    >
       {prompts.map((prompt, index) => (
         <li key={prompt.id}>
           <GalleryCard prompt={prompt} position={index + 1} userStatus={userStatus} />

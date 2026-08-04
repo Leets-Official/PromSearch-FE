@@ -54,11 +54,11 @@ const sidebarMenuItemVariants = cva(
     variants: {
       // 시안: md(주 항목: 홈/인기/직군별 = Title 1·text-primary) / sm(하위 항목: 학생~ = Title 2·text-secondary)
       // px-3: hover 배경이 텍스트에 붙지 않도록 여백 확보(그룹라벨도 동일 px 로 정렬)
-      // 모바일(Side bar/Menu(Mobile) 1206:3230)은 라벨만 14px 로 줄어든다(구조·여백 동일).
-      // md: 14/20 Bold → 16/20 Bold, sm: 14/20 SemiBold → 16/20 SemiBold
+      // 모바일(Side bar/Menu(Mobile) 1206:3230)은 라벨만 14px 로 줄어드는데(구조·여백 동일),
+      // 이는 전역 모바일 타이포 스케일(16→14)이 처리하므로 여기서 분기하지 않는다.
       size: {
-        md: "px-3 text-title-3 font-bold text-text-primary sm:text-title-1 [&_svg:not([class*='size-'])]:size-5",
-        sm: "px-3 text-title-3 text-text-secondary sm:text-title-2 [&_svg:not([class*='size-'])]:size-4",
+        md: "px-3 text-title-1 text-text-primary [&_svg:not([class*='size-'])]:size-5",
+        sm: "px-3 text-title-2 text-text-secondary [&_svg:not([class*='size-'])]:size-4",
       },
     },
     defaultVariants: {

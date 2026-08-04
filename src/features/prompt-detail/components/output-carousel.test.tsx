@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -30,14 +30,15 @@ describe("OutputCarousel", () => {
     expect(screen.getByRole("button", { name: "다음 이미지" })).toBeInTheDocument();
   });
 
+  // 전환은 트랙 슬라이드 애니메이션(CAROUSEL_SETTLE_MS)이 끝난 뒤 index 가 바뀐다 → waitFor
   it("다음/이전 클릭으로 인덱스가 순환한다", async () => {
     const user = userEvent.setup();
     renderCarousel(["a.png", "b.png"]);
 
     await user.click(screen.getByRole("button", { name: "다음 이미지" }));
-    expect(screen.getByTestId("carousel-indicator")).toHaveTextContent("2/2");
+    await waitFor(() => expect(screen.getByTestId("carousel-indicator")).toHaveTextContent("2/2"));
     await user.click(screen.getByRole("button", { name: "다음 이미지" }));
-    expect(screen.getByTestId("carousel-indicator")).toHaveTextContent("1/2");
+    await waitFor(() => expect(screen.getByTestId("carousel-indicator")).toHaveTextContent("1/2"));
   });
 
   it("단일 이미지 — 화살표/인디케이터 없음", () => {
