@@ -159,8 +159,11 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
           <DetailHeader detail={detail} />
 
           {/* 탭 행 — 상단 고정 + 레시피 열람 시 복사 버튼(디자인상 탭과 같은 줄).
-              모바일은 뒤로가기 헤더(56px) 바로 아래에 붙고, xl 부터는 우측 컬럼 상단에 붙는다. */}
-          <div className="sticky top-14 z-10 flex items-center justify-between bg-bg-primary py-3 sm:static sm:py-4 xl:sticky xl:top-0">
+              고정 위치는 그 구간에서 위에 깔린 고정 헤더 높이만큼 내린다.
+              - sm 미만 : MobilePageHeader(뒤로가기, h-14) 아래
+              - sm~lg   : AppHeader(h-20) 아래 — 페이지 전체가 스크롤된다
+              - xl      : 우측 컬럼이 자체 스크롤 컨테이너라 컬럼 상단(top-0) */}
+          <div className="sticky top-14 z-10 flex items-center justify-between bg-bg-primary py-3 sm:top-20 sm:py-4 xl:top-0">
             <DetailTabs active={tab} onSelect={setTab} />
             {showCopy ? (
               <Button variant="neutral" size="sm" onClick={handleCopy}>
