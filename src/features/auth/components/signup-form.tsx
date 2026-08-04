@@ -30,9 +30,9 @@ interface SignUpFormProps {
 
 /**
  * 회원가입 폼 (Figma: 회원가입 페이지)
- * 로고(세로) → 아이디/비밀번호 → 프로필/닉네임 → 관심 직군·태스크 → 약관 → 가입하기.
+ * sm+: 로고(세로) → 폼. 모바일: "회원가입" 제목 → 폼 (로고 숨김, 상단 뒤로가기는 page 가 렌더).
+ * 프로필/닉네임은 모바일 세로 / sm+ 가로(responsive).
  * 닉네임 검증은 useNicknameCheck(부모 주입), 나머지 상태는 폼이 관리.
- * 활성 조건: 아이디·비밀번호·닉네임(available)·직군≥1·태스크≥1·필수약관 모두 충족.
  */
 export function SignUpForm({
   nicknameStatus = "idle",
@@ -65,8 +65,10 @@ export function SignUpForm({
     requiredTermsOk;
 
   return (
-    <div className="flex min-h-[720px] w-full max-w-[1120px] flex-col items-center gap-8 py-12">
-      <Logo variant="vertical" />
+    <div className="flex min-h-[720px] w-full max-w-[1120px] flex-col items-center gap-8 sm:py-12">
+      {/* sm+: 로고 / 모바일: "회원가입" 제목 (뒤로가기는 page 의 MobileBackHeader) */}
+      <Logo variant="vertical" className="hidden sm:block" />
+      <p className="w-[480px] max-w-full text-display-1 text-text-primary sm:hidden">회원가입</p>
 
       <form
         onSubmit={(e) => {
@@ -112,14 +114,14 @@ export function SignUpForm({
           )}
         </label>
 
-        {/* 프로필 + 닉네임 (가로 배치) */}
+        {/* 프로필 + 닉네임 (모바일 세로 / sm+ 가로) */}
         <ProfileNicknameField
           nickname={nickname}
           onNicknameChange={handleNickname}
           nicknameStatus={nicknameStatus}
           avatarFile={avatarFile}
           onAvatarChange={setAvatarFile}
-          layout="horizontal"
+          layout="responsive"
         />
 
         {/* 관심 직군 / 태스크 */}

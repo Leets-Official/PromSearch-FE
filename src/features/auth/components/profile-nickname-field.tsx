@@ -85,7 +85,7 @@ export function ProfileNicknameField({
 
       {/* 닉네임 */}
       <div className="flex w-full flex-col gap-1.5">
-        <label htmlFor={nicknameId} className="text-title-3 text-text-primary">
+        <label htmlFor={nicknameId} className="text-title-1 text-text-primary">
           닉네임
         </label>
         <Input
