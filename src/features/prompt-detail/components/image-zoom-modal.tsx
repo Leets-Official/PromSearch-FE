@@ -119,19 +119,24 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
                 className="absolute inset-0 flex items-center justify-center px-0 sm:px-20"
               >
                 {i === index ? (
-                  /* centerZoomedOut: 축소돼 이미지가 뷰포트보다 작아지면 다시 중앙 정렬
-                     (포인터 기준 줌으로 커서 쪽에 치우치는 것 방지) */
+                  /*
+                    wrapper·content 를 **둘 다** 확대 영역 크기로 고정하는 게 핵심이다.
+                    라이브러리 기본값은 content 가 fit-content 라, 이미지가 로드되기 전에는
+                    높이가 0 이다. 그 상태에서 초기 중앙 정렬이 계산되면 오프셋이
+                    "영역 높이의 절반"으로 굳어, 나중에 로드된 이미지가 아래쪽으로 밀려 붙는다.
+                    content 를 영역과 같은 크기로 두면 오프셋이 항상 0 이라 로드 타이밍과 무관하고,
+                    이미지는 그 안에서 object-contain 으로 가운데 놓인다.
+                  */
                   <TransformWrapper
                     centerOnInit
-                    centerZoomedOut
                     doubleClick={{ mode: "toggle" }}
                     minScale={1}
                     maxScale={5}
                     onTransform={(_, state) => setZoomedAt(state.scale > 1.01 ? index : null)}
                   >
                     <TransformComponent
-                      wrapperClass="!h-full !w-full !items-center !justify-center"
-                      contentClass="!items-center !justify-center"
+                      wrapperClass="!h-full !w-full"
+                      contentClass="!h-full !w-full !items-center !justify-center"
                     >
                       <ZoomSlideImage src={src} alt={`${title} 아웃풋 ${index + 1}`} />
                     </TransformComponent>
@@ -173,14 +178,13 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
   );
 }
 
+/**
+ * 확대 영역을 꽉 채우고 object-contain 으로 비율을 유지한다.
+ * 크기를 영역에 맡기므로(고정 vh 없음) 이미지 원본 비율·로드 타이밍과 무관하게 항상 가운데다.
+ */
 function ZoomSlideImage({ src, alt }: { src: string; alt: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt}
-      draggable={false}
-      className="max-h-[70vh] w-screen max-w-full object-contain select-none sm:w-auto sm:max-w-[80vw]"
-    />
+    <img src={src} alt={alt} draggable={false} className="size-full object-contain select-none" />
   );
 }
