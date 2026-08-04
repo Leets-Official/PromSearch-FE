@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeftIcon } from "lucide-react";
+import { ChevronLeftIcon } from "@/components/ui/icons";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { NicknameStatus } from "@/features/auth/hooks/use-nickname-check";
