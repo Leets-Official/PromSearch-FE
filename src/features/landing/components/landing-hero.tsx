@@ -63,13 +63,15 @@ export function LandingHero() {
                    가운데 정렬된 문단 폭만큼 왼쪽·위로 벌어진다) */}
               <span className="relative inline-block text-text-brand">
                 결과
+                {/* 가로 위치는 상자 폭의 1/4·3/4 — "결과" 두 글자가 상자를 정확히 반씩
+                    나눠 쓰므로 폰트의 한글 자폭(1em 이 아니다)과 무관하게 각 글자 정중앙에 온다. */}
                 <span
                   aria-hidden
-                  className="absolute top-[-0.214em] left-[0.5em] size-[0.143em] -translate-x-1/2 rounded-full bg-brand"
+                  className="absolute top-[-0.214em] left-1/4 size-[0.143em] -translate-x-1/2 rounded-full bg-brand"
                 />
                 <span
                   aria-hidden
-                  className="absolute top-[-0.214em] left-[1.5em] size-[0.143em] -translate-x-1/2 rounded-full bg-brand"
+                  className="absolute top-[-0.214em] left-3/4 size-[0.143em] -translate-x-1/2 rounded-full bg-brand"
                 />
               </span>
               부터 보고
