@@ -35,23 +35,31 @@ function blurOnMouseClick(e: MouseEvent<HTMLElement>) {
   if (e.detail !== 0) e.currentTarget.blur();
 }
 
-export function CategoryNav() {
+/**
+ * @param variant
+ * - `sidebar`(기본): 데스크톱 좌측 상주 사이드바.
+ * - `drawer`: 모바일 햄버거 드로어(시안 1379:5812 · 1382:6077). 시안이 PC 와 다른 점만 분기한다 —
+ *   ① 첫 항목 라벨이 "홈" 이 아니라 **"최신 프롬프트"**, ② 상단 메뉴와 "직군별" 사이 **구분선**,
+ *   ③ 항목 간격이 4/12px 이 아니라 전부 **8px**.
+ */
+export function CategoryNav({ variant = "sidebar" }: { variant?: "sidebar" | "drawer" }) {
   const pathname = usePathname();
   const { query } = useGalleryFilters();
   const onHome = pathname === HOME_PATH;
+  const isDrawer = variant === "drawer";
 
   const isActive = (nav: Nav, job?: JobCategory) =>
     onHome && query.nav === nav && (nav === "job" ? query.job === job : true);
 
   return (
-    <Sidebar>
-      <SidebarMenu>
+    <Sidebar className={isDrawer ? "w-full gap-2" : undefined}>
+      <SidebarMenu className={isDrawer ? "gap-2" : undefined}>
         <SidebarMenuItem
           active={isActive("home")}
           onClick={blurOnMouseClick}
           render={<Link href={navHref("home")} />}
         >
-          홈
+          {isDrawer ? "최신 프롬프트" : "홈"}
         </SidebarMenuItem>
         <SidebarMenuItem
           active={isActive("popular")}
@@ -62,9 +70,11 @@ export function CategoryNav() {
         </SidebarMenuItem>
       </SidebarMenu>
 
-      <div className="flex flex-col">
+      {isDrawer ? <hr className="border-t border-stroke-primary" /> : null}
+
+      <div className={isDrawer ? "flex flex-col gap-2" : "flex flex-col"}>
         <SidebarGroupLabel>직군별</SidebarGroupLabel>
-        <SidebarMenu>
+        <SidebarMenu className={isDrawer ? "gap-2" : undefined}>
           {JOB_CATEGORIES.map((job) => (
             <SidebarMenuItem
               key={job.value}

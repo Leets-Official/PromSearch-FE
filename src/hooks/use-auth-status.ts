@@ -14,6 +14,8 @@ import { useDevPreview } from "@/components/dev-toolbar/dev-preview-context";
 export type AuthUser = {
   name: string;
   avatarUrl?: string;
+  /** 등급(예: "Node") — 모바일 드로어 프로필에 닉네임 위로 노출 */
+  grade?: string;
 };
 
 export type AuthStatus = {
@@ -33,8 +35,8 @@ export type AuthStatus = {
  */
 const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH;
 
-const MOCK_USER: AuthUser = { name: "홍길동" };
-const MOCK_ADMIN: AuthUser = { name: "관리자" };
+const MOCK_USER: AuthUser = { name: "홍길동", grade: "Node" };
+const MOCK_ADMIN: AuthUser = { name: "관리자", grade: "Node" };
 
 const AUTHENTICATED: AuthStatus = {
   status: "authenticated",
