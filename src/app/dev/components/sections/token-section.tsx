@@ -40,17 +40,19 @@ const SEMANTICS = [
   ["border-stroke-strong", "테두리 강조 (black)"],
 ] as const;
 
+// 크기는 sm(640px) 미만에서 시안 모바일 모드로 한 칸 내려간다(24→20 · 20→16 · 16→14 · 14→12).
+// 전역 규칙이라 컴포넌트에서 sm:text-* 로 덮지 않는다 — globals.css 참고.
 const TYPO = [
   ["text-display-1", "Display 1 — 32/36 Bold"],
   ["text-display-2", "Display 2 — 32/36 Medium"],
-  ["text-heading-1", "Heading 1 — 24/32 Bold"],
-  ["text-heading-2", "Heading 2 — 20/24 Bold"],
-  ["text-title-1", "Title 1 — 16/20 SemiBold"],
-  ["text-title-2", "Title 2 — 16/20 Medium"],
-  ["text-title-3", "Title 3 — 14/20 SemiBold"],
-  ["text-body-1", "Body 1 — 16/30 Regular"],
-  ["text-body-2", "Body 2 — 16/24 Medium"],
-  ["text-body-3", "Body 3 — 14/24 Regular"],
+  ["text-heading-1", "Heading 1 — 24/32 Bold (mobile 20)"],
+  ["text-heading-2", "Heading 2 — 20/24 Bold (mobile 16)"],
+  ["text-title-1", "Title 1 — 16/20 Bold (mobile 14)"],
+  ["text-title-2", "Title 2 — 16/20 SemiBold (mobile 14)"],
+  ["text-title-3", "Title 3 — 14/20 SemiBold (mobile 12)"],
+  ["text-body-1", "Body 1 — 16/28 Regular (mobile 14)"],
+  ["text-body-2", "Body 2 — 16/24 Medium (mobile 14)"],
+  ["text-body-3", "Body 3 — 14/24 Regular (mobile 12)"],
   ["text-caption-1", "Caption 1 — 12/16 SemiBold"],
 ] as const;
 
