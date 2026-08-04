@@ -40,7 +40,8 @@ export function DetailNotFound() {
     <div className="flex flex-col items-center gap-4 py-20 text-center">
       <p className="text-heading-1 text-text-primary">프롬프트를 찾을 수 없어요</p>
       <p className="text-body-1 text-text-secondary">삭제되었거나 비공개 상태일 수 있어요.</p>
-      <Button variant="brand" render={<Link href="/home" />}>
+      {/* render 로 <a> 를 넘기므로 nativeButton={false} — 없으면 Base UI 가 접근성 경고를 낸다 */}
+      <Button variant="brand" nativeButton={false} render={<Link href="/home" />}>
         홈으로
       </Button>
     </div>
