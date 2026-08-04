@@ -43,7 +43,7 @@ const SOLUTIONS = [
 export function LandingSolution() {
   return (
     <section id="solution" className="w-full scroll-mt-20">
-      <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-12 px-4 py-15 sm:px-20">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-12 px-4 py-15 sm:px-8 xl:px-20">
         <div className="flex w-full max-w-full flex-col items-center gap-4 text-center">
           <p className="text-title-1 text-text-brand">Solution</p>
           {/* 시안 40px Bold — 좁은 화면에서 한 줄이 뷰포트를 넘지 않도록 22 → 28 → 40 단계 적용 */}
@@ -58,12 +58,15 @@ export function LandingSolution() {
             key={solution.label}
             className="flex w-full max-w-280 flex-col items-center justify-center gap-6 lg:flex-row lg:gap-10"
           >
-            {/* 이미지 자리표시자 — 시안에서도 빈 회색 프레임(1729:7062 외) */}
+            {/* 이미지 자리표시자 — 시안에서도 빈 회색 프레임(1729:7062 외).
+                시안 480x270 = 16:9 라 고정 높이 대신 비율로 두어 폭을 따라간다. */}
             <div
               aria-hidden
-              className="h-67.5 w-full shrink-0 rounded-2xl bg-bg-secondary lg:w-120"
+              className="aspect-video w-full rounded-2xl bg-bg-secondary lg:max-w-120 lg:flex-1"
             />
-            <div className="flex w-full flex-col items-start gap-4 lg:w-120">
+            {/* lg 에서 480+480+40 은 1024 폭에 들어가지 않으므로 고정폭 대신
+                flex-1 + 상한(480px) 으로 두어 남는 폭을 나눠 갖게 한다. */}
+            <div className="flex w-full min-w-0 flex-col items-start gap-4 lg:max-w-120 lg:flex-1">
               <p className="text-title-1 text-text-brand">{solution.label}</p>
               {/* 시안 32/36 Bold(자간 -0.005em) = Display 1 과 정확히 일치.
                   모바일에서는 폭이 모자라 Heading 1(20/24)로 한 단계 낮춘다. */}

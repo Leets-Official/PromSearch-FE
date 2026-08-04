@@ -42,7 +42,7 @@ const PROBLEMS = [
 export function LandingProblem() {
   return (
     <section className="w-full bg-gray-900">
-      <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-12 px-4 py-15 sm:px-20">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-12 px-4 py-15 sm:px-8 xl:px-20">
         <div className="flex w-full max-w-full flex-col items-center gap-4 text-center">
           <p className="text-title-1 text-red-400">Problem</p>
           {/* 시안 40px Bold — 좁은 화면에서 한 줄이 뷰포트를 넘지 않도록 22 → 28 → 40 단계 적용 */}

@@ -23,7 +23,7 @@ export function LandingHeader() {
     <>
       <div className="mx-auto w-full max-w-7xl">
         <AppHeader
-          className="bg-bg-primary backdrop-blur-none sm:px-20"
+          className="bg-bg-primary backdrop-blur-none sm:px-8 xl:px-20"
           end={
             <>
               {/* 시안: Title 2(16/20 SemiBold) · text/secondary · 패딩 12px.

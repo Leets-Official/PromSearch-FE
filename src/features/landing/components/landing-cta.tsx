@@ -9,7 +9,7 @@ import { SocialLoginButton } from "@/components/ui/social-login-button";
 export function LandingCta() {
   return (
     <section className="w-full bg-gray-900">
-      <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-8 px-4 py-15 sm:px-20">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-8 px-4 py-15 sm:px-8 xl:px-20">
         <h2 className="text-center text-[1.75rem]/[1] font-bold tracking-[-0.005em] text-text-on-brand sm:text-[2.5rem]/[1]">
           지금 시작하기
         </h2>
