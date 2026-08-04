@@ -6,14 +6,14 @@ import { cn } from "@/lib/utils";
 import { GoogleIcon, KakaoIcon } from "./brand-icons";
 
 /**
- * 소셜 로그인 버튼 (Figma: Google/Kakao Login)
+ * 소셜 로그인 버튼 (Figma: Google Login / Kakao Login)
  *
- * 반응형:
- * - 모바일(기본): 가로 풀폭 + 라벨("구글로 시작하기") — 시안 로그인/온보딩 모바일
- * - sm+        : 44px 원형 + 아이콘 단독(라벨은 aria-label) — 데스크톱 로그인 모달
+ * 형태 두 가지:
+ * - circle(기본, 로그인 모달) : 44px 원형, 아이콘 18px 단독 → 문구는 aria-label 로만 제공
+ * - square(랜딩 CTA 1277:7729·1277:7730) : 212x48, radius 8, 아이콘 18px + 라벨(Title 2)
  *
- * 색은 플랫폼 고정 브랜드 색이라 시안 값을 임의값으로 사용(토큰 아님).
- * (Google #f2f2f2, Kakao #fee500)
+ * 색은 각 플랫폼의 고정 브랜드 색이라 시안 값을 그대로 임의값으로 사용합니다.
+ * (디자인 토큰이 아닌 브랜드 컬러 — Google #f2f2f2, Kakao #fee500)
  */
 const socialLoginButtonVariants = cva(
   cn(
@@ -30,9 +30,16 @@ const socialLoginButtonVariants = cva(
         google: "bg-[#f2f2f2] text-black hover:brightness-95 focus-visible:border-ring",
         kakao: "bg-[#fee500] text-black hover:brightness-95 focus-visible:border-[#fee500]",
       },
+      shape: {
+        circle: "size-11 rounded-full",
+        // 시안 212x48. 폭은 고정값으로 둔다 — w-full 로 두면 shrink-to-fit 부모 안에서
+        // 퍼센트 폭이 자기 자신을 참조해 부모가 텍스트 폭으로만 잡히고 버튼이 한쪽으로 넘친다.
+        square: "h-12 w-53 max-w-full gap-2 rounded-md px-3 text-title-2 text-text-primary",
+      },
     },
     defaultVariants: {
       provider: "google",
+      shape: "circle",
     },
   },
 );
@@ -42,6 +49,7 @@ type SocialLoginButtonProps = ButtonPrimitive.Props &
     provider?: "google" | "kakao";
   };
 
+/** provider별 로고 + 접근성 라벨 (아이콘 전용 버튼이라 텍스트 대신 aria-label 사용) */
 const PROVIDER_META = {
   google: { icon: <GoogleIcon />, label: "구글로 시작하기" },
   kakao: { icon: <KakaoIcon />, label: "카카오로 시작하기" },
@@ -50,18 +58,22 @@ const PROVIDER_META = {
 function SocialLoginButton({
   className,
   provider = "google",
+  shape = "circle",
   "aria-label": ariaLabel,
   ...props
 }: SocialLoginButtonProps) {
   const preset = PROVIDER_META[provider];
+  const isSquare = shape === "square";
   return (
     <ButtonPrimitive
       data-slot="social-login-button"
-      aria-label={ariaLabel ?? preset.label}
-      className={cn(socialLoginButtonVariants({ provider, className }))}
+      // square 는 라벨이 보이므로 aria-label 로 중복 낭독하지 않는다
+      aria-label={isSquare ? ariaLabel : (ariaLabel ?? preset.label)}
+      className={cn(socialLoginButtonVariants({ provider, shape, className }))}
       {...props}
     >
       {preset.icon}
+      {isSquare ? preset.label : null}
       {/* 라벨: 모바일만 노출, sm+ 에서는 숨김(원형 아이콘 버튼) */}
       <span className="sm:hidden">{preset.label}</span>
     </ButtonPrimitive>
