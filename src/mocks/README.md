@@ -9,8 +9,10 @@ mocks/
   server.ts         # 테스트용 서버 (setupServer) — Vitest setup 에서 사용
   MswProvider.tsx   # dev 브라우저 워커 시작 게이트 (NEXT_PUBLIC_API_MOCKING=enabled)
   prompt-query.ts   # 갤러리 목록 질의(필터/정렬/페이지네이션) 순수 함수 — 핸들러·테스트 공유
+  admin-query.ts    # 어드민 목록 질의(탭/검색/정렬/페이지네이션) 순수 함수
   data/
     prompts.ts      # 홈 갤러리 시드 데이터(48개, status/tier 혼합)
+    admin.ts        # 어드민 시드 데이터(신고 게시글·댓글, 등급 신청) + 처리 반영 인메모리 상태
 ```
 
 - BE 스펙 확정 전 `handlers.ts` 에 응답을 정의해 화면을 병렬 개발한다.
