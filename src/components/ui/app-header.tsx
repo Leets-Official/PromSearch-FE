@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { cn } from "@/lib/utils";
 
 import { Logo } from "@/components/ui/logo";
@@ -47,8 +49,14 @@ function AppHeader({ className, start, center, end, children, ...props }: AppHea
     >
       {children ?? (
         <>
-          {/* 좌측: 로고 (기본형 = 가로 로고) */}
-          <div className="flex shrink-0 items-center">{start ?? <Logo variant="horizontal" />}</div>
+          {/* 좌측: 로고 (기본형 = 가로 로고, 클릭 시 랜딩으로) */}
+          <div className="flex shrink-0 items-center">
+            {start ?? (
+              <Link href="/" aria-label="프롬써치 홈" className="flex items-center">
+                <Logo variant="horizontal" />
+              </Link>
+            )}
+          </div>
 
           {/* 중앙: 검색/네비 등 유연 영역 */}
           {center != null && <div className="flex min-w-0 flex-1 items-center gap-6">{center}</div>}
