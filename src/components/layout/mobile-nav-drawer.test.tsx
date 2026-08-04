@@ -2,17 +2,17 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { MobileNavDrawer } from "@/features/gallery/components/mobile-nav-drawer";
+import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
 
-// CategoryNav 는 next/navigation(usePathname) + nuqs 필터에 의존한다.
-// 드로어 자체의 동작(열림/닫기/프로필 분기)만 검증하면 되므로 목으로 대체한다.
-vi.mock("@/features/gallery/components/category-nav", () => ({
-  CategoryNav: () => (
+// 드로어는 이제 메뉴를 children 으로 받는다. 실제 CategoryNav/MyPageSidebar 대신
+// 링크 하나짜리 스텁을 넣어 드로어 자체 동작(열림/닫기/프로필 분기)만 검증한다.
+function NavStub() {
+  return (
     <nav data-slot="sidebar">
       <a href="/home?nav=popular">인기 프롬프트</a>
     </nav>
-  ),
-}));
+  );
+}
 
 function renderDrawer(props: Partial<React.ComponentProps<typeof MobileNavDrawer>> = {}) {
   const onOpenChange = vi.fn();
@@ -25,7 +25,9 @@ function renderDrawer(props: Partial<React.ComponentProps<typeof MobileNavDrawer
       user={null}
       onLoginClick={onLoginClick}
       {...props}
-    />,
+    >
+      {props.children ?? <NavStub />}
+    </MobileNavDrawer>,
   );
   return { onOpenChange, onLoginClick };
 }

@@ -13,8 +13,12 @@
 /** 툴바 게이트. Vercel Preview 환경 변수로 켜고, Production 에선 끈다(=정적 유지). */
 export const DEV_TOOLBAR_ENABLED = process.env.NEXT_PUBLIC_DEV_TOOLBAR === "enabled";
 
-/** 인증 축 — UserStatus 와 1:1 (비로그인/로그인). 프리미엄 잠금은 tier 로 갈리므로 딥링크로 체험. */
-export type DevAuth = "anonymous" | "authenticated";
+/**
+ * 인증 축 — 비로그인/로그인/어드민.
+ * analytics `UserStatus` 로는 anonymous ↔ (authenticated | admin) 2값으로 접히고,
+ * admin 만 어드민 화면(`/admin/*`) 접근 권한을 가진다. 프리미엄 잠금은 tier 로 갈리므로 딥링크로 체험.
+ */
+export type DevAuth = "anonymous" | "authenticated" | "admin";
 /** 상세 본문 길이 — 설명·레시피·댓글 탭 sticky 고정을 스크롤 유무로 확인 */
 export type DevContent = "default" | "short" | "long";
 /** 데이터 엣지 상태 — 목록/상세에서 강제 노출 */
@@ -48,7 +52,7 @@ export const DEV_EDGE_HEADER = "x-dev-edge";
 /** 임시저장 유무 → MSW 전달 헤더(목 전용) */
 export const DEV_DRAFT_HEADER = "x-dev-draft";
 
-const AUTH_VALUES: readonly DevAuth[] = ["anonymous", "authenticated"];
+const AUTH_VALUES: readonly DevAuth[] = ["anonymous", "authenticated", "admin"];
 const CONTENT_VALUES: readonly DevContent[] = ["default", "short", "long"];
 const EDGE_VALUES: readonly DevEdge[] = ["normal", "empty", "loading", "error"];
 const DRAFT_VALUES: readonly DevDraft[] = ["seeded", "none"];
