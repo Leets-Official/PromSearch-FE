@@ -21,7 +21,8 @@ export function OnboardingStepInterests({
   onComplete,
   onSkip,
 }: OnboardingStepInterestsProps) {
-  const canComplete = jobs.length > 0 && tasks.length > 0;
+  // 직군 또는 태스크 중 하나만 선택되어도 저장 가능 (OR 조건)
+  const canComplete = jobs.length > 0 || tasks.length > 0;
 
   return (
     <div className="flex flex-1 flex-col gap-8">

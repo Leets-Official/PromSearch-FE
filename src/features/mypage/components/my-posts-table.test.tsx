@@ -1,11 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { MyPostsTable } from "@/features/mypage/components/my-posts-table";
 import type { MyPost } from "@/mocks/data/mypage";
 
-// 라우터 push 를 관찰 (행 클릭 이동 검증)
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
@@ -29,22 +28,26 @@ describe("MyPostsTable", () => {
   it("게시물이 있으면 제목·조회·추천을 렌더한다", () => {
     render(<MyPostsTable posts={[makePost({ title: "마케팅 카피 프롬프트" })]} />);
 
-    expect(screen.getByText("마케팅 카피 프롬프트")).toBeInTheDocument();
-    expect(screen.getByText("1,821")).toBeInTheDocument(); // toLocaleString 포맷
-    expect(screen.getByText("1,906")).toBeInTheDocument();
+    // sm+ 표 영역으로 범위를 좁혀서 조회
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("마케팅 카피 프롬프트")).toBeInTheDocument();
+    expect(within(table).getByText("1,821")).toBeInTheDocument();
+    expect(within(table).getByText("1,906")).toBeInTheDocument();
   });
 
   it("게시물이 없으면 빈 상태 문구를 보여준다", () => {
     render(<MyPostsTable posts={[]} />);
 
-    expect(screen.getByText("게시물이 없습니다.")).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("게시물이 없습니다.")).toBeInTheDocument();
   });
 
   it("행을 클릭하면 상세 경로로 이동한다", async () => {
     const user = userEvent.setup();
     render(<MyPostsTable posts={[makePost({ id: "post-42" })]} />);
 
-    await user.click(screen.getByText("테스트 게시글"));
+    const table = screen.getByRole("table");
+    await user.click(within(table).getByText("테스트 게시글"));
 
     expect(push).toHaveBeenCalledWith("/prompts/post-42");
   });
@@ -61,10 +64,10 @@ describe("MyPostsTable", () => {
     const user = userEvent.setup();
     render(<MyPostsTable posts={[makePost({ id: "post-7" })]} showActions onEdit={onEdit} />);
 
-    await user.click(screen.getByRole("button", { name: "수정" }));
+    const table = screen.getByRole("table");
+    await user.click(within(table).getByRole("button", { name: "수정" }));
 
     expect(onEdit).toHaveBeenCalledWith("post-7");
-    // 부정: 버튼 클릭이 행 클릭(이동)으로 전파되지 않는다
     expect(push).not.toHaveBeenCalled();
   });
 
@@ -73,7 +76,8 @@ describe("MyPostsTable", () => {
     const user = userEvent.setup();
     render(<MyPostsTable posts={[makePost({ id: "post-9" })]} showActions onDelete={onDelete} />);
 
-    await user.click(screen.getByRole("button", { name: "삭제" }));
+    const table = screen.getByRole("table");
+    await user.click(within(table).getByRole("button", { name: "삭제" }));
 
     expect(onDelete).toHaveBeenCalledWith("post-9");
     expect(push).not.toHaveBeenCalled();

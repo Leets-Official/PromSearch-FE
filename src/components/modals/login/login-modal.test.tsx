@@ -95,7 +95,17 @@ describe("LoginModal", () => {
     const user = userEvent.setup();
     render(<LoginModal open onOpenChange={onOpenChange} />);
 
-    await user.click(screen.getByRole("button", { name: "닫기" }));
+    // 모바일(ChevronLeftIcon, sm:hidden)과 데스크톱(XIcon, hidden sm:flex)
+    // 두 개의 "닫기" 버튼이 CSS 반응형 클래스로만 구분되어 jsdom에는 둘 다 존재한다.
+    // aria-label만으로는 구분이 안 되므로, 실제로 "닫기(X)" 동작을 하는
+    // 데스크톱 버튼을 data-icon="x" 로 특정해서 클릭한다.
+    const closeButtons = screen.getAllByRole("button", { name: "닫기" });
+    const desktopCloseButton = closeButtons.find((button) =>
+      button.querySelector('[data-icon="x"]'),
+    );
+
+    expect(desktopCloseButton).toBeDefined();
+    await user.click(desktopCloseButton!);
 
     expect(onOpenChange).toHaveBeenCalledTimes(1);
     expect(onOpenChange.mock.calls[0][0]).toBe(false);
