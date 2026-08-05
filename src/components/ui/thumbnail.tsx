@@ -1,4 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import NextImage from "next/image";
+
+import { ImageFallback } from "@/components/ui/image-fallback";
 
 import { cn } from "@/lib/utils";
 
@@ -43,6 +48,20 @@ function Thumbnail({
   eager = false,
   ...props
 }: ThumbnailProps) {
+  /*
+    로드 실패(대개 presigned URL 403) 상태.
+
+    src 가 바뀌면 새 이미지는 다시 시도해야 하므로 실패 표시를 지운다.
+    effect 가 아니라 **렌더 중 조정**이다 — effect 로 하면 옛 실패 화면이 한 번 그려진 뒤
+    다시 그려져 깜빡인다(이 저장소가 쓰는 "props 변화로 state 조정" 패턴).
+  */
+  const [failed, setFailed] = useState(false);
+  const [lastSrc, setLastSrc] = useState(src);
+  if (src !== lastSrc) {
+    setLastSrc(src);
+    setFailed(false);
+  }
+
   return (
     <div
       data-slot="thumbnail"
@@ -52,17 +71,21 @@ function Thumbnail({
       )}
       {...props}
     >
-      {src ? (
+      {src && !failed ? (
         <NextImage
           src={src}
           alt={alt}
           fill
           sizes={sizes}
+          // 이미지가 깨졌을 때 빈칸만 남지 않도록 대체 표시로 바꾼다
+          onError={() => setFailed(true)}
           // Next 16 에서 `priority` 는 폐지됐다 → 즉시 로딩은 loading/fetchPriority 로 표현한다.
           loading={eager ? "eager" : "lazy"}
           fetchPriority={eager ? "high" : "auto"}
           className={fit === "cover" ? "object-cover" : "object-contain"}
         />
+      ) : failed ? (
+        <ImageFallback compact />
       ) : null}
     </div>
   );

@@ -13,6 +13,7 @@ import NextImage from "next/image";
 import { useState } from "react";
 
 import { CarouselNavigation } from "@/components/ui/carousel-navigation";
+import { ImageFallback } from "@/components/ui/image-fallback";
 import { useCarouselSwipe } from "@/hooks/use-carousel-swipe";
 import { cn } from "@/lib/utils";
 
@@ -122,17 +123,15 @@ export function OutputCarousel({
               className="absolute inset-0"
             >
               {isVisible(i) ? (
-                <NextImage
+                <CarouselSlideImage
                   src={src}
                   alt={i === index ? `${title} 아웃풋 ${index + 1}` : ""}
-                  fill
                   sizes={CAROUSEL_SIZES}
                   // 현재 장은 상세 페이지의 LCP 요소다. 좌우 프리로드분(±1)은 lazy 로 둔다.
                   loading={i === index ? "eager" : "lazy"}
                   fetchPriority={i === index ? "high" : "auto"}
                   // mobile 시안은 4:3 프레임을 꽉 채우는 크롭(cover), 데스크톱은 원본 비율 유지(contain)
                   className="object-cover select-none sm:object-contain"
-                  draggable={false}
                 />
               ) : null}
             </div>
@@ -212,6 +211,49 @@ export function OutputCarousel({
         />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * 캐러셀 한 장. 로드에 실패하면(대개 presigned URL 403) 빈칸 대신 대체 표시를 그린다.
+ * 실패 표시는 src 가 바뀌면 지운다(렌더 중 조정 — 옛 실패 화면이 깜빡이지 않게).
+ */
+function CarouselSlideImage({
+  src,
+  alt,
+  sizes,
+  loading,
+  fetchPriority,
+  className,
+}: {
+  src: string;
+  alt: string;
+  sizes: string;
+  loading: "eager" | "lazy";
+  fetchPriority: "high" | "auto";
+  className: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const [lastSrc, setLastSrc] = useState(src);
+  if (src !== lastSrc) {
+    setLastSrc(src);
+    setFailed(false);
+  }
+
+  if (failed) return <ImageFallback />;
+
+  return (
+    <NextImage
+      src={src}
+      alt={alt}
+      fill
+      sizes={sizes}
+      loading={loading}
+      fetchPriority={fetchPriority}
+      onError={() => setFailed(true)}
+      draggable={false}
+      className={className}
+    />
   );
 }
 

@@ -5,6 +5,7 @@ import NextImage from "next/image";
 import { useEffect, useState } from "react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
+import { ImageFallback } from "@/components/ui/image-fallback";
 import { useCarouselSwipe } from "@/hooks/use-carousel-swipe";
 import { cn } from "@/lib/utils";
 
@@ -203,8 +204,24 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
  * transform 을 직접 걸기 때문에 자기 위치를 잡는 `fill` 과 충돌한다.
  */
 function ZoomSlideImage({ src, alt }: { src: string; alt: string }) {
+  // 실패 표시는 src 가 바뀌면 지운다(렌더 중 조정 — 옛 실패 화면이 깜빡이지 않게)
+  const [failed, setFailed] = useState(false);
+  const [lastSrc, setLastSrc] = useState(src);
+  if (src !== lastSrc) {
+    setLastSrc(src);
+    setFailed(false);
+  }
+
+  if (failed) return <ImageFallback className="bg-transparent text-white/60" />;
+
   return (
     // eslint-disable-next-line @next/next/no-img-element -- 원본 화소 그대로 보여주는 확대 뷰
-    <img src={src} alt={alt} draggable={false} className="size-full object-contain select-none" />
+    <img
+      src={src}
+      alt={alt}
+      draggable={false}
+      onError={() => setFailed(true)}
+      className="size-full object-contain select-none"
+    />
   );
 }
