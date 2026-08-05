@@ -15,7 +15,7 @@ export function makeDetail(overrides: Partial<PromptDetail> = {}): PromptDetail 
     authorId: 12,
     stats: { views: 123, copies: 0, likes: 123 },
     createdAt: "2026-07-12T00:00:00.000Z",
-    images: ["a.png", "b.png", "c.png"],
+    images: ["/a.png", "/b.png", "/c.png"],
     descriptionBody: "이 프롬프트는 보고서 초안을 대신 작성해줍니다.",
     recipeBody: "레시피 전문",
     access: { locked: false, reason: null },

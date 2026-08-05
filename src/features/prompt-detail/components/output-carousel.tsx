@@ -10,14 +10,32 @@ import {
   HeartFilledIcon,
   HeartIcon,
 } from "@/components/ui/icons";
+import dynamic from "next/dynamic";
+import NextImage from "next/image";
 import { useState } from "react";
 
 import { useCarouselSwipe } from "@/hooks/use-carousel-swipe";
 import { cn } from "@/lib/utils";
-import { ImageZoomModal } from "./image-zoom-modal";
+
+/**
+ * 확대 모달은 **열릴 때 받는다**(지연 로딩).
+ *
+ * 이 모달만 `react-zoom-pan-pinch` 를 쓰는데, 정적 import 로 두면 확대를 한 번도 안 누른
+ * 사용자까지 상세 페이지 초기 번들로 그 라이브러리를 받게 된다.
+ * `ssr: false` — 뷰포트·포인터 이벤트에 의존하는 클라이언트 전용 UI라 서버에서 그릴 이유가 없다.
+ */
+const ImageZoomModal = dynamic(() => import("./image-zoom-modal").then((m) => m.ImageZoomModal), {
+  ssr: false,
+});
 
 /** 아웃풋 이미지 최대 개수(BE 제약과 동일) */
 export const MAX_OUTPUT_IMAGES = 10;
+
+/**
+ * 캐러셀 표시 폭 힌트 — 컨테이너 클래스(`-mx-4` 풀블리드 / `sm:w-full` / `xl:w-108`)와 맞춘다.
+ * xl 의 `w-108` 은 432px 이다. 이 값이 실제 레이아웃과 어긋나면 필요보다 큰 이미지를 받는다.
+ */
+const CAROUSEL_SIZES = "(min-width: 1280px) 432px, (min-width: 640px) 50vw, 100vw";
 
 type OutputCarouselProps = {
   images: string[];
@@ -91,17 +109,29 @@ export function OutputCarousel({
             화면에 걸치는 ±1 에만 src 를 걸어 초기 로드를 제한한다(= 자연스러운 프리로드). */}
         <div className="absolute inset-0" style={trackStyle}>
           {items.map((src, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            // 슬라이드 위치(translate %)는 래퍼가 맡는다 — `fill` 이미지는 자기 위치를 직접
+            // 잡으므로 transform 을 같이 걸 수 없다. 래퍼가 컨테이너와 같은 크기라 % 기준은 동일하다.
+            <div
               key={i}
-              src={isVisible(i) ? src : undefined}
-              alt={i === index ? `${title} 아웃풋 ${index + 1}` : ""}
               aria-hidden={i !== index}
               style={slideStyle(i)}
-              // mobile 시안은 4:3 프레임을 꽉 채우는 크롭(cover), 데스크톱은 원본 비율 유지(contain)
-              className="absolute inset-0 size-full object-cover select-none sm:object-contain"
-              draggable={false}
-            />
+              className="absolute inset-0"
+            >
+              {isVisible(i) ? (
+                <NextImage
+                  src={src}
+                  alt={i === index ? `${title} 아웃풋 ${index + 1}` : ""}
+                  fill
+                  sizes={CAROUSEL_SIZES}
+                  // 현재 장은 상세 페이지의 LCP 요소다. 좌우 프리로드분(±1)은 lazy 로 둔다.
+                  loading={i === index ? "eager" : "lazy"}
+                  fetchPriority={i === index ? "high" : "auto"}
+                  // mobile 시안은 4:3 프레임을 꽉 채우는 크롭(cover), 데스크톱은 원본 비율 유지(contain)
+                  className="object-cover select-none sm:object-contain"
+                  draggable={false}
+                />
+              ) : null}
+            </div>
           ))}
         </div>
       </button>
