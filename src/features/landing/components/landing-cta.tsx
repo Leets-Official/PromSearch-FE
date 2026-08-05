@@ -1,12 +1,15 @@
 "use client";
 
 import { SocialLoginButton } from "@/components/ui/social-login-button";
+import { useSocialLoginRedirect } from "@/features/auth/hooks/use-social-login-redirect";
 
 /**
  * 마지막 CTA (Figma 1637:11655) — gray-900 배경 + "지금 시작하기" + 소셜 로그인 2종.
  * 시안의 Kakao/Google Login "square"(212x48, 라벨 포함) 형태를 쓴다.
  */
 export function LandingCta() {
+  const redirectToOAuth = useSocialLoginRedirect();
+
   return (
     <section className="w-full bg-gray-900">
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-8 px-4 py-15 sm:px-8 xl:px-20">
@@ -17,16 +20,12 @@ export function LandingCta() {
           <SocialLoginButton
             provider="kakao"
             shape="square"
-            onClick={() => {
-              // TODO: OAuth 연동
-            }}
+            onClick={() => redirectToOAuth("kakao")}
           />
           <SocialLoginButton
             provider="google"
             shape="square"
-            onClick={() => {
-              // TODO: OAuth 연동
-            }}
+            onClick={() => redirectToOAuth("google")}
           />
         </div>
       </div>
