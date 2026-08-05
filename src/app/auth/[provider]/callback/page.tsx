@@ -5,7 +5,7 @@ import { OAuthCallbackPage } from "@/features/auth/components/oauth-callback-pag
 export default function Page() {
   return (
     <Suspense fallback={null}>
-      <OAuthCallbackPage provider="google" />
+      <OAuthCallbackPage />
     </Suspense>
   );
 }
