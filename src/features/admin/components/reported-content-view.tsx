@@ -20,8 +20,10 @@ import {
   AdminTableRow,
   AdminTableTruncatedCell,
 } from "@/features/admin/components/admin-table";
+import { AdminSearch } from "@/features/admin/components/admin-search";
 import {
   MODERATION_ACTIONS,
+  REPORT_REASON_LABELS,
   REPORT_TABS,
   REPORT_TAB_VALUES,
   REPORT_TARGET_COPY,
@@ -42,7 +44,7 @@ import { useToast } from "@/components/ui/toast";
  */
 export function ReportedContentView({ target }: { target: ReportTarget }) {
   const copy = REPORT_TARGET_COPY[target];
-  const { query, setTab, setPage } = useAdminFilters(REPORT_TAB_VALUES, "all");
+  const { query, setTab, setSearch, setPage } = useAdminFilters(REPORT_TAB_VALUES, "all");
   const { data, isPending, isError, refetch } = useReportList(target, query);
   const updateStatus = useUpdateReportStatus(target);
   // 표 안의 버튼 하나로 끝나는 액션이라 결과를 적을 자리가 없다 → 토스트.
@@ -52,12 +54,21 @@ export function ReportedContentView({ target }: { target: ReportTarget }) {
     <div className="flex flex-col gap-4">
       <h1 className="text-heading-1 text-text-primary">{copy.heading}</h1>
 
-      <AdminTabs
-        label={`${copy.heading} 처리 상태`}
-        tabs={REPORT_TABS}
-        value={query.tab}
-        onChange={setTab}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <AdminTabs
+          label={`${copy.heading} 처리 상태`}
+          tabs={REPORT_TABS}
+          value={query.tab}
+          onChange={setTab}
+        />
+        {/* 서버 검색(q): 대상 내용(제목/본문) 또는 작성자 닉네임 부분일치 */}
+        <AdminSearch
+          value={query.q}
+          onSearch={setSearch}
+          placeholder={`${copy.contentColumn}·작성자 검색`}
+          label={`${copy.heading} 검색`}
+        />
+      </div>
 
       {isError ? (
         <AdminError onRetry={() => void refetch()} />
@@ -83,7 +94,10 @@ export function ReportedContentView({ target }: { target: ReportTarget }) {
                 <AdminTableRow key={item.id}>
                   <AdminTableTruncatedCell strong>{item.content}</AdminTableTruncatedCell>
                   <AdminTableCell>{item.author}</AdminTableCell>
-                  <AdminTableTruncatedCell>{item.reason}</AdminTableTruncatedCell>
+                  <AdminTableTruncatedCell>
+                    {/* 서버에 없는 코드가 새로 생겨도 화면이 비지 않게 코드 자체를 보여준다 */}
+                    {REPORT_REASON_LABELS[item.reason] ?? item.reason}
+                  </AdminTableTruncatedCell>
                   <AdminTableActionCell>
                     {MODERATION_ACTIONS.map((action) =>
                       item.status === action.value ? (

@@ -1,14 +1,11 @@
+import { OriginUserView } from "@/features/admin/components/origin-user-view";
+
 /**
- * 어드민 - 어드민 계정 관리.
+ * 어드민 - Origin 유저 관리 ([ADMIN-GRADE-003]).
  *
- * 사이드바 시안에는 있으나 **화면 시안이 아직 없다**. 메뉴에서 눌렀을 때 404 가 뜨지 않도록
- * 자리만 잡아 둔다. 시안이 나오면 이 파일을 실제 화면으로 교체한다.
+ * 사이드바 시안에는 "어드민 계정 관리"로 적혀 있지만 어드민 계정 CRUD 엔드포인트가 없고,
+ * 이 자리에 붙일 수 있는 API 는 Origin 등급 유저 목록뿐이라 그것으로 채웠다.
  */
 export default function AdminAccountsPage() {
-  return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-heading-1 text-text-primary">어드민 계정 관리</h1>
-      <p className="text-body-2 text-text-secondary">화면 준비 중입니다.</p>
-    </div>
-  );
+  return <OriginUserView />;
 }

@@ -18,6 +18,7 @@ import {
   AdminTableHeader,
   AdminTableRow,
 } from "@/features/admin/components/admin-table";
+import { AdminSearch } from "@/features/admin/components/admin-search";
 import { AdminTabs } from "@/features/admin/components/admin-tabs";
 import { GRADE_TABS, GRADE_TAB_VALUES } from "@/features/admin/constants";
 import { formatAdminDate, formatCount } from "@/features/admin/format";
@@ -30,11 +31,11 @@ import { useToast } from "@/components/ui/toast";
 
 /**
  * 유저 등급 관리 화면 (시안 1434:5839).
- * 탭(심사 대기중 / 승인 완료) → 표 → 페이지네이션. (검색은 서버 미지원 — 아래 주석 참고)
+ * 탭(심사 대기중 / 승인 완료) → 검색 → 표 → 페이지네이션.
  * 승인 액션은 "심사 대기중" 행에만 있고, 승인 완료 행은 상태 라벨로 표시한다.
  */
 export function GradeApplicationView() {
-  const { query, setTab, setPage } = useAdminFilters(GRADE_TAB_VALUES, "pending");
+  const { query, setTab, setSearch, setPage } = useAdminFilters(GRADE_TAB_VALUES, "pending");
   const { data, isPending, isError, refetch } = useGradeApplicationList(query);
   const approve = useApproveGradeApplication();
   const { toastSuccess, toastApiError } = useToast();
@@ -43,15 +44,19 @@ export function GradeApplicationView() {
     <div className="flex flex-col gap-4">
       <h1 className="text-heading-1 text-text-primary">유저 등급 관리</h1>
 
-      {/*
-        유저 검색은 **의도적으로 빼 둔다**(2026-08-06 BE 결정: 서버 미지원 → 미구현으로 남김).
-
-        시안(1434:5839)에는 검색바가 있지만, 서버가 `q` 를 모르는 상태에서 붙여 두면
-        받아 온 앞쪽 100건 안에서만 걸러진다 → 실제로 존재하는 유저를 "없음"으로 보여 준다.
-        조용히 틀린 결과를 주느니 없는 편이 낫다. 서버 검색이 붙으면 되살릴 것
-        (`fetchGradeApplications` 의 클라이언트 필터 경로는 그대로 남아 있다).
-      */}
-      <AdminTabs label="등급 신청 상태" tabs={GRADE_TABS} value={query.tab} onChange={setTab} />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <AdminTabs label="등급 신청 상태" tabs={GRADE_TABS} value={query.tab} onChange={setTab} />
+        {/*
+          시안(1434:5839)의 검색바. 서버 `q` 가 붙어(2026-08-06) 되살렸다 —
+          신청자 아이디(이메일) 또는 닉네임 부분일치를 **서버가** 걸러 준다.
+        */}
+        <AdminSearch
+          value={query.q}
+          onSearch={setSearch}
+          placeholder="아이디·닉네임 검색"
+          label="등급 신청자 검색"
+        />
+      </div>
 
       {isError ? (
         <AdminError onRetry={() => void refetch()} />
