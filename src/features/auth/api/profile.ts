@@ -70,7 +70,18 @@ export interface UpdateProfileRequest {
   profileImageUrl?: string;
 }
 
-/** [USER-002] 프로필 수정 — 온보딩 모달(소셜 로그인 전용)의 onComplete 에서 호출 */
+/** [USER-001] 프로필 수정 */
 export function updateMyProfile(payload: UpdateProfileRequest) {
   return api.patch<void>("/users/me", payload);
+}
+
+/** [USER-002] 내 비밀번호 변경 요청 바디 */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+/** [USER-002] 내 비밀번호 변경 */
+export function changeMyPassword(payload: ChangePasswordRequest) {
+  return api.patch<void>("/users/me/password", payload);
 }
