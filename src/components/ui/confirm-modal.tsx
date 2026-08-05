@@ -24,8 +24,27 @@ type ConfirmModalProps = {
   onOpenChange: (open: boolean) => void;
   /** 모달 타이틀 */
   title: React.ReactNode;
-  /** 설명(선택) — 두 줄까지 여유 있는 영역 */
+  /**
+   * 설명(선택) — 두 줄까지 여유 있는 영역.
+   *
+   * ⚠️ **문단(`<p>`) 안에 들어간다.** base-ui 의 Description 이 `<p>` 로 렌더되고,
+   * 이 요소가 `aria-describedby` 대상이라 엘리먼트를 바꾸면 스크린리더 읽기 순서가 달라진다.
+   * 그래서 여기에는 phrasing content(텍스트·`<span>`·`<strong>` 등)만 넣을 수 있다.
+   * `<fieldset>`·`<div>`·`<ul>` 같은 flow content 를 넣으면 HTML 이 무효가 되고
+   * 브라우저가 `<p>` 를 강제로 닫아 하이드레이션 불일치가 난다 → 그건 `children` 으로.
+   */
   description?: React.ReactNode;
+  /**
+   * 설명과 버튼 사이에 들어가는 자유 영역(선택).
+   *
+   * 라디오 그룹·입력창처럼 **구조를 갖거나 상호작용하는 콘텐츠**는 여기에 넣는다.
+   * `description` 과 나누는 이유는 두 가지다.
+   * - HTML: `<p>` 는 flow content 를 담을 수 없다(위 주석 참고).
+   * - 접근성: `aria-describedby` 는 "이 모달이 무엇인지" 설명하는 문구를 가리켜야 한다.
+   *   폼 컨트롤까지 그 안에 있으면 모달을 열 때 통째로 읽히고, 컨트롤은 각자
+   *   label 로 이미 이름이 있어 중복된다.
+   */
+  children?: React.ReactNode;
   /** 확인 버튼 라벨 */
   confirmLabel?: string;
   /** 취소 버튼 라벨 */
@@ -44,6 +63,7 @@ function ConfirmModal({
   onOpenChange,
   title,
   description,
+  children,
   confirmLabel = "확인",
   cancelLabel = "취소",
   onConfirm,
@@ -100,6 +120,10 @@ function ConfirmModal({
               </AlertDialogPrimitive.Description>
             ) : null}
           </div>
+
+          {/* 자유 영역 — 라디오 그룹·입력창 등. 텍스트 블록 밖이라 flow content 를 넣어도 된다.
+              (텍스트 블록의 가운데 정렬을 물려받지 않도록 형제로 둔다) */}
+          {children}
 
           {/*
             버튼 — mobile 5:5 분할(높이 36) / desktop 우측 정렬 + 콘텐츠 폭(높이 48).
