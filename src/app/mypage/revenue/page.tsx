@@ -56,7 +56,7 @@ export default function RevenuePage() {
     <TooltipProvider>
       <div className="flex flex-col gap-16">
         <section className="flex flex-col gap-4">
-          <h1 className="text-heading-2 text-text-primary">수익</h1>
+          <h1 className="text-heading-1 text-text-primary">수익</h1>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
             <StatCard label="이번 달 수익" value={revenue.monthly} unit="P" />
             <StatCard label="누적 수익" value={revenue.total} unit="P" />
@@ -78,7 +78,7 @@ export default function RevenuePage() {
         </section>
 
         <section className="flex flex-col gap-4">
-          <h2 className="text-heading-2 text-text-primary">게시글 인사이트</h2>
+          <h2 className="text-heading-1 text-text-primary">게시글 인사이트</h2>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
             <StatCard label="누적 조회수" value={revenue.views} unit="회" />
             <StatCard label="누적 추천 수" value={revenue.likes} unit="회" />

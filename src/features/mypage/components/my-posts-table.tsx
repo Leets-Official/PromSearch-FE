@@ -44,7 +44,7 @@ export function MyPostsTable({
                 }}
                 className="flex cursor-pointer flex-col gap-2 rounded-md border border-stroke-primary p-4"
               >
-                <span className="text-title-3 text-text-primary">{post.title}</span>
+                <span className="text-title-2 text-text-primary">{post.title}</span>
                 <div className="flex items-center gap-3 text-body-3 text-text-secondary">
                   <span>{post.date}</span>
                   <span>조회 {post.views.toLocaleString()}</span>
@@ -52,7 +52,7 @@ export function MyPostsTable({
                 </div>
                 {showActions && (
                   <div
-                    className="flex items-center gap-3 text-body-3"
+                    className="flex items-center gap-3 text-body-1"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -80,7 +80,7 @@ export function MyPostsTable({
       {/* sm+: 표 */}
       <table className="hidden w-full border-collapse text-left sm:table">
         <thead>
-          <tr className="bg-bg-secondary text-title-2 text-text-primary">
+          <tr className="bg-bg-secondary text-title-1 text-text-primary">
             <th scope="col" className="rounded-l-md px-4 py-3">
               제목
             </th>
@@ -113,18 +113,18 @@ export function MyPostsTable({
                 onClick={() => router.push(detailHref(post.id))}
                 className="cursor-pointer border-b border-stroke-primary transition-colors hover:bg-bg-secondary"
               >
-                <td className="px-4 py-4 text-title-3 text-text-primary">{post.title}</td>
-                <td className="px-4 py-4 text-body-3 text-text-secondary">{post.date}</td>
-                <td className="px-4 py-4 text-body-3 text-text-secondary">
+                <td className="px-4 py-4 text-body-2 text-text-primary">{post.title}</td>
+                <td className="px-4 py-4 text-body-1 text-text-secondary">{post.date}</td>
+                <td className="px-4 py-4 text-body-1 text-text-secondary">
                   {post.views.toLocaleString()}
                 </td>
-                <td className="px-4 py-4 text-body-3 text-text-secondary">
+                <td className="px-4 py-4 text-body-1 text-text-secondary">
                   {post.likes.toLocaleString()}
                 </td>
                 {showActions && (
                   <td className="px-4 py-4">
                     <div
-                      className="flex items-center justify-end gap-3 text-body-3"
+                      className="flex items-center justify-end gap-9 text-body-1"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button

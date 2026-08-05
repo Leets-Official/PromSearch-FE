@@ -28,13 +28,13 @@ export default function SettingsPage() {
     <div className="flex flex-col gap-12">
       {/* 계정 설정 */}
       <section className="flex flex-col gap-6">
-        <h1 className="text-heading-2 text-text-primary">계정 설정</h1>
+        <h1 className="text-heading-1 text-text-primary">계정 설정</h1>
 
         {/* 아이디(연결된 계정) */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-1">
-            <span className="text-title-3 text-text-primary">아이디 (연결된 계정)</span>
-            <span className="flex items-center gap-1.5 text-body-3 text-text-secondary">
+            <span className="text-title-1 text-text-primary">아이디 (연결된 계정)</span>
+            <span className="flex items-center gap-1.5 text-body-1 text-text-secondary">
               {account.email}
               {PROVIDER_ICON[account.provider]}
             </span>
@@ -61,8 +61,8 @@ export default function SettingsPage() {
         {isEmailAccount && (
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-title-3 text-text-primary">비밀번호 변경</span>
-              <span className="text-body-3 text-text-secondary">
+              <span className="text-title-1 text-text-primary">비밀번호 변경</span>
+              <span className="text-body-1 text-text-secondary">
                 최근 변경: {account.passwordUpdatedAt}
               </span>
             </div>
@@ -80,7 +80,7 @@ export default function SettingsPage() {
 
       {/* 알림 설정 */}
       <section className="flex flex-col gap-6">
-        <h2 className="text-heading-2 text-text-primary">알림 설정</h2>
+        <h2 className="text-heading-1 text-text-primary">알림 설정</h2>
 
         <ul className="flex flex-col">
           {notifications.map((item) => (
@@ -89,7 +89,7 @@ export default function SettingsPage() {
               className="flex items-center justify-between border-b border-stroke-primary py-4 last:border-b-0"
             >
               <div className="flex flex-col gap-1">
-                <span className="text-title-3 text-text-primary">{item.label}</span>
+                <span className="text-title-1 text-text-primary">{item.label}</span>
                 <span className="text-body-3 text-text-secondary">{item.description}</span>
               </div>
               <Switch
