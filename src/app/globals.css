@@ -245,6 +245,19 @@
   }
   html {
     @apply font-sans;
+
+    /*
+     * 스크롤바 자리를 **항상** 비워 둔다.
+     *
+     * Base UI 스크롤락은 모달이 열릴 때 <html> 에 `scrollbar-gutter: stable` 을 건다
+     * (@base-ui/utils useScrollLock 의 updateGutterOnly 경로). 그래서 스크롤바가 있던
+     * 페이지에서 모달을 열면 그 순간 거터가 새로 생기고, 페이지가 그만큼 좁아지면서
+     * 딤이 덮지 못한 띠가 오른쪽에 남는다(스크롤바가 없던 페이지에선 안 생긴다).
+     *
+     * 처음부터 거터를 예약해 두면 모달을 열어도 레이아웃이 그대로라 띠가 생기지 않는다.
+     * 덤으로 스크롤 유무에 따라 콘텐츠가 좌우로 튀는 것도 사라진다.
+     */
+    scrollbar-gutter: stable;
   }
 }
 
