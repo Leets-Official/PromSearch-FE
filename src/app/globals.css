@@ -3,6 +3,8 @@
 @import "shadcn/tailwind.css";
 /* Pretendard dynamic subset(92개 @font-face). 통짜 2MB woff2 를 대체한다 — 사유는 해당 파일 주석 참고. */
 @import "./fonts/pretendard-dynamic.css";
+/* 랜딩(/) 전용 서브셋 한 조각. `.font-landing` 을 붙인 곳에서만 쓰이므로 다른 페이지는 받지 않는다. */
+@import "./fonts/pretendard-landing.css";
 
 /* 다크 모드는 디자인 시스템에 정의되어 있지 않아 사용하지 않습니다 (라이트 온리).
  * `.dark` 클래스를 붙이지 않는 한 `dark:` 유틸리티는 모두 비활성 상태입니다. */

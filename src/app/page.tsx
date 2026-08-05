@@ -11,10 +11,26 @@ import { LandingSolution } from "@/features/landing/components/landing-solution"
  *
  * (main) 셸 밖의 단독 페이지 — 헤더/사이드바 없이 섹션만 세로로 쌓는다.
  * 히어로 · Problem · Solution · For You · CTA · Footer 순서는 시안과 동일.
+ *
+ * 폰트: 이 페이지는 카피가 전부 하드코딩이라 쓰이는 글자가 고정이다 → 서비스 공용
+ * 92조각 대신 랜딩 전용 서브셋 한 조각(`.font-landing`)을 쓴다. 359KB/14파일 → 41KB/1파일.
+ * 서브셋에 없는 글자는 공용 조각으로 자동 폴백한다 — 자세한 건 `fonts/pretendard-landing.css` 참고.
  */
 export default function LandingPage() {
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-bg-primary">
+    <div className="font-landing flex min-h-dvh w-full flex-col bg-bg-primary">
+      {/*
+        서브셋을 CSS 파싱 이후가 아니라 문서 파싱과 동시에 받게 한다.
+        (React 19 가 이 <link> 를 <head> 로 끌어올린다)
+        폰트는 same-origin 이어도 CORS 모드로 요청되므로 crossOrigin 을 빼면 두 번 받는다.
+      */}
+      <link
+        rel="preload"
+        href="/fonts/pretendard/PretendardVariable.landing.woff2"
+        as="font"
+        type="font/woff2"
+        crossOrigin=""
+      />
       <LandingHeader />
       {/* items-center 를 주면 각 섹션이 max-content 폭으로 줄어들어(=stretch 해제)
           좁은 화면에서 가로 스크롤이 생긴다. 가운데 정렬은 섹션 내부 컨테이너가 담당한다. */}

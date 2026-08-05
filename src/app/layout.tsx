@@ -13,9 +13,16 @@ import Providers from "./providers";
  *
  * 그래서 `--font-pretendard` 변수도 사라졌다 — 폰트 패밀리는 CSS 의 `--font-sans` 가 직접 가리킨다.
  */
+/**
+ * 고정폭 폰트는 **`/dev/components`(내부 컴포넌트 갤러리)에서만** 쓴다.
+ * `preload` 기본값(true)이면 next/font 가 모든 페이지 <head> 에 preload 를 심어,
+ * 정작 쓰지 않는 랜딩·홈에서도 23KB 를 임계 경로에서 받는다. 실제 쓰는 페이지에서만
+ * 받도록 끈다(@font-face 선언 자체는 남으므로 font-mono 를 쓰면 그때 내려온다).
+ */
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 export const metadata: Metadata = {
