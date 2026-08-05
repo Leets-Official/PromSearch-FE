@@ -85,6 +85,7 @@ export function OAuthCallbackPage({ provider: providerProp }: OAuthCallbackPageP
       open={showOnboarding}
       onOpenChange={setShowOnboarding}
       nicknameStatus={nicknameStatus}
+      nickname={nickname}
       onNicknameChange={setNickname}
       onComplete={handleOnboardingComplete}
       onSkip={() => {
