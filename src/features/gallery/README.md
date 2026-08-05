@@ -2,8 +2,23 @@
 
 홈 화면 = **사이드바 + 프롬프트 갤러리** 기능 모듈. (PS-29)
 
-아웃풋(썸네일) 우선 카드 그리드를 검색·필터·페이지네이션으로 탐색한다. BE 스펙 확정 전에는
-`src/mocks` 의 MSW 목(`GET /api/prompts`)으로 동작한다.
+아웃풋(썸네일) 우선 카드 그리드를 검색·필터·페이지네이션으로 탐색한다.
+목록은 **실 BE**(`GET /api/v1/home/prompts/*`)에 붙어 있다.
+
+## 연동 상태 ✅ 실서버
+
+목록은 **[HOME-001] `GET /api/v1/home/prompts`** 하나로 처리한다.
+정렬(최신/인기)·직군·태스크·AI모델·결과물타입·검색·페이지를 전부 서버가 계산한다.
+
+목은 없다 — MSW 가 가로채지 않으므로 요청이 Next rewrites 를 타고 그대로 BE 로 나간다.
+
+남은 임시 조치는 하나뿐이다.
+
+| 항목                       | 지금                  | 태그 API 붙인 뒤 |
+| -------------------------- | --------------------- | ---------------- |
+| 태그 ID (직군·태스크·모델) | `tag-ids.ts` 하드코딩 | `GET /tags` 조회 |
+
+> "기타" AI 모델은 BE 에 태그 행이 없어(ID 없음) **필터로 보낼 수 없다.** 선택해도 그 축이 빠진다.
 
 ## 구조
 
@@ -11,8 +26,11 @@
 gallery/
   types.ts                 # 도메인 타입 (PromptSummary, GalleryQuery, PromptListResponse …)
   categories.ts            # 직군/태스크/AI모델/결과물타입/등급 상수 — 단일 출처
+  tag-ids.ts               # 직군 → BE 태그 ID 하드코딩(임시) — 태그 API 나오면 삭제
   api/
-    prompt.ts              # toSearchParams(필터→쿼리스트링) + fetchPrompts
+    dto.ts                 # BE 응답 타입(HOME-001 의 result 그대로)
+    map.ts                 # ApiPromptCard → PromptSummary 변환(순수)
+    prompt.ts              # 필터 상태 → 쿼리 파라미터 + 응답 → 화면 페이지 메타
   hooks/
     use-gallery-filters.ts # nuqs 기반 필터/페이지 URL 상태 (+ 세터)
     use-prompt-list.ts     # useQuery(+keepPreviousData) 목록 조회
@@ -53,7 +71,8 @@ source ~/.nvm/nvm.sh && nvm use
 pnpm test src/features/gallery
 ```
 
-- 질의 계약(필터 AND/OR·정렬·페이지네이션)은 `src/mocks/prompt-query.test.ts` 에서 순수 함수로 고정.
+- 쿼리 파라미터 변환·응답 매핑·페이지 계산은 `api/prompt.test.ts` 에서 고정
+  (MSW 로 `/api/v1/home/prompts` 만 세우고 실제 함수를 호출하는 방식).
 - 진리표는 **긍정+부정 케이스**를 함께 넣어, 조건을 반대로 짜면 깨지도록 설계.
 
 ## 후속(별도 브랜치)

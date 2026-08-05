@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { OutputCarousel } from "@/features/prompt-detail/components/output-carousel";
 
 function renderCarousel(
-  images = ["a.png", "b.png", "c.png"],
+  images = ["/a.png", "/b.png", "/c.png"],
   overrides: Partial<Parameters<typeof OutputCarousel>[0]> = {},
 ) {
   const props = {
@@ -33,7 +33,7 @@ describe("OutputCarousel", () => {
   // 전환은 트랙 슬라이드 애니메이션(CAROUSEL_SETTLE_MS)이 끝난 뒤 index 가 바뀐다 → waitFor
   it("다음/이전 클릭으로 인덱스가 순환한다", async () => {
     const user = userEvent.setup();
-    renderCarousel(["a.png", "b.png"]);
+    renderCarousel(["/a.png", "/b.png"]);
 
     await user.click(screen.getByRole("button", { name: "다음 이미지" }));
     await waitFor(() => expect(screen.getByTestId("carousel-indicator")).toHaveTextContent("2/2"));
@@ -42,7 +42,7 @@ describe("OutputCarousel", () => {
   });
 
   it("단일 이미지 — 화살표/인디케이터 없음", () => {
-    renderCarousel(["only.png"]);
+    renderCarousel(["/only.png"]);
     expect(screen.queryByTestId("carousel-indicator")).toBeNull();
     expect(screen.queryByRole("button", { name: "다음 이미지" })).toBeNull();
   });
@@ -69,10 +69,11 @@ describe("OutputCarousel", () => {
 
   it("이미지 클릭 시 확대 모달(dialog)이 열린다", async () => {
     const user = userEvent.setup();
-    renderCarousel(["a.png", "b.png"]);
+    renderCarousel(["/a.png", "/b.png"]);
 
     expect(screen.queryByRole("dialog")).toBeNull();
     await user.click(screen.getByRole("button", { name: /이미지 확대/ }));
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    // 모달은 next/dynamic 으로 열릴 때 받아오므로 한 틱 뒤에 나타난다 → find* 로 기다린다.
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 });

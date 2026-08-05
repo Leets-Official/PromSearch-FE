@@ -14,7 +14,7 @@ export const DEFAULT_PREVIEW_LENGTH = 200;
  * 폴백 규칙(2026-07-22 개정):
  * - 비로그인 → 잠금(anonymous), previewLength 까지 **미리보기 노출** 후 블러
  * - 로그인 + free → 열람
- * - 로그인 + premium|master(미결제) → 잠금(premium), **전체 블러**(미리보기 없음)
+ * - 로그인 + premium(미결제) → 잠금(premium)
  */
 export function resolveRecipeAccess(
   detail: { access?: RecipeAccess | null; tier: ContentTier },
@@ -31,7 +31,7 @@ export function resolveRecipeAccess(
     return { locked: true, reason: "anonymous", previewLength: DEFAULT_PREVIEW_LENGTH };
   }
 
-  // 로그인 상태: free 는 열람, premium/master 미결제는 전체 블러(포인트 유도)
+  // 로그인 상태: free 는 열람, premium 미결제는 잠금(포인트 유도)
   if (detail.tier === "free") {
     return { locked: false, reason: null };
   }

@@ -43,6 +43,11 @@ type PromptCardProps = useRender.ComponentProps<"div"> & {
   tags?: string[];
   /** 썸네일 이미지 URL */
   thumbnailSrc?: string;
+  /**
+   * 첫 화면에 보이는 카드면 `true` — 썸네일 지연 로딩을 끈다.
+   * 홈 갤러리의 LCP 요소가 이 썸네일이라 상단 카드에만 켠다.
+   */
+  eagerThumbnail?: boolean;
   /** 썸네일 우하단 배지(선택) — 결과물타입 등 */
   badge?: React.ReactNode;
   /** 작성자 정보(선택) — 있으면 아바타+이름 노출 */
@@ -54,6 +59,7 @@ function PromptCard({
   title,
   tags,
   thumbnailSrc,
+  eagerThumbnail,
   badge,
   author,
   render,
@@ -63,7 +69,7 @@ function PromptCard({
     <>
       {/* 썸네일 16:9 (+ 우하단 결과물타입 배지) */}
       <div className="relative w-full">
-        <Thumbnail src={thumbnailSrc} alt={title} />
+        <Thumbnail src={thumbnailSrc} alt={title} eager={eagerThumbnail} />
         {badge ? <div className="absolute right-2 bottom-2">{badge}</div> : null}
       </div>
 

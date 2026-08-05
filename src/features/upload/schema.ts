@@ -18,8 +18,11 @@
 
 import { z } from "zod";
 
-/** 제목 최대 글자 수 — 유일한 글자 수 제한 */
+/** 제목 최대 글자 수 */
 export const TITLE_MAX = 100;
+
+/** AI 모델 "기타" 자유 입력 최대 글자 수 — BE `customAiModel` 컬럼 길이(2026-08-05 회신) */
+export const MODEL_ETC_NAME_MAX = 50;
 
 // gallery 도메인 유니온과 1:1 (src/features/gallery/types.ts)
 // 단일 선택(필수) — 미선택 시 노출할 메시지를 enum 에 지정
@@ -38,6 +41,22 @@ const jobCategoryEnum = z.enum([
 ]);
 const tierEnum = z.enum(["free", "premium"]);
 
+/**
+ * 결과물 이미지 1장.
+ *
+ * 파일 자체가 아니라 **서버가 발급한 imageId** 를 들고 다닌다(Presigned 업로드).
+ * `previewUrl` 은 화면 표시용이고 서버로 보내지 않는다 — 방금 올린 파일은 objectURL,
+ * 임시저장에서 복원한 이미지는 조회용 URL 이 응답에 없어(요청서 U-1) 비어 있다.
+ */
+const promptImageSchema = z.object({
+  imageId: z.string().min(1),
+  previewUrl: z.string().optional(),
+  status: z.enum(["uploading", "processing", "ready", "failed"]),
+});
+
+/** 결과물 이미지 값 타입 — 폼과 업로드 훅이 공유한다. */
+export type PromptImageValue = z.infer<typeof promptImageSchema>;
+
 export const promptFormSchema = z
   .object({
     title: z
@@ -51,10 +70,18 @@ export const promptFormSchema = z
     jobCategories: z.array(jobCategoryEnum).min(1, "직군을 하나 이상 선택해주세요."),
     tasks: z.array(taskEnum).min(1, "태스크를 하나 이상 선택해주세요."),
     model: aiModelEnum,
-    modelEtcName: z.string(),
+    modelEtcName: z
+      .string()
+      .max(MODEL_ETC_NAME_MAX, `모델명은 최대 ${MODEL_ETC_NAME_MAX}자까지 입력할 수 있어요.`),
     tier: tierEnum,
     body: z.string().trim().min(1, "프롬프트 본문을 입력해주세요."),
-    images: z.array(z.string()).min(1, "결과물 이미지를 최소 1장 첨부해주세요."),
+    images: z
+      .array(promptImageSchema)
+      .min(1, "결과물 이미지를 최소 1장 첨부해주세요.")
+      // 서버는 READY 이미지만 게시물에 붙일 수 있다(PROMPT-008). 처리 중/실패가 섞이면 막는다.
+      .refine((images) => images.every((image) => image.status === "ready"), {
+        message: "이미지 처리가 끝난 뒤에 게시할 수 있어요.",
+      }),
   })
   // "기타" 모델 선택 시 자유 입력명 필수
   .refine((v) => v.model !== "etc" || v.modelEtcName.trim().length > 0, {

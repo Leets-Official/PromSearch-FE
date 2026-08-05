@@ -11,9 +11,6 @@ import type { PromptFormSchema } from "./schema";
 /** 업로드 폼 값(= 게시 요청 값). 검증 통과 형태라 모든 필드가 채워져 있다(null/미선택 없음). */
 export type PromptFormValues = PromptFormSchema;
 
-/** 게시 요청 본문 */
-export type CreatePromptRequest = PromptFormValues;
-
 /** 게시 응답 — 생성된 프롬프트 식별자(상세로 이동) */
 export type CreatePromptResponse = {
   id: string;
@@ -27,7 +24,7 @@ export type PromptDraft = Partial<PromptFormValues> & {
   updatedAt: string;
 };
 
-/** 임시저장 조회 응답 — 없으면 draft: null */
+/** 임시저장 조회 응답 — 없으면 draft: null (서버는 404 로 알려준다) */
 export type DraftResponse = {
   draft: PromptDraft | null;
 };

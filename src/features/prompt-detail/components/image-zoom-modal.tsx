@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/components/ui/icons";
+import NextImage from "next/image";
 import { useEffect, useState } from "react";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
@@ -162,14 +163,15 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
               aria-current={i === index}
               onClick={() => goTo(i)}
               className={cn(
-                "size-16 shrink-0 overflow-hidden rounded-md ring-2 transition-opacity",
+                // `fill` 이미지의 기준이 되도록 relative
+                "relative size-16 shrink-0 overflow-hidden rounded-md ring-2 transition-opacity",
                 i === index
                   ? "opacity-100 ring-white"
                   : "opacity-40 ring-transparent hover:opacity-70",
               )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="size-full object-cover" />
+              {/* 64px 고정 타일 — 원본을 그대로 받으면 낭비가 가장 큰 자리다 */}
+              <NextImage src={src} alt="" fill sizes="64px" className="object-cover" />
             </button>
           ))}
         </div>
@@ -181,10 +183,14 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
 /**
  * 확대 영역을 꽉 채우고 object-contain 으로 비율을 유지한다.
  * 크기를 영역에 맡기므로(고정 vh 없음) 이미지 원본 비율·로드 타이밍과 무관하게 항상 가운데다.
+ *
+ * **여기만 native `<img>` 를 유지한다.** 확대 모달은 원본 화소를 보려고 여는 화면이라
+ * 리사이즈가 목적과 정면으로 어긋나고(핀치 줌하면 깨진다), react-zoom-pan-pinch 가 이 엘리먼트에
+ * transform 을 직접 걸기 때문에 자기 위치를 잡는 `fill` 과 충돌한다.
  */
 function ZoomSlideImage({ src, alt }: { src: string; alt: string }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
+    // eslint-disable-next-line @next/next/no-img-element -- 원본 화소 그대로 보여주는 확대 뷰
     <img src={src} alt={alt} draggable={false} className="size-full object-contain select-none" />
   );
 }

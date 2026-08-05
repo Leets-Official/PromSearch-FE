@@ -16,7 +16,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "@/lib/api/auth-cookie";
-import { DEV_PREVIEW_COOKIE, DEV_TOOLBAR_ENABLED, parseDevPreview } from "@/lib/dev-preview";
 import {
   AUTHENTICATED_HOME_PATH,
   GUEST_ONLY_ROUTES,
@@ -28,30 +27,14 @@ import {
   REDIRECT_PARAM,
 } from "@/lib/auth-routes";
 
-/**
- * dev 전용 가짜 로그인 판정.
- *
- * 실제 auth 가 붙기 전까지 화면의 로그인 상태는 dev 툴바(쿠키 `ps_dev_preview`)나
- * `NEXT_PUBLIC_MOCK_AUTH` 로만 결정된다. 이 프록시는 인증 **쿠키**만 봤기 때문에,
- * 화면상 로그인 상태여도 `/upload` 진입이 `?login=required` 로 튕기는 문제가 있었다.
- * 툴바가 켜진 환경(dev/preview)에서만 동일한 소스를 함께 본다 — 프로덕션에선 영향 없다.
- */
-function hasMockSession(request: NextRequest): boolean {
-  if (!DEV_TOOLBAR_ENABLED) return process.env.NEXT_PUBLIC_MOCK_AUTH != null;
-  const preview = parseDevPreview(request.cookies.get(DEV_PREVIEW_COOKIE)?.value);
-  if (preview.auth !== "anonymous") return true;
-  // 툴바 쿠키가 아직 없으면(첫 방문) env 폴백 — useAuthStatus 의 폴백 규칙과 동일하게 맞춘다.
-  return !request.cookies.has(DEV_PREVIEW_COOKIE) && process.env.NEXT_PUBLIC_MOCK_AUTH != null;
-}
-
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  const hasSession =
-    Boolean(
-      request.cookies.get(ACCESS_TOKEN_COOKIE)?.value ??
-      request.cookies.get(REFRESH_TOKEN_COOKIE)?.value,
-    ) || hasMockSession(request);
+  // 인증 쿠키 존재 여부만 본다 — 토큰을 검증하지는 않는다(보안 경계가 아니라 UX 가드).
+  const hasSession = Boolean(
+    request.cookies.get(ACCESS_TOKEN_COOKIE)?.value ??
+    request.cookies.get(REFRESH_TOKEN_COOKIE)?.value,
+  );
 
   // 비로그인 → 보호 라우트: 로그인 모달이 있는 홈으로. 원래 가려던 경로를 실어 보내 로그인 후 복귀시킨다.
   if (!hasSession && matchesRoute(pathname, PROTECTED_ROUTES)) {

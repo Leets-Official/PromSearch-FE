@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ImageZoomModal } from "@/features/prompt-detail/components/image-zoom-modal";
 
-const IMAGES = ["a.png", "b.png", "c.png"];
+const IMAGES = ["/a.png", "/b.png", "/c.png"];
 
 describe("ImageZoomModal", () => {
   it("dialog + 초기 이미지 + 카운트(현재/전체)를 노출한다", () => {
