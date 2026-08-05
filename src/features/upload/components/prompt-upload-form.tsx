@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Controller, useForm, type DefaultValues } from "react-hook-form";
+import { Controller, useForm, useWatch, type DefaultValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PencilIcon, SaveIcon } from "@/components/ui/icons";
+import { getErrorMessage } from "@/lib/api";
 
 import { MobilePageHeader } from "@/components/layout/mobile-page-header";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,9 @@ function toggle<T>(arr: readonly T[], value: T): T[] {
  * 폼 기본값. 단일 선택(outputType·model)은 **미선택** 상태로 시작하므로 기본값에 넣지 않는다
  * (선택 강제 = 검증에서 필수). 나머지는 빈 값으로 시작.
  */
+/** "임시저장되었어요" 문구가 떠 있는 시간(ms). 읽을 만큼만 보여 주고 걷는다. */
+const TEMP_SAVE_NOTICE_MS = 3000;
+
 const DEFAULT_VALUES: DefaultValues<PromptFormValues> = {
   title: "",
   description: "",
@@ -85,14 +89,25 @@ function PromptUploadForm() {
     mode: "onChange",
   });
 
-  // 진입 시 임시저장이 있으면 모달을 띄운다. effect 없이 파생 상태로 계산:
-  // 드래프트가 존재하고(비동기 로드 완료) 아직 사용자가 선택하지 않았으면 열림.
-  const draft = draftQuery.data?.draft ?? null;
+  /*
+    "임시저장된 글이 있어요" 모달은 **이 화면에 들어온 순간의 임시저장**만 본다.
+
+    라이브 쿼리(draftQuery.data)를 그대로 보면, 임시저장 버튼을 눌러 성공한 직후
+    쿼리가 무효화되며 draft 가 새로 생기고 → 방금 내가 저장한 글을 두고
+    "불러오시겠어요?" 를 되묻는다. 진입 시점 값을 한 번만 붙잡아 둔다.
+
+    `undefined` = 아직 로딩 중(판단 보류), `null` = 임시저장 없음.
+    effect 가 아니라 렌더 중 조정이라 한 번 그린 뒤 다시 그리는 낭비가 없다.
+  */
+  const [entryDraft, setEntryDraft] = React.useState<PromptDraft | null | undefined>(undefined);
+  if (entryDraft === undefined && draftQuery.isSuccess) {
+    setEntryDraft(draftQuery.data?.draft ?? null);
+  }
   const [decided, setDecided] = React.useState(false);
-  const modalOpen = Boolean(draft) && !decided;
+  const modalOpen = Boolean(entryDraft) && !decided;
 
   const handleLoadDraft = () => {
-    if (draft) reset(draftToValues(draft));
+    if (entryDraft) reset(draftToValues(entryDraft));
     setDecided(true);
   };
 
@@ -105,10 +120,34 @@ function PromptUploadForm() {
     });
   };
 
+  /*
+    이미지가 아직 올라가는(또는 서버에서 워터마크 처리 중인) 동안에는 저장·게시를 막는다.
+
+    안 막으면 그 상태로 요청이 나가고 서버가
+    `IMAGE-0xx 워터마크 처리가 완료되지 않은 이미지입니다.` 로 거절한다 — 사용자는
+    자기가 뭘 잘못했는지 알 수 없다. 준비되지 않은 버튼은 애초에 못 누르게 하는 편이 낫다.
+  */
+  const images = useWatch({ control, name: "images" });
+  const imagesBusy = (images ?? []).some(
+    (image) => image.status === "uploading" || image.status === "processing",
+  );
+
   // 임시저장 — 부분 작성 허용(전체 검증 없이 현재 값 저장)
   const handleTempSave = () => {
     saveDraft.mutate(getValues());
   };
+
+  /*
+    "임시저장되었어요" 는 **잠깐 보이고 사라지는** 알림이다.
+    mutation 의 isSuccess 는 다음 요청까지 계속 true 라, 그대로 두면 문구가 화면에 눌러앉는다.
+    성공 후 일정 시간이 지나면 mutation 상태를 되돌려 문구를 걷어낸다.
+  */
+  const saveDraftReset = saveDraft.reset;
+  React.useEffect(() => {
+    if (!saveDraft.isSuccess) return;
+    const timer = setTimeout(saveDraftReset, TEMP_SAVE_NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [saveDraft.isSuccess, saveDraftReset]);
 
   // 게시 — 전체 검증 통과 시. 성공하면 임시저장 정리 후 상세로 이동
   const onSubmit = (values: PromptFormValues) => {
@@ -332,12 +371,24 @@ function PromptUploadForm() {
           <p className="text-title-2 text-text-brand">
             ‘게시하기’를 누르면 작성하신 프롬프트가 즉시 등록됩니다.
           </p>
-          {createPrompt.isError ? (
-            <p className="text-body-3 text-red-500">
-              게시에 실패했어요. 잠시 후 다시 시도해주세요.
+          {/*
+            피드백 우선순위: 실패 > 진행 중 안내 > 성공.
+            실패는 **서버 문구를 그대로** 보여 준다 — "이미 등록된 프롬프트입니다",
+            "워터마크 처리가 완료되지 않은 이미지입니다" 처럼 무엇을 고쳐야 하는지가
+            거기 담겨 있는데, 뭉뚱그린 안내로 덮으면 그 정보가 사라진다.
+          */}
+          {createPrompt.isError || saveDraft.isError ? (
+            <p role="alert" className="text-body-3 text-red-500">
+              {getErrorMessage(createPrompt.error ?? saveDraft.error)}
+            </p>
+          ) : imagesBusy ? (
+            <p className="text-body-3 text-text-secondary">
+              이미지 처리가 끝나면 저장하거나 게시할 수 있어요.
             </p>
           ) : saveDraft.isSuccess ? (
-            <p className="text-body-3 text-text-secondary">임시저장되었어요.</p>
+            <p role="status" className="text-body-3 text-text-secondary">
+              임시저장되었어요.
+            </p>
           ) : null}
           <div className="flex gap-2 sm:gap-4">
             <Button
@@ -345,12 +396,17 @@ function PromptUploadForm() {
               variant="ghost"
               size="lg"
               onClick={handleTempSave}
-              disabled={saveDraft.isPending}
+              disabled={saveDraft.isPending || imagesBusy}
             >
               {saveDraft.isPending ? <Spinner className="h-5 w-14" /> : <SaveIcon />}
               임시저장
             </Button>
-            <Button type="submit" variant="brand" size="lg" disabled={createPrompt.isPending}>
+            <Button
+              type="submit"
+              variant="brand"
+              size="lg"
+              disabled={createPrompt.isPending || imagesBusy}
+            >
               {createPrompt.isPending ? <Spinner className="h-5 w-14" /> : <PencilIcon />}
               게시하기
             </Button>
@@ -366,7 +422,7 @@ function PromptUploadForm() {
         }}
         onLoad={handleLoadDraft}
         onDiscard={handleDiscardDraft}
-        savedAt={draft?.updatedAt}
+        savedAt={entryDraft?.updatedAt}
         discarding={deleteDraft.isPending}
       />
     </div>

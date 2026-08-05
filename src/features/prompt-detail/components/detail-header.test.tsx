@@ -13,8 +13,8 @@ describe("DetailHeader", () => {
     expect(screen.getByText("2026.07.12")).toBeInTheDocument();
     expect(screen.getByText("조회 123")).toBeInTheDocument();
     expect(screen.getByText("추천 45")).toBeInTheDocument();
-    // 태그 — 등급(무료)·직군·태스크·모델·결과물타입
-    expect(screen.getByText("무료")).toBeInTheDocument();
+    // 태그 — 직군·태스크·모델·결과물타입 (게시글 타입 무료/프리미엄은 태그로 쓰지 않는다)
+    expect(screen.queryByText("무료")).toBeNull();
     expect(screen.getByText("학생")).toBeInTheDocument();
     expect(screen.getByText("ChatGPT")).toBeInTheDocument();
     expect(screen.getByText("텍스트")).toBeInTheDocument();
