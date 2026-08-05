@@ -8,7 +8,6 @@ import type { MyPost } from "@/mocks/data/mypage";
 interface MyPostsTableProps {
   posts: MyPost[];
   showActions?: boolean;
-  onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   className?: string;
 }
@@ -23,12 +22,11 @@ const detailHref = (id: string) => `/prompts/${id}`;
 export function MyPostsTable({
   posts,
   showActions = false,
-  onEdit,
   onDelete,
   className,
 }: MyPostsTableProps) {
   const router = useRouter();
-  const colSpan = showActions ? 5 : 4;
+  const colSpan = 4;
 
   return (
     <table className={cn("w-full border-collapse text-left", className)}>
@@ -80,13 +78,6 @@ export function MyPostsTable({
                     className="flex items-center justify-end gap-9 text-body-1"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button
-                      type="button"
-                      onClick={() => onEdit?.(post.id)}
-                      className="rounded-sm text-text-secondary transition-colors hover:text-text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                    >
-                      수정
-                    </button>
                     <button
                       type="button"
                       onClick={() => onDelete?.(post.id)}
