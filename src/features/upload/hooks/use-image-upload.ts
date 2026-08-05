@@ -75,15 +75,22 @@ export function useImageUpload({ value, onChange }: UseImageUploadOptions) {
     [onChange],
   );
 
-  /** 아직 처리 중인 이미지들이 최종 상태가 될 때까지 폴링 */
+  /**
+   * 아직 처리 중인 이미지들이 최종 상태가 될 때까지 폴링.
+   *
+   * **먼저 물어보고, 안 끝났을 때만 잔다.** 재우고 나서 조회하면 서버가 워터마크를 이미
+   * 끝냈더라도 무조건 한 주기(1.5초)를 버린다. 순서를 뒤집으면 모든 경우에 같거나 빠르고
+   * (최선 −1.5초, 최악 ±0), 요청 수도 늘지 않는다.
+   *
+   * 지수 백오프도 검토했지만 폐기했다 — 간격이 성기어져 구간에 따라 **오히려 느려진다**
+   * (서버가 1초에 끝나는 경우 1.5초 → 2.1초).
+   */
   const poll = useCallback(
     async (imageIds: string[]) => {
       const deadline = Date.now() + POLL_TIMEOUT_MS;
       let pending = [...imageIds];
 
       while (pending.length > 0 && Date.now() < deadline) {
-        await sleep(POLL_INTERVAL_MS);
-
         const result = await fetchImageStatuses(pending);
         const stillPending: string[] = [];
 
@@ -97,6 +104,9 @@ export function useImageUpload({ value, onChange }: UseImageUploadOptions) {
           if (!isTerminal(image.status)) stillPending.push(image.imageId);
         }
         pending = stillPending;
+
+        if (pending.length === 0) break;
+        await sleep(POLL_INTERVAL_MS);
       }
 
       // 시간 초과 — 서버는 계속 처리 중일 수 있지만 화면은 더 기다리지 않는다.
