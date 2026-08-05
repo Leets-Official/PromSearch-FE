@@ -1,290 +1,203 @@
 # API 연동 현황 — 담당자별 정리
 
-> 기준: 2026-08-05 BE 회신 반영 | 상세한 요청 배경은 [`api-requests-be.md`](./api-requests-be.md) 참고
+> **기준: 2026-08-05 배포된 Swagger 실물 확인** (엔드포인트 39개)
+> 요청 배경·협의 과정은 [`api-requests-be.md`](./api-requests-be.md) 참고
+>
+> **Swagger 보는 법** — Basic 인증이 걸려 있습니다.
+> <https://api.promsearch.kr/swagger-ui/index.html> · 계정 `promsearch` / `promsearch*`
+> 원본 JSON은 <https://api.promsearch.kr/docs-json>
 >
 > **읽는 법**
 >
-> - ✅ **확정** — 스펙 합의 완료. 배포됐거나 곧 배포됨
-> - 🔨 **구현됨/배포 대기** — BE 구현은 끝났는데 Swagger에 아직 안 올라옴
-> - ⏳ **작업 예정** — 만들어주기로 했지만 아직 없음
-> - ❌ **안 하기로 함**
-> - ⚠️ **확인 필요** — 회신끼리 어긋나거나 답을 못 받음
+> - ✅ **사용 가능** — Swagger에 있고 구현 완료
+> - ⏳ **계약만 있음** — Swagger에 있지만 **구현 상태: 미구현** (호출하면 501)
+> - 🟡 **약속했지만 아직 스펙에 없음**
+> - ⚠️ **확인 필요**
 
 ---
 
 ## 0. 한눈에 보기
 
-| 영역              | 담당   | 상태                                   |
-| ----------------- | ------ | -------------------------------------- |
-| 홈 갤러리         | 조혜원 | ✅ 통합 API 확정 → **FE 재작업 필요**  |
-| 프롬프트 상세     | 조혜원 | ✅ 대부분 확정, 배포 대기 3건          |
-| 프롬프트 업로드   | 조혜원 | ✅ 확정 (수정 기능·공개범위 선택 제외) |
-| 관리자            | 조혜원 | ⚠️ 4개 API 여전히 미구현 + 필드 부족   |
-| 로그인 · 회원가입 | 팀원   | ✅ 확정 (약관·관심사·소셜 포함)        |
-| 마이페이지        | 팀원   | ✅ 프로필 조회 구현 완료, 일부 미정    |
+| 영역              | 담당   | 상태                                          |
+| ----------------- | ------ | --------------------------------------------- |
+| 홈 갤러리         | 조혜원 | ✅ 통합 API 나옴 → **FE 재작업 중**           |
+| 프롬프트 상세     | 조혜원 | ✅ 전부 사용 가능 (필드명 2건만 대기)         |
+| 프롬프트 업로드   | 조혜원 | ✅ 전부 사용 가능                             |
+| 관리자            | 조혜원 | ⏳ **4개 모두 미구현** + 필드 부족            |
+| 로그인 · 회원가입 | 팀원   | ✅ 전부 사용 가능                             |
+| 마이페이지        | 팀원   | ✅ 프로필·북마크 가능 / ⏳ 게시글 목록 미구현 |
 
-**지금 당장 손봐야 할 것**
+### 🎉 이번에 새로 들어온 것
 
-1. **[공통-1] 관심 직군·태스크 필드명을 BE에 재확인해야 합니다** — 회신마다 이름이 달랐습니다
-2. 홈 통합 API(`GET /home/prompts`) 확정 → FE의 임시 조치(인기순 대체·클라이언트 필터) 걷어내기
+`GET /tags` · `GET /home/prompts`(통합) · 북마크 등록/취소 · 북마크 목록 · `unlock` ·
+복사 수 · 신고 접수 · 로그아웃 · 프로필 이미지 3종 · 이미지 `imageUrl` · `isNewUser`
 
-**우리가 정한 것 (2026-08-05)**
+### ⚠️ 아직 안 들어온 것 (회신은 받았음)
 
-| 결정                                      | 근거                                         | 영향                                            |
-| ----------------------------------------- | -------------------------------------------- | ----------------------------------------------- |
-| **프롬프트 수정 기능은 만들지 않는다**    | 이번 스코프 밖                               | `GET /prompts/{id}/edit` 도 불필요 → BE 에 알림 |
-| **비공개 게시물 생성 경로는 두지 않는다** | 업로드 폼에 공개범위 선택이 없고 시안도 없음 | 마이페이지 "비공개" 탭은 **유지하되 비어 있음** |
+| 항목                              | 현재 스펙                             | 담당   |
+| --------------------------------- | ------------------------------------- | ------ |
+| 상세 응답 좋아요 네이밍           | 여전히 `recommendCount`/`recommended` | 조혜원 |
+| 상세 응답 `customAiModel`         | 없음                                  | 조혜원 |
+| `aiModelTagId` 단수화             | 여전히 `aiModelTagIds` 배열           | 조혜원 |
+| 어드민 신고 대상 요약 (A-1)       | 없음                                  | 조혜원 |
+| 어드민 등급 신청 지표 (A-2)       | 없음                                  | 조혜원 |
+| 어드민 검색 파라미터 (A-3)        | 없음                                  | 조혜원 |
+| `GET /users/me` 의 `authProvider` | 없음                                  | 팀원   |
+
+→ FE는 **옛 이름·새 이름을 모두 받도록** 방어해 놨습니다. 나중에 배포돼도 안 깨집니다.
 
 ---
 
-# 1. 🔴 공통 — 두 사람 다 영향받는 것
+# 1. 🔴 공통 — 두 사람 다 쓰는 것
 
-여기 있는 건 **한쪽만 맞춰도 소용없습니다.** 같은 값을 양쪽 화면이 쓰기 때문입니다.
+## 공통-1. 관심 직군 · 태스크 ✅ **해결 (더 안 물어봐도 됩니다)**
 
-## 공통-1. 관심 직군 · 태스크 필드명 ⚠️ **회신 3개가 서로 다릅니다**
+회신마다 이름이 달랐는데(`jobTagIds` / `interestJobTagIds` / `jobTags:["개발자"]`),
+**Swagger 실물에서 확정됐습니다.**
 
-같은 값인데 회신 시점마다 이름이 달라졌습니다.
+```
+SignupRequest.interestJobTagIds        : [integer]
+SignupRequest.interestTaskTagIds       : [integer]
+UpdateUserProfileRequest.interestJobTagIds  : [integer]
+UpdateUserProfileRequest.interestTaskTagIds : [integer]
+UserProfileResponse.interestJobTags    : [{ tagId, name }]
+UserProfileResponse.interestTaskTags   : [{ tagId, name }]
+```
 
-| 회신 출처                | 필드명                                     | 값의 형태               |
-| ------------------------ | ------------------------------------------ | ----------------------- |
-| 7-11 회신 (회원가입 DTO) | `jobTagIds` / `taskTagIds`                 | 숫자 ID `[1, 2]`        |
-| C-2 회신 (요청 A 확정)   | `interestJobTagIds` / `interestTaskTagIds` | 숫자 ID `[1, 2]`        |
-| 약관 페이지 예시         | `jobTags` / `taskTags`                     | **문자열** `["개발자"]` |
+- **요청은 숫자 ID 배열**, **응답은 `{tagId, name}` 객체 배열**
+- 약관 페이지에 있던 `jobTags: ["개발자"]`(문자열)는 **오기입니다** — 실제 스펙이 아닙니다
 
-앞의 둘은 이름만 다르지만, **세 번째는 ID가 아니라 태그 이름**이라 아예 다른 계약입니다.
-
-> 🙏 **BE 확인 요청**: 셋 중 어느 것이 맞나요? FE는 **`interestJobTagIds` / `interestTaskTagIds` (숫자 ID)** 로
-> 가정하고 작업하겠습니다 (C-2 요청 A 회신이 가장 최근이자 명시적이라서요).
-> 태그 이름을 문자열로 주고받으면 이름이 바뀔 때마다 깨지고, 동명이의 태그도 구분 못 합니다.
-
-**영향 범위**
-
-| 화면                   | 담당 | API                    |
-| ---------------------- | ---- | ---------------------- |
-| 회원가입               | 팀원 | `POST /auth/signup`    |
-| 온보딩 모달            | 팀원 | `PATCH /users/me`      |
-| 마이페이지 프로필 수정 | 팀원 | `PATCH /users/me`      |
-| 마이페이지 프로필 카드 | 팀원 | `GET /users/me` (응답) |
-
-→ 실제 코드 작업은 **전부 팀원 쪽**이지만, 태그 ID 체계는 홈·업로드와 공유합니다(공통-2).
-
-## 공통-2. 태그 목록 API ✅ **확정**
+## 공통-2. 태그 목록 ✅ `GET /api/v1/tags`
 
 ```
 GET /api/v1/tags
-GET /api/v1/tags?tagType=JOB
+GET /api/v1/tags?tagType=JOB      // JOB | TASK | AI_MODEL
+→ { tags: [{ tagId, tagType, name }] }
 ```
 
-```json
-{
-  "result": {
-    "tags": [
-      { "tagId": 1, "tagType": "JOB", "name": "학생" },
-      { "tagId": 10, "tagType": "TASK", "name": "PPT" },
-      { "tagId": 20, "tagType": "AI_MODEL", "name": "ChatGPT" }
-    ]
-  }
-}
-```
+`sortOrder`는 없습니다 → **`tagId` 순으로 정렬**해서 쓰면 됩니다.
 
-- `sortOrder`는 안 주기로 함 → **FE가 `tagId` 순으로 정렬**해서 씁니다
-- `name`은 화면 표기용이라 그대로 노출 가능 (7-3 회신)
-
-**현재 태그 ID** (이 API 나오기 전까지 FE 하드코딩 — `src/features/gallery/tag-ids.ts`)
+**현재 태그 ID** (`src/features/gallery/tag-ids.ts` 에 하드코딩 중 — 이 API로 교체 예정)
 
 | tagType    | ID       | name                                                  |
 | ---------- | -------- | ----------------------------------------------------- |
 | `JOB`      | 1~6      | 학생 / 직장인 / 자영업자 / 기획자 / 디자이너 / 개발자 |
 | `TASK`     | 7~12     | PPT / 레포트 / 이메일 / 보고서 / 회의록 / 이미지 생성 |
 | `AI_MODEL` | 13~15    | ChatGPT / Gemini / Claude                             |
-| `AI_MODEL` | **없음** | 기타 → `customAiModel` 텍스트로 저장                  |
+| `AI_MODEL` | **없음** | 기타 → `customAiModel` 문자열로 저장                  |
 
-**쓰는 곳**: 홈 필터(조혜원) · 업로드 태그 선택(조혜원) · 회원가입/온보딩 관심사(팀원)
+**쓰는 곳**: 홈 필터·업로드 태그(조혜원) / 회원가입·온보딩·프로필 수정 관심사(팀원)
 
-> ⚠️ 예시의 ID(`10`=PPT, `20`=ChatGPT)와 실제 회신 ID(`7`=PPT, `13`=ChatGPT)가 다릅니다.
-> **실제 값은 회신받은 위 표 기준**입니다.
+## 공통-3. 이름 필드 ⚠️ **아직 `username` 이 남아 있습니다**
 
-## 공통-3. 이름 필드 (`name` / `nickname` / `username`) ✅ **확정 — 닉네임만 사용**
+`name`(실명)은 제거하기로 했고 `SignupRequest`에는 실제로 없습니다. 그런데:
 
-`name`(실명)은 유료 결제 도입 전까지 **제거**. 화면에 노출되는 이름은 **닉네임 하나**입니다.
+| API                       | 필드                                         |
+| ------------------------- | -------------------------------------------- |
+| `POST /auth/signup`       | `nickname` ✅ (`name` 없음)                  |
+| `LoginResponse`           | `nickname` ✅                                |
+| `PATCH /users/me`         | `nickname` + ⚠️ **`name` 이 아직 남아 있음** |
+| `GET /users/me`           | ⚠️ **`username`**                            |
+| `GET /users/{id}/profile` | `nickname`                                   |
+| `ADMIN-GRADE-001`         | ⚠️ **`username`**                            |
 
-| API                       | 필드              |
-| ------------------------- | ----------------- |
-| `POST /auth/signup`       | `nickname`        |
-| `PATCH /users/me`         | `nickname`        |
-| `GET /users/me`           | **`username`** ⚠️ |
-| `GET /users/{id}/profile` | `nickname`        |
-| `ADMIN-GRADE-001`         | `username` ⚠️     |
+→ FE는 `nickname ?? username` 으로 받으면 안전합니다.
 
-> ⚠️ **아직 답 못 받음**: `GET /users/me`와 어드민 목록만 `username`입니다.
-> `nickname`으로 통일되나요? FE는 일단 두 이름 다 받도록 처리하겠습니다.
+## 공통-4. 약관 ✅ **확정** — FE 화면과 정확히 일치
 
-## 공통-4. 약관 동의 ✅ **확정** — FE 화면과 정확히 일치
+| 요청 키                     | 화면 문구                         | FE `TERMS` id       | 비고                  |
+| --------------------------- | --------------------------------- | ------------------- | --------------------- |
+| `agreements.serviceTerms`   | 프롬써치 이용약관                 | `service`           | 필수 (`true` 필요)    |
+| `agreements.communityTerms` | 커뮤니티 이용규칙 동의            | `community`         | 필수                  |
+| `agreements.contentPolicy`  | 콘텐츠 업로드 및 저작권 정책 동의 | `content-copyright` | 필수                  |
+| `agreements.age14OrOver`    | 만 14세 이상입니다                | `age-over-14`       | 필수                  |
+| `agreements.marketing`      | 마케팅 정보 수신 동의             | `marketing`         | 선택 (값은 필수 전송) |
 
-| 요청 키                     | 화면 문구                         | 필수 | FE `TERMS` id       |
-| --------------------------- | --------------------------------- | ---- | ------------------- |
-| `agreements.serviceTerms`   | 프롬써치 이용약관                 | 필수 | `service`           |
-| `agreements.communityTerms` | 커뮤니티 이용규칙 동의            | 필수 | `community`         |
-| `agreements.contentPolicy`  | 콘텐츠 업로드 및 저작권 정책 동의 | 필수 | `content-copyright` |
-| `agreements.age14OrOver`    | 만 14세 이상입니다                | 필수 | `age-over-14`       |
-| `agreements.marketing`      | 마케팅 정보 수신 동의             | 선택 | `marketing`         |
-
-필수 중 하나라도 `false`/누락이면 **400**. FE 폼은 이미 5개 그대로 있어서 **키 매핑만** 하면 됩니다.
-→ 작업: **팀원**
+> ⚠️ 스키마상 **다섯 개 모두 `required`** 입니다. `marketing` 도 **키는 반드시 보내야** 하고 값만 `false` 가능합니다.
 
 ---
 
-# 2. 🅰 조혜원 담당 — 홈 / 상세 / 업로드 / 관리자
+# 2. 🅰 조혜원 — 홈 / 상세 / 업로드 / 관리자
 
-## 2-1. 홈 갤러리
-
-### ✅ 통합 API 확정 — **FE 재작업 필요**
+## 2-1. 홈 ✅ 통합 API 나옴
 
 ```
-GET /api/v1/home/prompts?sort=POPULAR&jobTagId=4&taskTagIds=10,11&aiModelTagIds=20,21&outputTypes=IMAGE,TEXT&q=대시보드&page=0&size=12
+GET /api/v1/home/prompts
+  ?sort=LATEST|POPULAR &jobTagId=4 &taskTagIds=7,8
+  &aiModelTagIds=13,14 &outputTypes=IMAGE,TEXT &q=대시보드 &page=0 &size=12
 ```
 
-| 파라미터        | 값                                       |
-| --------------- | ---------------------------------------- |
-| `sort`          | `LATEST`(기본) / `POPULAR`               |
-| `jobTagId`      | 직군 단일                                |
-| `taskTagIds`    | 콤마 구분 다중                           |
-| `aiModelTagIds` | 콤마 구분 다중                           |
-| `outputTypes`   | `IMAGE` / `TEXT` 콤마 구분 다중          |
-| `q`             | 제목·설명 부분일치 (trim, 대소문자 무시) |
-| `page` / `size` | 0-based / 기본 12, 최대 50               |
+응답은 기존 홈 카드와 동일(`{ prompts, page }`) → FE 매핑 재사용.
+`/home/prompts/popular`(HOME-002) · `/jobs/{id}`(HOME-003)는 호환용으로 남습니다.
 
-- 축 내부 OR, 축 간 AND ✅ 요청대로 반영됨
-- 응답 스키마는 기존 홈 카드와 동일 → **FE 매핑 그대로 재사용 가능**
-- `/popular`, `/jobs/{id}`는 호환용으로 남지만 **새 화면은 통합 API만** 사용
+**FE 할 일** — 임시 조치 걷어내기 (인기순 대체 / 50개 받아 클라 필터 / 제목만 검색)
 
-**FE 할 일** — 지금 임시 조치를 전부 걷어냅니다.
+## 2-2. 상세 ✅ 전부 사용 가능
 
-- [ ] 홈 기본 탭이 `popular`를 대신 호출하던 것 → `sort=LATEST`
-- [ ] 검색·필터 클라이언트 처리(50개 받아 거르기) → 쿼리 파라미터로 위임
-- [ ] `hasClientFilters` / `applyClientFilters` 삭제
+| API                                  | 상태                                         |
+| ------------------------------------ | -------------------------------------------- |
+| 상세 조회 · 좋아요 · 댓글 CRUD       | ✅ 연동 완료                                 |
+| **북마크** `/prompts/{id}/bookmarks` | ✅ **나옴** → 목 제거 예정                   |
+| **잠금 해제** `/prompts/{id}/unlock` | ✅ **나옴** (응답 `Void` → 상세 재조회 필요) |
+| **복사 수** `/prompts/{id}/copies`   | ✅ **나옴** → `{ promptId, copyCount }`      |
+| **신고 접수**                        | ✅ **나옴** — 단, 경로가 예상과 다름 ↓       |
 
-### 그 외
+### 신고 경로가 예상과 다릅니다
 
-| 항목                         | 상태                            |
-| ---------------------------- | ------------------------------- |
-| 카드 응답에 `customAiModel`  | ✅ 추가 확정 (배포 시점 미확인) |
-| `contentType`                | ✅ `FREE`/`PREMIUM` 두 값만     |
-| 비로그인 `viewerInteraction` | ✅ `null` 아님, 전부 `false`    |
+```
+POST /api/v1/reports/posts/{postId}        [MODERATION-001]
+POST /api/v1/reports/comments/{commentId}  [MODERATION-002]
+body: { reason, description }   // 둘 다 required
+```
 
-## 2-2. 프롬프트 상세
+**신고 사유 enum** ✅ `SPAM` · `INAPPROPRIATE` · `COPYRIGHT` · `LOW_QUALITY` · `ETC`
+→ 신고 모달에 사유 라디오를 붙일 수 있습니다.
 
-| 항목                        | 상태             | 비고                                                  |
-| --------------------------- | ---------------- | ----------------------------------------------------- |
-| 상세 조회 `PROMPT-001`      | ✅               | `recommendCount` → `likeCount` 로 통일 예정           |
-| 좋아요 `COMMUNITY-001/002`  | ✅               |                                                       |
-| 댓글 CRUD `COMMENT-001~006` | ✅               | status: `ACTIVE`/`HIDDEN`/`DELETED`                   |
-| **북마크 등록/취소**        | 🔨 **배포 대기** | 구현 완료, Swagger 미반영                             |
-| **포인트 열람 unlock**      | 🔨 **배포 대기** | `POST /prompts/{id}/unlock` 구현 완료                 |
-| **신고 접수**               | 🔨 **배포 대기** | 구현 완료                                             |
-| 복사 수 증가                | ✅ 확정          | `POST /prompts/{id}/copies` → `{promptId, copyCount}` |
+## 2-3. 업로드 ✅ 전부 사용 가능
 
-### 포인트 정책 — MVP 합의
+| 항목                     | 상태                                                              |
+| ------------------------ | ----------------------------------------------------------------- |
+| 게시 · 임시저장 · 이미지 | ✅ 연동 완료                                                      |
+| **`imageUrl`**           | ✅ `PromptImageStatusResponse` 에 추가됨 → 임시저장 미리보기 해결 |
+| 이미지 status            | ✅ `UPLOADING`/`UPLOADED`/`PROCESSING`/`READY`/`FAILED`           |
+| `aiModelTagIds`          | ⚠️ 아직 **배열** — FE는 단수·복수 둘 다 보내는 중                 |
+| `visibility`             | 요청에 `PUBLIC`/`PRIVATE` 있음. FE는 **항상 `PUBLIC`** 전송       |
 
-**`unlock`은 0포인트 차감**입니다. 프롬프트는 유료(`PREMIUM`) 상태이기만 하고 실제 포인트는 안 빠집니다.
+**수정 기능은 만들지 않습니다**(2026-08-05 결정). Swagger에도 `PUT /prompts/{id}` · `/edit` 둘 다 없어서 BE와 일치합니다.
 
-FE는 **포인트가 차감되는 것처럼 보이는 UI를 그대로 유지**합니다 (모달에 보유/필요/차감 후 잔액 표시).
-실제 결제 정책이 정해지면 서버 값만 바뀌면 되도록 `pricePoint`를 응답에서 받아 쓰고 있습니다.
+## 2-4. 관리자 ⏳ **4개 모두 여전히 미구현**
 
-> ⚠️ **아직 답 못 받음**: 신고 `reason` **enum 값 목록**. 지금은 사유 선택 없이 확인 모달만 있는데,
-> 값 목록을 받으면 라디오 UI를 붙이겠습니다.
+```
+GET   /admin/reports             ⏳ 미구현   (targetType, status, page, size)
+PATCH /admin/reports/{id}        ⏳ 미구현
+GET   /admin/grade-requests      ⏳ 미구현   (status, page, size)
+PATCH /admin/grade-requests/{id} ⏳ 미구현
+```
 
-## 2-3. 프롬프트 업로드
+FE는 계약대로 붙여 뒀고 임시 목이 응답 중입니다.
 
-| 항목                             | 상태                                                    |
-| -------------------------------- | ------------------------------------------------------- |
-| 게시 `PROMPT-008`                | ✅                                                      |
-| 임시저장 `PROMPT-005~007`        | ✅ 계정당 1슬롯 확정                                    |
-| 이미지 Presigned 파이프라인      | ✅                                                      |
-| 이미지 상태 enum                 | ✅ `UPLOADING`→`UPLOADED`→`PROCESSING`→`READY`/`FAILED` |
-| **`statuses` 응답에 `imageUrl`** | ✅ **추가 확정** (권장안 채택)                          |
-| `aiModelTagId`                   | ✅ 단수로 변경                                          |
-| `customAiModel`                  | ✅ 최대 50자                                            |
-| **프롬프트 수정**                | ❌ **안 하기로 함** ⚠️ 아래 참고                        |
-
-### ⚠️ 수정 기능 회신이 모순됩니다
-
-| 회신     | 내용                                                             |
-| -------- | ---------------------------------------------------------------- |
-| **7-10** | `GET /prompts/{promptId}/edit` **만들겠다** (수정 폼용 조회 API) |
-| **U-2**  | 프롬프트 **수정 기능 없이 간다**                                 |
-
-조회 API만 있고 저장 API가 없으면 **수정 화면을 만들 수 없습니다.** 둘 중 하나입니다.
-
-- 수정 기능을 **한다** → `PUT /prompts/{promptId}`(저장)도 필요
-- 수정 기능을 **안 한다** → `GET /prompts/{id}/edit`도 불필요하고,
-  **마이페이지 게시글 표의 "수정" 버튼을 빼야 합니다** (→ 팀원 작업)
-
-> 🙏 **BE 확인 요청**: 어느 쪽인가요?
-
-**FE 할 일**
-
-- [ ] `statuses` 배포되면 임시저장 복원 시 이미지 미리보기 채우기 (지금은 자리표시 타일)
-- [ ] `aiModelTagIds`(복수) 함께 보내던 임시 대응 제거 — 단수 배포 시점 확인 후
-
-> ⚠️ **아직 답 못 받음**: `failureCode` 값 목록, 워터마크 처리 소요 시간(폴링 주기 권장값).
-
-### ⚠️ 비공개(PRIVATE) 게시물을 만들 방법이 없습니다
-
-마이페이지 탭 조건이 이렇게 확정됐는데:
-
-| 탭       | 조회 조건                              |
-| -------- | -------------------------------------- |
-| 게시완료 | `status=ACTIVE` + `visibility=PUBLIC`  |
-| 임시저장 | `status=DRAFT`                         |
-| 비공개   | `status=ACTIVE` + `visibility=PRIVATE` |
-
-**업로드 폼에 공개 범위 선택이 없습니다.** 지금 FE는 항상 `visibility: PUBLIC`으로 보냅니다.
-비공개 게시물을 만들 경로가 없으면 그 탭은 영원히 비어 있습니다.
-
-> 🙏 **기획 확인 필요**: 둘 중 하나가 필요합니다.
->
-> - 업로드 폼에 "공개 / 비공개" 선택 추가 (→ 조혜원, 시안 필요)
-> - 마이페이지에서 게시 후 공개↔비공개 전환 (→ 팀원, 전환 API도 필요)
-
-## 2-4. 관리자 ⚠️ **여기가 가장 미해결입니다**
-
-| API                    | 상태          |
-| ---------------------- | ------------- |
-| `ADMIN-REPORT-001/002` | ⏳ **미구현** |
-| `ADMIN-GRADE-001/002`  | ⏳ **미구현** |
-
-FE는 계약대로 붙여 뒀고 임시 목이 응답 중입니다. 구현되면 목만 지우면 됩니다.
-
-**아직 답 못 받은 것 3가지**
-
-| 항목 | 내용                                                                                         |
-| ---- | -------------------------------------------------------------------------------------------- |
-| A-1  | 신고 목록에 **대상 내용·작성자가 없음** → 표에 `#12` · `-` 로 뜸                             |
-| A-2  | 등급 신청에 **게시글 수·누적 추천이 없음** → `0` 으로 뜸                                     |
-| A-1b | 숨김=`RESOLVED` / 유지=`REJECTED` 해석이 맞는지 + **숨김 시 콘텐츠가 실제로 블라인드되는지** |
-
-> 신고 접수 API(`POST /reports`)는 구현됐다고 하니, **신고함에 데이터는 쌓입니다.**
-> 다만 위 필드가 없으면 관리자가 무엇을 보고 판단해야 할지 알 수 없습니다.
+| 여전히 없는 것                             | 화면에 보이는 결과   |
+| ------------------------------------------ | -------------------- |
+| 신고 대상 내용·작성자 (A-1)                | `#12` · `-`          |
+| 등급 신청 게시글 수·누적 추천·닉네임 (A-2) | `0`                  |
+| 검색 파라미터 `q` (A-3)                    | 클라이언트 필터 유지 |
 
 ---
 
-# 3. 🅱 팀원 담당 — 로그인 · 회원가입 / 마이페이지
+# 3. 🅱 팀원 — 로그인 · 회원가입 / 마이페이지
 
-## 3-1. 회원가입
-
-### ✅ 확정된 요청 본문
+## 3-1. 회원가입 ✅ `POST /api/v1/auth/signup`
 
 ```json
-POST /api/v1/auth/signup
 {
-  "nickname": "prompt-master",
-  "email": "gildong@example.com",
-  "password": "password123!",
-  "profileImageUrl": "https://cdn.promsearch.com/profiles/me.png",
-  "interestJobTagIds": [1, 2],
-  "interestTaskTagIds": [10, 11],
+  "nickname": "prompt-master", // required
+  "email": "gildong@example.com", // required
+  "password": "password123!", // required
+  "profileImageUrl": "https://...", // optional
+  "interestJobTagIds": [1, 2], // optional
+  "interestTaskTagIds": [7, 8], // optional
   "agreements": {
+    // required (5개 키 모두 전송)
     "serviceTerms": true,
     "communityTerms": true,
     "contentPolicy": true,
@@ -294,82 +207,92 @@ POST /api/v1/auth/signup
 }
 ```
 
-- **`name`(실명) 없음** — 폼에 실명 입력란을 만들 필요 없습니다 (시안대로)
-- 관심사 필드명은 [공통-1](#공통-1-관심-직군--태스크-필드명--회신-3개가-서로-다릅니다) 확인 후 확정
-- 약관 키는 [공통-4](#공통-4-약관-동의--확정--fe-화면과-정확히-일치) 표 그대로
+- **`name`(실명) 없음** — 폼 그대로 두시면 됩니다
+- 관심사는 **태그 ID 배열** → `src/features/gallery/tag-ids.ts` 재사용
+- 닉네임 중복 확인 `GET /users/nicknames/availability?nickname=` 은 이미 연동돼 있습니다
+  (`src/features/auth/api/nickname.ts`)
 
-**FE 할 일**
+## 3-2. 소셜 로그인 ✅ `POST /api/v1/auth/oauth/{provider}`
 
-- [ ] `signup-form-container.tsx`의 `TODO: 회원가입 API 호출` 연결
-- [ ] FE `TERMS` id → `agreements` 키 매핑 (`content-copyright` → `contentPolicy` 등)
-- [ ] 관심 직군·태스크를 **태그 ID로 변환**해서 전송 → `src/features/gallery/tag-ids.ts` 재사용
-- [ ] 프로필 이미지 업로드 후 받은 URL을 `profileImageUrl`로 전송
-
-## 3-2. 소셜 로그인
-
-```json
-POST /api/v1/auth/oauth/{provider}
-// 응답
-{ "accessToken": "...", "refreshToken": "...", "userId": 1, "isNewUser": true }
-```
-
-- ✅ **`isNewUser` 추가 확정** — 첫 소셜 자동 가입이면 `true`
-- FE는 `isNewUser === true`면 **온보딩 모달**(닉네임·프로필·관심사)을 띄우면 됩니다
-
-> ⚠️ **아직 답 못 받음**: 지원 provider 목록(`kakao` / `google`?), `redirectUri` 화이트리스트 여부.
-
-## 3-3. 로그아웃 ✅ **확정**
+`LoginResponse` 로 이런 게 옵니다:
 
 ```
-POST /api/v1/auth/logout
-Authorization: Bearer {accessToken}
+accessToken, refreshToken, tokenType, expiresIn,
+userId, nickname, profileImageUrl, email, isNewUser
 ```
 
-**요청 본문 없음** — Access Token으로 사용자를 식별해 Refresh Token 세션을 폐기합니다.
+- ✅ **`isNewUser`** 있음 → `true` 면 온보딩 모달
+- ⚠️ 지원 provider 목록(`kakao`/`google`)은 Swagger에 안 적혀 있음 → BE 확인 필요
 
-**FE 할 일**: 로그아웃 시 이 API 호출 → 성공하면 `clearTokens()` (쿠키만 지우면 서버 세션이 남습니다)
+## 3-3. 로그아웃 ✅ `POST /api/v1/auth/logout`
 
-## 3-4. 프로필 이미지 업로드 🔨 **구현됨 / 배포 대기**
+Access Token만 있으면 됩니다(**body 없음**). 성공 후 `clearTokens()` 하세요 —
+쿠키만 지우면 서버 Refresh 세션이 남습니다.
 
-프롬프트 이미지와 **다른 API**입니다 (워터마크 파이프라인 없음).
-배포되면 Swagger에서 정확한 경로·요청 형태를 확인해 주세요.
+## 3-4. 프로필 이미지 ✅ **3개 세트**
 
-> 프롬프트 이미지 업로드(Presigned + 폴링) 구현이 `src/features/upload/api/image.ts`에 있으니
-> 흐름이 비슷하면 참고하실 수 있습니다.
+```
+POST   /api/v1/users/me/profile-image/upload-url   [USER-007] URL 발급
+PUT    /api/v1/users/me/profile-image              [USER-008] 업로드 완료
+DELETE /api/v1/users/me/profile-image              [USER-009] 제거
+```
+
+프롬프트 이미지와 같은 **Presigned 방식**입니다(워터마크 폴링만 없음).
+흐름은 `src/features/upload/api/image.ts` 를 참고하시면 됩니다.
+
+> ⚠️ **S3 PUT은 공통 axios(`api.put`)를 쓰면 안 됩니다.** baseURL(`/api/v1`)과 `Authorization` 헤더가
+> 붙어서 S3 서명 검증이 깨집니다. 순수 `fetch` 로 보내세요.
 
 ## 3-5. 마이페이지
 
-| 항목                       | 상태                                       |
-| -------------------------- | ------------------------------------------ |
-| **내 프로필 `USER-004`**   | ✅ **구현 완료, 머지 예정**                |
-| 프로필 수정 `USER-001`     | ✅ (관심사 필드 추가 확정)                 |
-| 비밀번호 변경 / 회원 탈퇴  | ✅ 기존대로                                |
-| **내 게시글 `PROMPT-010`** | ✅ 상태 enum 확정 (아래)                   |
-| 내 북마크 목록             | ⚠️ **답 못 받음** — 화면은 있는데 API 없음 |
-| 수익 요약                  | ⚠️ **답 못 받음** — 정산 정책 미정         |
-| 알림 설정 / 알림 목록      | ⚠️ **답 못 받음**                          |
+| API                                | 상태                           |
+| ---------------------------------- | ------------------------------ |
+| `GET /users/me` 내 프로필          | ✅ 구현 완료                   |
+| `PATCH /users/me` 프로필 수정      | ✅                             |
+| `PATCH /users/me/password`         | ✅                             |
+| `DELETE /users/me` 탈퇴            | ✅                             |
+| **`GET /users/me/bookmarks`**      | ✅ **새로 나옴**               |
+| `GET /prompts/me` 내 게시글        | ⏳ **미구현**                  |
+| `GET /prompts/me/insights`         | ⏳ **미구현**                  |
+| `DELETE /prompts/{id}` 게시물 삭제 | ⏳ **미구현**                  |
+| 수익 / 알림                        | ❌ API 없음 (스코프 확인 필요) |
 
 ### 내 프로필 응답
 
 ```json
-GET /api/v1/users/me
 {
   "username": "prompt-master",
   "profileImageUrl": "https://...",
   "email": "gildong@example.com",
   "point": 1200,
   "gradeName": "NORMAL",
-  "interestJobTags": [{ "tagId": 1, "name": "직장인" }],
-  "interestTaskTags": [{ "tagId": 10, "name": "PPT" }]
+  "interestJobTags": [{ "tagId": 2, "name": "직장인" }],
+  "interestTaskTags": [{ "tagId": 7, "name": "PPT" }]
 }
 ```
 
-- 관심사가 **`{tagId, name}` 객체**로 옵니다 → 프로필 카드 뱃지에 `name` 그대로 사용
-- `username` 필드명은 [공통-3](#공통-3-이름-필드-name--nickname--username--확정--닉네임만-사용) 확인 대기
-- ⚠️ `authProvider`(소셜/이메일)를 요청했는데 응답에 없습니다 — **설정 화면에서 소셜 계정이면
-  비밀번호 변경 메뉴를 숨겨야** 해서 필요합니다. 추가 요청 부탁드립니다.
+- 관심사가 `{tagId, name}` 으로 오니 **뱃지에 `name` 그대로** 쓰시면 됩니다
+- ⚠️ `authProvider` 없음 → **소셜 계정일 때 비밀번호 변경 메뉴를 숨길 근거가 없습니다.** BE 추가 요청 필요
 
-### 게시글 탭 상태 조건 ✅ **확정**
+### ⚠️ 북마크 목록 필터가 **단수**입니다
+
+```
+GET /api/v1/users/me/bookmarks
+  ?taskTagId=7 &aiModelTagId=13 &outputType=IMAGE &page=0 &size=12
+```
+
+**축마다 하나씩만** 받습니다. 그런데 FE 북마크 화면은 갤러리와 같은 **멀티 선택** 필터를 씁니다
+(`src/features/mypage/hooks/use-bookmarks.ts` — `tasks`/`models`/`outputTypes` 배열).
+
+둘 중 하나로 정해야 합니다.
+
+- BE에 **멀티(콤마 구분)로 바꿔달라** 요청 — 홈 통합 API가 이미 콤마 방식이라 일관성도 맞습니다
+- 또는 화면을 **단일 선택**으로 바꾸기 (시안 확인 필요)
+
+응답(`BookmarkPromptResponse`)은 홈 카드와 필드가 조금 다릅니다 —
+`thumbnailImage`(홈은 `thumbnailImageUrl`), `viewCount`/`likeCount`가 평평하게 옴, `bookmarkedAt` 추가.
+
+### 게시글 탭
 
 ```
 PromptStatus     : DRAFT | ACTIVE | HIDDEN | DELETED
@@ -382,41 +305,54 @@ PromptVisibility : PUBLIC | PRIVATE
 | 임시저장 | `status=DRAFT`                         |
 | 비공개   | `status=ACTIVE` + `visibility=PRIVATE` |
 
-**주의할 점 두 가지**
+**⚠️ 문제 두 가지**
 
-1. **임시저장은 계정당 1개**입니다 (7-6 확정). 임시저장 탭은 항상 **0행 또는 1행**입니다.
-   목록 UI로 둘지, 탭을 없애고 업로드 페이지의 "이어서 작성하기"로만 접근할지 기획 확인이 필요합니다.
-2. **비공개 탭은 당분간 항상 비어 있습니다.** 업로드에 공개범위 선택을 만들지 않기로 해서
-   `PRIVATE` 게시물이 생기는 경로가 없습니다(2026-08-05 결정). 탭·조회 조건은 그대로 두면 됩니다.
+1. **`GET /prompts/me` 에 `visibility` 파라미터가 없습니다.** `status` 만 받습니다
+   (`status` 는 `required`). → 게시완료와 비공개를 **구분할 방법이 없습니다.**
+   BE에 `visibility` 파라미터 추가 요청이 필요합니다.
+2. **비공개 게시물을 만들 경로가 없습니다.** 업로드 폼에 공개범위 선택을 만들지 않기로 했습니다(2026-08-05 결정).
+   → 비공개 탭은 **당분간 항상 비어 있습니다.** 탭·조회 조건은 그대로 두시면 됩니다.
+
+또 **임시저장은 계정당 1개**라 임시저장 탭은 항상 0~1행입니다(7-6 확정). 탭 유지 여부는 기획 확인이 필요합니다.
 
 ### 게시글 수정/삭제 버튼
 
-- **삭제** `PROMPT-009` — ⏳ 여전히 미구현 (BE 구현 요청 필요)
-- **수정** — ❌ **안 하기로 확정** → **"수정" 버튼을 제거해 주세요**
+- **수정** — ❌ **기능 자체를 안 하기로 확정.** 버튼을 제거해 주세요.
   - `src/features/mypage/components/my-posts-table.tsx` — `showActions` 의 수정 버튼 · `onEdit`
   - `src/app/mypage/posts/page.tsx` — `TODO: 게시글 수정 화면으로 이동`
+- **삭제** — API는 있으나 ⏳ 미구현 상태
+
+### 내 게시글 응답 필드
+
+```
+MyPromptSummaryResponse: { promptId, title, publishedAt, viewCount, recommendCount }
+```
+
+⚠️ 여기도 `recommendCount` 입니다(like 통일 미반영). 나중에 `likeCount` 로 바뀔 수 있으니
+`likeCount ?? recommendCount` 로 받아두시길 권합니다.
 
 ---
 
-# 4. BE에 다시 물어볼 것 (우선순위 순)
+# 4. BE에 물어볼 것
 
-| #   | 질문                                                               | 영향        |
-| --- | ------------------------------------------------------------------ | ----------- |
-| 1   | 관심사 필드명 3가지 중 무엇? (`interestJobTagIds` 로 가정 중)      | 팀원        |
-| 2   | 프롬프트 수정 — 한다 vs 안 한다 (7-10 ↔ U-2 모순)                  | 조혜원·팀원 |
-| 3   | 관리자 4개 API 구현 일정 + A-1/A-2 필드 추가                       | 조혜원      |
-| 4   | 신고 `reason` enum 값 목록                                         | 조혜원      |
-| 5   | `GET /users/me` 의 `username` → `nickname` 통일 여부               | 팀원        |
-| 6   | `GET /users/me` 에 `authProvider` 추가                             | 팀원        |
-| 7   | 소셜 로그인 provider 목록 · `redirectUri` 정책                     | 팀원        |
-| 8   | 이미지 `failureCode` 값 목록 · 워터마크 처리 소요 시간             | 조혜원      |
-| 9   | 내 북마크 목록 / 수익 / 알림 API — 이번 스코프인지                 | 팀원        |
-| 10  | 배포 일정: 북마크 · unlock · 신고 · 프로필이미지 · `customAiModel` | 양쪽        |
+| #   | 질문                                                   | 담당   |
+| --- | ------------------------------------------------------ | ------ |
+| 1   | 관리자 4개 API 구현 일정 + A-1/A-2/A-3 필드·파라미터   | 조혜원 |
+| 2   | `GET /prompts/me` 에 **`visibility` 파라미터** 추가    | 팀원   |
+| 3   | `GET /users/me/bookmarks` 필터를 **멀티(콤마)로** 변경 | 팀원   |
+| 4   | `GET /users/me` 에 **`authProvider`** 추가             | 팀원   |
+| 5   | `GET /users/me` 의 `username` → `nickname` 통일 여부   | 팀원   |
+| 6   | `PATCH /users/me` 에 남아 있는 **`name` 제거**         | 팀원   |
+| 7   | 소셜 로그인 지원 provider 목록 (`kakao`/`google`?)     | 팀원   |
+| 8   | `PROMPT-009`(삭제) · `PROMPT-010/011` 구현 일정        | 팀원   |
+| 9   | 상세 응답 `likeCount`/`customAiModel` 배포 시점        | 조혜원 |
+| 10  | 이미지 `failureCode` 값 목록 · 워터마크 처리 소요 시간 | 조혜원 |
+| 11  | 마이페이지 수익 / 알림 — 이번 스코프인지               | 팀원   |
 
 # 5. 기획에 확인할 것
 
-| #   | 질문                                                          | 영향   |
-| --- | ------------------------------------------------------------- | ------ |
-| 1   | 비공개 게시물을 어디서 만드나? (업로드 폼 vs 마이페이지 전환) | 양쪽   |
-| 2   | 임시저장 1개인데 마이페이지 "임시저장" 탭을 유지할지          | 팀원   |
-| 3   | 등급 신청 "반려" 상태를 어드민 화면 어디에 노출할지           | 조혜원 |
+| #   | 질문                                                   | 담당   |
+| --- | ------------------------------------------------------ | ------ |
+| 1   | 임시저장이 1개인데 마이페이지 "임시저장" 탭을 유지할지 | 팀원   |
+| 2   | 북마크 필터를 단일 선택으로 바꿀지 (BE가 단수라서)     | 팀원   |
+| 3   | 등급 신청 "반려" 상태를 어드민 화면 어디에 노출할지    | 조혜원 |
