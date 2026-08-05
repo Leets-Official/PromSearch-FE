@@ -21,11 +21,7 @@ import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useBookmark } from "@/features/prompt-detail/hooks/use-bookmark";
 import { useAuthGate } from "@/features/prompt-detail/hooks/use-auth-gate";
 import { useDetailTab } from "@/features/prompt-detail/hooks/use-detail-tab";
-import {
-  useCreateReport,
-  useRecordCopy,
-  useUnlockPrompt,
-} from "@/features/prompt-detail/hooks/use-prompt-actions";
+import { useRecordCopy, useUnlockPrompt } from "@/features/prompt-detail/hooks/use-prompt-actions";
 import { useLikePrompt } from "@/features/prompt-detail/hooks/use-like-prompt";
 import type { PromptDetail } from "@/features/prompt-detail/types";
 
@@ -48,7 +44,6 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const bookmark = useBookmark(detail.id);
   const unlock = useUnlockPrompt(detail.id);
   const copy = useRecordCopy(detail.id);
-  const report = useCreateReport();
   // 좋아요·북마크·신고·잠금해제는 로그인이 필요하다. 비회원이 누르면 로그인 모달을 연다.
   const gate = useAuthGate();
   const [copied, setCopied] = useState(false);
@@ -228,11 +223,8 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
       <ReportModal
         open={reportOpen}
         onOpenChange={setReportOpen}
-        target="게시글"
-        onConfirm={(reason, description) => {
-          report.mutate({ target: "post", targetId: detail.id, reason, description });
-          setReportOpen(false);
-        }}
+        target="post"
+        targetId={detail.id}
       />
 
       {/* 비회원이 로그인 필요한 액션을 눌렀을 때 */}
