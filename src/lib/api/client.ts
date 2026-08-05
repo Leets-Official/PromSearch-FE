@@ -9,7 +9,6 @@
  * - 공통 응답 봉투(`{ success, code, message, result }`) 해제 → `result` 만 반환
  * - 실패는 전부 {@link ApiError} 로 정규화해서 throw
  * - 401 이면 `/auth/reissue` 로 한 번 재발급 후 원 요청 재시도(동시 401 은 한 번만 재발급)
- * - dev 툴바 헤더 부착(MSW 목 전용, 실서버 호출에는 흔적 없음)
  */
 
 import axios, {
@@ -17,8 +16,6 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from "axios";
-
-import { devPreviewFetchHeaders } from "@/lib/dev-preview";
 
 import { API_TIMEOUT_MS, PUBLIC_AUTH_PATHS, REISSUE_PATH, resolveBaseURL } from "./config";
 import { ApiError, toApiError } from "./error";
@@ -43,11 +40,6 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const token = getAccessToken();
   if (token) config.headers.set("Authorization", `Bearer ${token}`);
-
-  // dev 프리뷰 토글(MSW 목이 읽는다). 툴바가 꺼져 있으면 빈 객체.
-  for (const [key, value] of Object.entries(devPreviewFetchHeaders())) {
-    config.headers.set(key, value);
-  }
 
   return config;
 });

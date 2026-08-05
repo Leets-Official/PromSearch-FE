@@ -20,7 +20,7 @@ export type PromptRecord = PromptSummary & { status: PostStatus };
 // 조합을 순환시키기 위한 축들
 const MODELS: AiModel[] = ["chatgpt", "gemini", "claude", "etc"];
 const OUTPUT_TYPES: OutputType[] = ["image", "text"];
-const TIERS: ContentTier[] = ["free", "premium", "master"];
+const TIERS: ContentTier[] = ["free", "premium"];
 const JOBS: JobCategory[] = [
   "student",
   "worker",

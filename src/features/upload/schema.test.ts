@@ -15,7 +15,7 @@ function values(overrides: Record<string, unknown> = {}): Record<string, unknown
     modelEtcName: "",
     tier: "free",
     body: "프롬프트 본문",
-    images: ["data:image/png;base64,AAAA"],
+    images: [{ imageId: "img-1", status: "ready" }],
     ...overrides,
   };
 }

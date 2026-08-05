@@ -25,7 +25,7 @@ export type AnalyticsEventPropertiesMap = {
   prompt_view: {
     prompt_id: string;
     user_status: UserStatus;
-    tier: "free" | "premium" | "master";
+    tier: "free" | "premium";
     source?: string;
   };
   // 레시피 잠금 CTA 클릭(로그인/포인트 유도) — 전환 직결 지표

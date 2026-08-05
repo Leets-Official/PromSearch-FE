@@ -68,10 +68,13 @@ export function GalleryTopBar() {
         // 모바일 시안에서 상단바(로고·검색·알림)는 **홈에만** 있다. 상세/업로드는
         // 뒤로가기 헤더(MobilePageHeader)를 페이지 내부에서 렌더하므로 sm 미만에서 숨긴다.
         className={cn(
+          // 스크롤해도 상단에 고정. 데스크톱 배경은 불투명(sm:bg-bg-primary)이고
+          // 모바일은 bg/80 + blur 라 아래 콘텐츠가 비쳐도 시안 의도대로 보인다.
+          "sticky top-0 z-40",
           "sm:px-20",
           !onHome && "hidden sm:flex",
-          // 검색 모드: 아래 본문을 덮는 스크림 위로 헤더를 올린다(화면 최상단 고정)
-          mobileSearchOpen && "sticky top-0 z-50 bg-bg-primary",
+          // 검색 모드: 아래 본문을 덮는 스크림 위로 헤더를 올린다
+          mobileSearchOpen && "z-50 bg-bg-primary",
         )}
         start={
           <>
@@ -98,7 +101,7 @@ export function GalleryTopBar() {
                   >
                     <MenuIcon />
                   </Button>
-                  <Link href="/" aria-label="프롬써치 홈" className="flex items-center">
+                  <Link href="/home" aria-label="프롬써치 홈" className="flex items-center">
                     <Logo variant="wordmark" />
                   </Link>
                 </>
@@ -116,7 +119,7 @@ export function GalleryTopBar() {
               >
                 <MenuIcon />
               </Button>
-              <Link href="/" aria-label="프롬써치 홈" className="flex items-center">
+              <Link href="/home" aria-label="프롬써치 홈" className="flex items-center">
                 <Logo variant="horizontal" />
               </Link>
             </div>
@@ -138,7 +141,7 @@ export function GalleryTopBar() {
               </div>
             )}
 
-            {/* desktop: 검색바 + 업로드 상시 노출 */}
+            {/* sm+ : 검색바. 업로드는 lg 부터(그 아래는 UploadFab 이 대신한다) */}
             <div className="hidden min-w-0 flex-1 items-center gap-6 sm:flex">
               <SearchBar
                 value={keyword}
@@ -147,10 +150,13 @@ export function GalleryTopBar() {
                 aria-label="프롬프트 검색"
                 className="max-w-none flex-1"
               />
+              {/* 태블릿(sm~lg)은 헤더 폭이 빠듯해 검색바를 좁히므로 업로드를 FAB 로 내린다.
+                  사이드바가 햄버거로 접히는 경계(lg)와 같은 지점에서 전환한다. */}
               <Button
                 variant="ghost"
                 size="lg"
                 nativeButton={false}
+                className="hidden lg:inline-flex"
                 render={<Link href="/upload" />}
               >
                 <PencilIcon />

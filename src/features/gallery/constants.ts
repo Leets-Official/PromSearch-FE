@@ -6,3 +6,11 @@
 
 /** 홈 갤러리 한 페이지에 보여줄 카드 수 */
 export const GALLERY_PAGE_SIZE = 6;
+
+/**
+ * BE 목록 API 가 허용하는 최대 `size` (Swagger HOME-001/002 기준).
+ *
+ * 검색·필터를 클라이언트에서 처리하는 동안(서버 미지원, 요청서 H-1) 한 번에 최대한 많이 받아와야
+ * 필터 결과와 페이지네이션이 어긋나지 않는다. 서버 필터가 생기면 이 상수는 쓰이지 않는다.
+ */
+export const GALLERY_MAX_PAGE_SIZE = 50;

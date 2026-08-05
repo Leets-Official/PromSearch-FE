@@ -3,7 +3,7 @@
  *
  * 기획 확정값(기술명세서 / IA 2026-07-10) 기준:
  * - 결과물타입(content_output_type): image | text — AI모델과 독립 축(F-1.4)
- * - 콘텐츠타입(content_tier): free | premium | master — 상세 잠금 근거(홈 게이팅 아님)
+ * - 콘텐츠타입(content_tier): free | premium — 상세 잠금 근거(홈 게이팅 아님)
  * - 직군/태스크/AI모델 태그는 멀티(복수) 값
  * - 홈 갤러리는 status=ACTIVE 만 노출 (DRAFT/HIDDEN 제외)
  */
@@ -22,7 +22,7 @@ export type JobCategory =
   "student" | "worker" | "planner" | "designer" | "developer" | "self_employed";
 
 // 콘텐츠타입(접근 등급) — 무료/프리미엄/마스터. 상세 잠금 근거(이번 범위 밖)
-export type ContentTier = "free" | "premium" | "master";
+export type ContentTier = "free" | "premium";
 
 // 게시글 상태 — 홈 갤러리는 ACTIVE 만 노출
 export type PostStatus = "active" | "hidden" | "draft";

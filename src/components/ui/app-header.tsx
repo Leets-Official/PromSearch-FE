@@ -49,10 +49,12 @@ function AppHeader({ className, start, center, end, children, ...props }: AppHea
     >
       {children ?? (
         <>
-          {/* 좌측: 로고 (기본형 = 가로 로고, 클릭 시 랜딩으로) */}
+          {/* 좌측: 로고 (기본형 = 가로 로고).
+              클릭 시 **홈 갤러리(/home)** 로 간다 — 마이페이지 등 하위 화면에서 서비스로
+              돌아올 통로가 로고뿐이라, 랜딩(/)이 아니라 홈으로 보낸다(2026-08-05 피드백). */}
           <div className="flex shrink-0 items-center">
             {start ?? (
-              <Link href="/" aria-label="프롬써치 홈" className="flex items-center">
+              <Link href="/home" aria-label="프롬써치 홈" className="flex items-center">
                 <Logo variant="horizontal" />
               </Link>
             )}

@@ -6,7 +6,7 @@ import { GalleryGrid } from "@/features/gallery/components/gallery-grid";
 import { GalleryPagination } from "@/features/gallery/components/gallery-pagination";
 import {
   GalleryError,
-  GalleryInlineLoading,
+  GalleryFetching,
   GallerySkeleton,
 } from "@/features/gallery/components/gallery-states";
 import { UploadFab } from "@/features/gallery/components/upload-fab";
@@ -44,9 +44,15 @@ export default function HomePage() {
         <GallerySkeleton />
       ) : (
         <>
-          <GalleryGrid prompts={data.items} userStatus={status} onResetFilters={reset} />
-          {/* 페이지 이동·필터 변경 재조회 중(이전 결과는 유지) — 최초 로딩은 위 스켈레톤 */}
-          {isFetching ? <GalleryInlineLoading /> : null}
+          {/* 필터·페이지 변경 재조회 중에는 이전 결과를 흐리게 깔고 위에 표시를 얹는다.
+              (최초 로딩은 위 스켈레톤) */}
+          {isFetching ? (
+            <GalleryFetching>
+              <GalleryGrid prompts={data.items} userStatus={status} onResetFilters={reset} />
+            </GalleryFetching>
+          ) : (
+            <GalleryGrid prompts={data.items} userStatus={status} onResetFilters={reset} />
+          )}
           <GalleryPagination page={data.page} totalPages={data.totalPages} />
         </>
       )}

@@ -28,6 +28,12 @@ function OutputTypeBadge({ type }: { type: OutputType }) {
   );
 }
 
+/**
+ * 지연 로딩을 끌 카드 수 — 데스크톱 첫 행(lg 3열)을 덮는 값.
+ * 모바일(1열)에서는 3장 중 2장이 접힘 아래지만, 카드가 작아 손해가 크지 않다.
+ */
+const EAGER_THUMBNAIL_COUNT = 3;
+
 /** 상세 경로 — 상세 페이지는 후속 브랜치지만 경로는 확정해 링크만 연결한다. */
 export function promptDetailHref(id: string): string {
   return `/prompts/${id}`;
@@ -75,6 +81,9 @@ export function GalleryCard({ prompt, position, userStatus }: GalleryCardProps) 
       title={prompt.title}
       tags={buildCardTags(prompt)}
       thumbnailSrc={prompt.thumbnailUrl}
+      // 첫 행(lg 3열 기준)은 접힘 위라 지연 로딩을 끈다 — 이 썸네일이 홈의 LCP 요소다.
+      // 그 아래는 lazy 로 둬야 스크롤 전 대역폭을 낭비하지 않는다.
+      eagerThumbnail={position <= EAGER_THUMBNAIL_COUNT}
       badge={<OutputTypeBadge type={prompt.outputType} />}
       // 개정(209:3690): [아바타 | 제목 / 작성자이름] → 태그 순서
       author={{ name: prompt.author.name, avatarSrc: prompt.author.avatarUrl }}

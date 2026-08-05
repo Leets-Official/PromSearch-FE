@@ -18,7 +18,7 @@ import {
   SegmentedControlList,
 } from "@/components/ui/segmented-control";
 
-import { promptFormSchema, TITLE_MAX } from "../schema";
+import { MODEL_ETC_NAME_MAX, promptFormSchema, TITLE_MAX } from "../schema";
 import type { PromptDraft, PromptFormValues } from "../types";
 import { AI_MODELS, CONTENT_TIER_OPTIONS, JOB_CATEGORIES, OUTPUT_TYPES, TASKS } from "../options";
 import { usePromptDraft } from "../hooks/use-prompt-draft";
@@ -225,6 +225,8 @@ function PromptUploadForm() {
             <div className="flex w-full flex-col gap-3">
               <ChipGroupField
                 label="AI 모델"
+                // 직군/태스크의 "복수선택이 가능해요."와 짝을 이뤄 단일 선택임을 알린다
+                hint="한 가지만 선택할 수 있어요."
                 options={AI_MODELS}
                 selected={field.value ? [field.value] : []}
                 // 필수 단일 선택 — 선택만. 기타가 아니면 자유 입력값 정리
@@ -240,8 +242,12 @@ function PromptUploadForm() {
                   name="modelEtcName"
                   render={({ field: etcField, fieldState }) => (
                     <div className="flex flex-col gap-1">
+                      {/* 예시를 하나만 보여줘 "모델 하나"를 적는 칸임을 드러낸다.
+                          입력값은 쪼개지 않고 그대로 저장되므로(BE `customAiModel` 단수),
+                          여러 개를 나열하면 그 문자열이 통째로 모델명이 된다. */}
                       <Input
-                        placeholder="사용한 AI 모델명을 입력해주세요."
+                        placeholder="예: GPT 4.1 Mini"
+                        maxLength={MODEL_ETC_NAME_MAX}
                         value={etcField.value}
                         onChange={etcField.onChange}
                         onBlur={etcField.onBlur}
@@ -249,7 +255,11 @@ function PromptUploadForm() {
                       />
                       {fieldState.error ? (
                         <span className="text-body-3 text-red-500">{fieldState.error.message}</span>
-                      ) : null}
+                      ) : (
+                        <span className="text-body-3 text-text-secondary">
+                          사용한 AI 모델명을 하나만 입력해주세요.
+                        </span>
+                      )}
                     </div>
                   )}
                 />
@@ -305,17 +315,13 @@ function PromptUploadForm() {
           control={control}
           name="images"
           render={({ field, fieldState }) => (
-            <div className="flex w-full flex-col gap-1">
-              <OutputImageUploader
-                label="결과물 이미지"
-                hint="프롬프트로 생성한 결과물의 이미지를 첨부해주세요. 호버하면 삭제할 수 있어요."
-                value={field.value}
-                onChange={field.onChange}
-              />
-              {fieldState.error ? (
-                <span className="text-body-3 text-red-500">{fieldState.error.message}</span>
-              ) : null}
-            </div>
+            <OutputImageUploader
+              label="결과물 이미지"
+              hint="프롬프트로 생성한 결과물의 이미지를 첨부해주세요. 호버하면 삭제할 수 있어요."
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+            />
           )}
         />
 

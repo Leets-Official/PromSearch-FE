@@ -13,7 +13,6 @@ import type {
   ReportTab,
   ReportTarget,
 } from "@/features/admin/types";
-import { devPreviewFetchHeaders } from "@/lib/dev-preview";
 
 /** 신고 대상 → 목록/처리 엔드포인트. posts/comments 두 화면이 같은 계약을 쓴다. */
 const REPORT_PATH: Record<ReportTarget, string> = {
@@ -40,7 +39,7 @@ export function toAdminSearchParams<Tab extends string>(
 
 async function getJson<T>(path: string, params: URLSearchParams): Promise<T> {
   const qs = params.toString();
-  const res = await fetch(`${path}${qs ? `?${qs}` : ""}`, { headers: devPreviewFetchHeaders() });
+  const res = await fetch(`${path}${qs ? `?${qs}` : ""}`);
 
   if (!res.ok) {
     throw new Error(`어드민 목록 조회 실패: ${res.status}`);
@@ -65,7 +64,7 @@ export async function updateReportStatus(
 ): Promise<void> {
   const res = await fetch(`${REPORT_PATH[target]}/${id}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json", ...devPreviewFetchHeaders() },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
   });
 
@@ -88,7 +87,6 @@ export function fetchGradeApplications(
 export async function approveGradeApplication(id: string): Promise<void> {
   const res = await fetch(`/api/admin/users/grade-applications/${id}/approve`, {
     method: "POST",
-    headers: devPreviewFetchHeaders(),
   });
 
   if (!res.ok) {

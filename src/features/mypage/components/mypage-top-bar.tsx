@@ -70,7 +70,7 @@ export function MyPageTopBar() {
                   >
                     <MenuIcon />
                   </Button>
-                  <Link href="/" aria-label="프롬써치 홈" className="flex items-center">
+                  <Link href="/home" aria-label="프롬써치 홈" className="flex items-center">
                     <Logo variant="wordmark" />
                   </Link>
                 </>
@@ -88,7 +88,7 @@ export function MyPageTopBar() {
               >
                 <MenuIcon />
               </Button>
-              <Link href="/" aria-label="프롬써치 홈" className="flex items-center">
+              <Link href="/home" aria-label="프롬써치 홈" className="flex items-center">
                 <Logo variant="horizontal" />
               </Link>
             </div>

@@ -3,11 +3,12 @@ import Link from "next/link";
 import { PencilIcon } from "@/components/ui/icons";
 
 /**
- * 모바일 업로드 진입 버튼(우하단 플로팅).
+ * 모바일·태블릿 업로드 진입 버튼(우하단 플로팅).
  *
- * 모바일 시안의 홈 헤더는 [햄버거+로고] / [알림·검색] 로 이미 채워져 있어 업로드 자리가 없다.
- * 데스크톱 상단바에는 "업로드" 버튼이 상시 노출되므로, 모바일에서는 주 액션을
- * 엄지가 닿는 우하단 플로팅 버튼으로 제공한다.
+ * 모바일 시안의 홈 헤더는 [햄버거+로고] / [알림·검색] 로 이미 채워져 있어 업로드 자리가 없고,
+ * 태블릿(sm~lg)도 헤더 폭이 빠듯해 업로드를 넣으면 검색바가 눌린다. 그래서 **lg 미만**에서는
+ * 주 액션을 엄지가 닿는 우하단 플로팅 버튼으로 제공하고, lg 부터 헤더 버튼으로 올린다
+ * (사이드바가 햄버거로 접히는 경계와 같은 지점).
  *
  * 디자인 시스템 매핑(신규 컴포넌트가 아니라 기존 토큰 조합):
  * - 색      : Interaction/Brand default·hover·pressed (Button/Brand 와 동일 규칙)
@@ -22,7 +23,7 @@ export function UploadFab() {
     <Link
       href="/upload"
       aria-label="프롬프트 업로드"
-      className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex size-14 items-center justify-center rounded-full bg-interaction-brand text-text-on-brand shadow-[0_4px_8px_rgb(35_35_33/0.13)] transition-colors outline-none hover:bg-interaction-brand-hover focus-visible:ring-3 focus-visible:ring-ring/50 active:bg-interaction-brand-pressed sm:hidden"
+      className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex size-14 items-center justify-center rounded-full bg-interaction-brand text-text-on-brand shadow-[0_4px_8px_rgb(35_35_33/0.13)] transition-colors outline-none hover:bg-interaction-brand-hover focus-visible:ring-3 focus-visible:ring-ring/50 active:bg-interaction-brand-pressed lg:hidden"
     >
       <PencilIcon className="size-6" />
     </Link>

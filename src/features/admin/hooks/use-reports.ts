@@ -9,7 +9,6 @@ import type {
   ReportTab,
   ReportTarget,
 } from "@/features/admin/types";
-import { currentDevEdge } from "@/lib/dev-preview";
 
 /** 신고 목록 조회. 탭/검색/페이지가 queryKey 에 들어가 조건이 바뀌면 자동 리페치된다. */
 export function useReportList(target: ReportTarget, query: AdminListQuery<ReportTab>) {
@@ -18,7 +17,6 @@ export function useReportList(target: ReportTarget, query: AdminListQuery<Report
     queryFn: () => fetchReports(target, query),
     // 페이지 이동 시 이전 페이지를 유지해 표가 깜빡이지 않게 한다.
     placeholderData: keepPreviousData,
-    retry: (failureCount) => currentDevEdge() !== "error" && failureCount < 3,
   });
 }
 

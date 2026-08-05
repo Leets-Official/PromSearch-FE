@@ -16,7 +16,10 @@ export const COMMENT_INPUT_ANCHOR_ID = "detail-comment-input";
  * - 댓글 : 항상 노출. 누르면 댓글 탭으로 전환하고 최하단 댓글 입력창으로 스크롤한다.
  * - 맨 위로 : 스크롤 Y 가 560px 이상일 때만 노출.
  *
- * 모바일 시안에만 있는 요소라 sm 미만에서만 렌더한다.
+ * **xl 미만**에서만 렌더한다. 두 동작 모두 "페이지 자체가 스크롤될 때"만 의미가 있는데,
+ * xl 부터는 우측 컬럼이 자체 스크롤 컨테이너가 되어 `window.scrollTo` 도, 댓글 입력창으로의
+ * 페이지 스크롤도 대상이 사라진다. 태블릿(sm~lg)은 모바일과 같은 단일 컬럼·페이지 스크롤이라
+ * 스크롤바가 잘 보이지 않는 터치 환경에서 이 버튼들이 특히 필요하다.
  */
 export function DetailFloatingActions({ onCommentClick }: { onCommentClick: () => void }) {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -29,7 +32,7 @@ export function DetailFloatingActions({ onCommentClick }: { onCommentClick: () =
   }, []);
 
   return (
-    <div className="fixed right-4 bottom-4 z-40 flex items-center gap-2 sm:hidden">
+    <div className="fixed right-4 bottom-4 z-40 flex items-center gap-2 xl:hidden">
       <FloatingButton label="댓글로 이동" onClick={onCommentClick}>
         <CommentIcon className="size-5" />
       </FloatingButton>

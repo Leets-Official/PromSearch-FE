@@ -1,19 +1,17 @@
 /**
- * 프롬프트 상세 API.
+ * 프롬프트 상세 API — `[PROMPT-001] GET /prompts/{promptId}`.
  *
- * 현재는 MSW 목(`GET /api/prompts/:id`)을 호출한다. BE 스펙 확정 시 응답 매핑만 교체한다.
- *
- * 뷰어(인증) 상태는 목이 잠금(access)을 계산하는 데 필요해 헤더로 실어 보낸다.
- * 실제 BE 는 세션으로 판정하므로, 교체 시 이 헤더만 제거하면 된다(목 전용).
+ * 인증은 선택이다(비회원도 조회 가능). 잠금 판정(`access`)과 본문 노출 범위는 **서버가** 정하므로
+ * 프론트는 받은 값을 그대로 렌더한다.
  */
 
-import type { UserStatus } from "@/analytics/events";
-import type { PromptDetail } from "@/features/prompt-detail/types";
-import { devPreviewFetchHeaders } from "@/lib/dev-preview";
+import { api, isApiError } from "@/lib/api";
 
-/** 목 전용: 뷰어 인증 상태 전달 헤더(BE 전환 시 제거) */
-export const MOCK_VIEWER_HEADER = "x-mock-user-status";
+import type { ApiPromptDetail } from "./dto";
+import { toPromptDetail } from "./map";
+import type { PromptDetail } from "../types";
 
+/** 없는/비공개/삭제된 게시글 — 화면에서 404 상태로 분기하기 위한 전용 에러 */
 export class PromptNotFoundError extends Error {
   constructor(id: string) {
     super(`프롬프트를 찾을 수 없습니다: ${id}`);
@@ -21,20 +19,14 @@ export class PromptNotFoundError extends Error {
   }
 }
 
-export async function fetchPromptDetail(
-  id: string,
-  viewerStatus: UserStatus,
-): Promise<PromptDetail> {
-  const res = await fetch(`/api/prompts/${id}`, {
-    headers: { [MOCK_VIEWER_HEADER]: viewerStatus, ...devPreviewFetchHeaders() },
-  });
-
-  if (res.status === 404) {
-    throw new PromptNotFoundError(id);
+export async function fetchPromptDetail(id: string): Promise<PromptDetail> {
+  try {
+    const result = await api.get<ApiPromptDetail>(`/prompts/${id}`);
+    return toPromptDetail(result);
+  } catch (error) {
+    if (isApiError(error) && error.status === 404) {
+      throw new PromptNotFoundError(id);
+    }
+    throw error;
   }
-  if (!res.ok) {
-    throw new Error(`프롬프트 상세 조회 실패: ${res.status}`);
-  }
-
-  return (await res.json()) as PromptDetail;
 }

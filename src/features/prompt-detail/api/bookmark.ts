@@ -1,18 +1,24 @@
 /**
- * 북마크(저장) 토글 API.
+ * 북마크 API — `[COMMUNITY-003/004] POST|DELETE /prompts/{promptId}/bookmarks`.
  *
- * 현재는 MSW 목(`POST /api/prompts/:id/bookmark`)을 호출한다. 서버가 토글된 상태를 돌려주고,
- * 프론트는 낙관적 갱신 후 이 응답으로 확정한다(실패 시 롤백).
+ * 좋아요와 같이 **등록/취소가 분리**돼 있어 현재 상태를 보고 메서드를 고른다.
  */
 
-import type { BookmarkToggleResponse } from "@/features/prompt-detail/types";
+import { api } from "@/lib/api";
 
-export async function toggleBookmark(id: string): Promise<BookmarkToggleResponse> {
-  const res = await fetch(`/api/prompts/${id}/bookmark`, { method: "POST" });
+import type { ApiBookmarkResult } from "./dto";
+import type { BookmarkToggleResponse } from "../types";
 
-  if (!res.ok) {
-    throw new Error(`북마크 토글 실패: ${res.status}`);
-  }
+/**
+ * @param bookmarked 현재(요청 전) 북마크 상태. true 면 취소, false 면 등록한다.
+ */
+export async function toggleBookmark(
+  id: string,
+  bookmarked: boolean,
+): Promise<BookmarkToggleResponse> {
+  const result = bookmarked
+    ? await api.delete<ApiBookmarkResult>(`/prompts/${id}/bookmarks`)
+    : await api.post<ApiBookmarkResult>(`/prompts/${id}/bookmarks`);
 
-  return (await res.json()) as BookmarkToggleResponse;
+  return { bookmarked: result.bookmarked };
 }
