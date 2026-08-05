@@ -23,7 +23,7 @@ function StatCard({
   return (
     <Card className={cn("gap-6", className)}>
       <div className="flex items-center gap-1">
-        <span className="text-title-3 text-text-secondary">{label}</span>
+        <span className="text-body-2 text-text-secondary">{label}</span>
         {hint && (
           <Tooltip>
             <TooltipTrigger
@@ -41,9 +41,9 @@ function StatCard({
           </Tooltip>
         )}
       </div>
-      <span className="text-heading-1 text-text-primary">
+      <span className="text-display-2 text-text-primary">
         {value.toLocaleString()}
-        <span className="ml-1 text-title-2 text-text-secondary">{unit}</span>
+        <span className="ml-1 text-body-2 text-text-secondary">{unit}</span>
       </span>
     </Card>
   );
@@ -54,7 +54,7 @@ export default function RevenuePage() {
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-16">
         <section className="flex flex-col gap-4">
           <h1 className="text-heading-2 text-text-primary">수익</h1>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
