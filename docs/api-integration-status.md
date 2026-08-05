@@ -18,14 +18,14 @@
 
 ## 0. 한눈에 보기
 
-| 영역              | 담당   | 상태                                          |
-| ----------------- | ------ | --------------------------------------------- |
-| 홈 갤러리         | 조혜원 | ✅ 통합 API 나옴 → **FE 재작업 중**           |
-| 프롬프트 상세     | 조혜원 | ✅ 전부 사용 가능 (필드명 2건만 대기)         |
-| 프롬프트 업로드   | 조혜원 | ✅ 전부 사용 가능                             |
-| 관리자            | 조혜원 | ⏳ **4개 모두 미구현** + 필드 부족            |
-| 로그인 · 회원가입 | 팀원   | ✅ 전부 사용 가능                             |
-| 마이페이지        | 팀원   | ✅ 프로필·북마크 가능 / ⏳ 게시글 목록 미구현 |
+| 영역              | 담당   | 상태                                              |
+| ----------------- | ------ | ------------------------------------------------- |
+| 홈 갤러리         | 조혜원 | ✅ 통합 API 나옴 → **FE 재작업 중**               |
+| 프롬프트 상세     | 조혜원 | ✅ 전부 사용 가능 (필드명 2건만 대기)             |
+| 프롬프트 업로드   | 조혜원 | ✅ 전부 사용 가능                                 |
+| 관리자            | 조혜원 | ✅ **5개 전부 구현 + 요청 필드 반영** (연동 완료) |
+| 로그인 · 회원가입 | 팀원   | ✅ 전부 사용 가능                                 |
+| 마이페이지        | 팀원   | ✅ 프로필·북마크 가능 / ⏳ 게시글 목록 미구현     |
 
 ### 🎉 이번에 새로 들어온 것
 
@@ -49,9 +49,6 @@
 | 상세 응답 좋아요 네이밍           | 여전히 `recommendCount`/`recommended` | 조혜원 |
 | 상세 응답 `customAiModel`         | 없음                                  | 조혜원 |
 | `aiModelTagId` 단수화             | 여전히 `aiModelTagIds` 배열           | 조혜원 |
-| 어드민 신고 대상 요약 (A-1)       | 없음                                  | 조혜원 |
-| 어드민 등급 신청 지표 (A-2)       | 없음                                  | 조혜원 |
-| 어드민 검색 파라미터 (A-3)        | 없음                                  | 조혜원 |
 | `GET /users/me` 의 `authProvider` | 없음                                  | 팀원   |
 
 → FE는 **옛 이름·새 이름을 모두 받도록** 방어해 놨습니다. 나중에 배포돼도 안 깨집니다.
@@ -175,28 +172,42 @@ body: { reason, description }   // 둘 다 required
 
 **수정 기능은 만들지 않습니다**(2026-08-05 결정). Swagger에도 `PUT /prompts/{id}` · `/edit` 둘 다 없어서 BE와 일치합니다.
 
-## 2-4. 관리자 ⏳ **4개 모두 여전히 미구현**
+## 2-4. 관리자 ✅ **전부 구현 완료 + 요청 필드 반영됨** (2026-08-06 재확인)
 
 ```
-GET   /admin/reports             ⏳ 미구현   (targetType, status, page, size)
-PATCH /admin/reports/{id}        ⏳ 미구현
-GET   /admin/grade-requests      ⏳ 미구현   (status, page, size)
-PATCH /admin/grade-requests/{id} ⏳ 미구현
+GET   /admin/reports              ✅ (targetType, status, q, page, size)
+PATCH /admin/reports/{id}         ✅ body: { targetType, status }   ← targetType 필수
+GET   /admin/grade-requests       ✅ (status, q, page, size)
+PATCH /admin/grade-requests/{id}  ✅ body: { decision }
+GET   /admin/origin-users         ✅ 새로 생김 [ADMIN-GRADE-003] (page, size)
 ```
 
-FE는 계약대로 붙여 뒀고 임시 목이 응답 중입니다.
+### 요청서 A-1 · A-2 · A-3 전부 반영됐습니다
 
-| 여전히 없는 것                             | 화면에 보이는 결과   |
-| ------------------------------------------ | -------------------- |
-| 신고 대상 내용·작성자 (A-1)                | `#12` · `-`          |
-| 등급 신청 게시글 수·누적 추천·닉네임 (A-2) | `0`                  |
-| 검색 파라미터 `q` (A-3)                    | 클라이언트 필터 유지 |
+| 요청                | 반영된 스펙                                                    |
+| ------------------- | -------------------------------------------------------------- |
+| A-1 신고 대상 요약  | `targetSummary { content, authorId, authorNickname, deleted }` |
+| A-2 등급 신청 지표  | `nickname` · `postCount` · `totalLikeCount`                    |
+| A-3 검색 파라미터   | 두 목록 모두 `q` (부분일치)                                    |
+| A-1b 신고 상태 해석 | 확정 — `RESOLVED` 로 바꾸면 대상이 실제로 블라인드된다         |
 
-> **등급 관리 검색**은 BE 도 "유저 검색을 통해 승인하는 기능은 아직 미구현"이라고 회신했습니다(2026-08-05).
-> 서버 검색이 붙기 전까지 FE 의 클라이언트 필터를 유지하는 게 맞습니다.
->
-> **등급업 신청 생성 화면은 만들지 않습니다.** PRIME 등급이 되면 **자동으로 신청 대기 명단에 들어가고**,
-> 관리자가 목록에서 ORIGIN 으로 승인하는 구조라 시안에 있는 어드민 화면 외에 별도 구현이 필요 없습니다.
+→ FE 도 전부 맞췄습니다. 100건 받아 클라이언트에서 거르던 임시 검색 경로는 제거했고,
+MSW 어드민 목도 지웠습니다(`.env.development` 의 `NEXT_PUBLIC_API_MOCKING=disabled`).
+
+### ⚠️ 놓치기 쉬운 것 — `PATCH /admin/reports/{id}` 의 `targetType`
+
+게시글 신고와 댓글 신고가 **별도 테이블**이라 `reportId` 만으로는 대상을 못 찾습니다.
+`UpdateReportStatusRequest.required = ["status", "targetType"]` — 빠뜨리면 400 입니다.
+
+### 남은 항목
+
+| 항목                  | 상태                                                                                   |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| 어드민 권한 계정      | access token `role` 클레임(`USER`/`ADMIN`)으로 판정. `GET /users/me` 엔 권한 필드 없음 |
+| 반려(REJECTED)        | 서버는 받지만 시안에 반려 UI·탭이 없어 승인만 붙임 (기획 확인 필요)                    |
+| 어드민 계정 관리 화면 | 계정 CRUD 엔드포인트가 없어 `/admin/accounts` 에 ADMIN-GRADE-003 을 붙임               |
+| 등급 enum             | `NODE                                                                                  | LINK          | SYNC      | CORE        | PRIME                        | ORIGIN`(예전`NORMAL` 아님) |
+| 신고 사유 enum        | `SPAM                                                                                  | INAPPROPRIATE | COPYRIGHT | LOW_QUALITY | ETC` → 표에 한글 라벨로 표시 |
 
 ---
 
@@ -354,7 +365,7 @@ MyPromptSummaryResponse: { promptId, title, publishedAt, viewCount, recommendCou
 
 | #   | 질문                                                       | 담당   |
 | --- | ---------------------------------------------------------- | ------ |
-| 1   | 관리자 4개 API 구현 일정 + A-1/A-2/A-3 필드·파라미터       | 조혜원 |
+| 1   | 어드민 권한 계정 발급 (또는 테스트 계정에 ADMIN role)      | 조혜원 |
 | 2   | `GET /prompts/me` 에 **`visibility` 파라미터** 추가        | 팀원   |
 | 3   | `GET /users/me/bookmarks` 필터를 **멀티(콤마)로** 변경     | 팀원   |
 | 4   | `GET /users/me` 에 **`authProvider`** 추가                 | 팀원   |
@@ -364,7 +375,7 @@ MyPromptSummaryResponse: { promptId, title, publishedAt, viewCount, recommendCou
 | 8   | `PROMPT-010`(내 게시글) · `PROMPT-011`(인사이트) 구현 일정 | 팀원   |
 | 9   | 상세 응답 `likeCount`/`customAiModel` 배포 시점            | 조혜원 |
 | 10  | 이미지 `failureCode` 값 목록 · 워터마크 처리 소요 시간     | 조혜원 |
-| 11  | 어드민 **유저 검색 승인** 기능 구현 일정 (A-3 와 함께)     | 조혜원 |
+| 11  | 어드민 신고 **반려** 상태를 목록에서 어떻게 보여줄지       | 조혜원 |
 
 # 5. 기획에 확인할 것
 
