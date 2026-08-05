@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronRightIcon, PencilIcon } from "@/components/ui/icons";
 
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PostStatusTabs } from "@/features/mypage/components/post-status-tabs";
@@ -46,12 +47,9 @@ export default function MyProfilePage() {
             {/* sm+: 관심 태그 */}
             <div className="hidden flex-wrap gap-1.5 sm:flex">
               {profile.interests.map((interest) => (
-                <span
-                  key={interest}
-                  className="inline-flex h-7 items-center rounded-md border border-stroke-brand bg-interaction-neutral-selected px-2 text-body-3 text-text-brand"
-                >
+                <Badge key={interest} variant="default">
                   {interest}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
