@@ -1,5 +1,6 @@
 import { LandingCta } from "@/features/landing/components/landing-cta";
 import { LandingFooter } from "@/features/landing/components/landing-footer";
+import { LandingForYou } from "@/features/landing/components/landing-for-you";
 import { LandingHeader } from "@/features/landing/components/landing-header";
 import { LandingHero } from "@/features/landing/components/landing-hero";
 import { LandingProblem } from "@/features/landing/components/landing-problem";
@@ -9,7 +10,7 @@ import { LandingSolution } from "@/features/landing/components/landing-solution"
  * 루트 랜딩 (Figma 1201:3082).
  *
  * (main) 셸 밖의 단독 페이지 — 헤더/사이드바 없이 섹션만 세로로 쌓는다.
- * 히어로 · Problem · Solution · CTA · Footer 순서는 시안과 동일.
+ * 히어로 · Problem · Solution · For You · CTA · Footer 순서는 시안과 동일.
  */
 export default function LandingPage() {
   return (
@@ -21,6 +22,7 @@ export default function LandingPage() {
         <LandingHero />
         <LandingProblem />
         <LandingSolution />
+        <LandingForYou />
         <LandingCta />
       </main>
       <LandingFooter />

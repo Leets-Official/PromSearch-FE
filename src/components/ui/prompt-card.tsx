@@ -44,6 +44,12 @@ type PromptCardProps = useRender.ComponentProps<"div"> & {
   /** 썸네일 이미지 URL */
   thumbnailSrc?: string;
   /**
+   * 썸네일의 뷰포트별 표시 폭 힌트(`Thumbnail.sizes` 로 그대로 전달).
+   * 기본값은 홈 갤러리 그리드 기준이라, **갤러리가 아닌 곳에 카드를 쓰면 반드시 넘긴다**
+   * (안 넘기면 실제 표시 폭보다 큰 후보를 받아 대역폭을 낭비한다).
+   */
+  thumbnailSizes?: string;
+  /**
    * 첫 화면에 보이는 카드면 `true` — 썸네일 지연 로딩을 끈다.
    * 홈 갤러리의 LCP 요소가 이 썸네일이라 상단 카드에만 켠다.
    */
@@ -59,6 +65,7 @@ function PromptCard({
   title,
   tags,
   thumbnailSrc,
+  thumbnailSizes,
   eagerThumbnail,
   badge,
   author,
@@ -69,7 +76,7 @@ function PromptCard({
     <>
       {/* 썸네일 16:9 (+ 우하단 결과물타입 배지) */}
       <div className="relative w-full">
-        <Thumbnail src={thumbnailSrc} alt={title} eager={eagerThumbnail} />
+        <Thumbnail src={thumbnailSrc} alt={title} sizes={thumbnailSizes} eager={eagerThumbnail} />
         {badge ? <div className="absolute right-2 bottom-2">{badge}</div> : null}
       </div>
 
