@@ -3,29 +3,20 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import { api, getErrorMessage } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api";
 import { SignUpForm, type SignUpValues } from "./signup-form";
 import { useNicknameCheck } from "@/features/auth/hooks/use-nickname-check";
 import { useSignup } from "@/features/auth/hooks/use-signup";
 import { toJobTagIds, toTaskTagIds } from "@/features/auth/lib/tag-mapping";
 import { toAgreementsPayload } from "@/features/auth/lib/agreements";
-import type { NicknameAvailabilityResponse } from "@/features/auth/api/types";
+import { checkNicknameAvailability } from "@/features/auth/api/profile";
 
 /** 회원가입 폼 컨테이너 — useNicknameCheck 연결 + 제출 처리 */
 export function SignUpFormContainer() {
   const router = useRouter();
 
   // [USER-005] 닉네임 중복 확인
-  const checkNickname = useCallback(async (nickname: string, signal: AbortSignal) => {
-    const result = await api.get<NicknameAvailabilityResponse>("/users/nicknames/availability", {
-      params: { nickname },
-      signal,
-    });
-    return result.available;
-  }, []);
-
-  const { setNickname, status } = useNicknameCheck({ checkNickname });
-
+  const { setNickname, status } = useNicknameCheck({ checkNickname: checkNicknameAvailability });
   const {
     mutate: submitSignup,
     isPending,
