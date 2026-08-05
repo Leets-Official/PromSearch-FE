@@ -9,7 +9,9 @@ export const ADMIN_NAV_ITEMS = [
   { href: "/admin/reports/posts", label: "신고 게시글 관리" },
   { href: "/admin/reports/comments", label: "신고 댓글 관리" },
   { href: "/admin/users", label: "유저 등급 관리" },
-  { href: "/admin/accounts", label: "어드민 계정 관리" },
+  // 시안 문구는 "어드민 계정 관리"지만 붙는 API 가 Origin 등급 유저 목록(ADMIN-GRADE-003)이라
+  // 화면 내용과 맞췄다. 어드민 계정 CRUD 는 서버에 엔드포인트 자체가 없다.
+  { href: "/admin/accounts", label: "Origin 유저 관리" },
 ] as const;
 
 /** 신고 목록 탭 */
