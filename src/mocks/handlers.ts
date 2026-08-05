@@ -18,10 +18,12 @@ import {
   listReplies,
   promptDetail,
   removeComment,
-  toggleBookmarkState,
+  bumpCopyCount,
+  setBookmarkState,
+  unlockPromptState,
   toggleLikeState,
 } from "@/mocks/detail-api";
-import { jobCards, paginate, popularCards } from "@/mocks/home-prompt-cards";
+import { filteredCards, jobCards, paginate, popularCards } from "@/mocks/home-prompt-cards";
 import { queryPrompts } from "@/mocks/prompt-query";
 import {
   DEV_CONTENT_HEADER,
@@ -113,8 +115,8 @@ export const handlers = [
   // 응답은 공통 봉투(`{ success, code, message, result }`)까지 서버와 동일하게 맞춘다.
   // ──────────────────────────────────────────────────────────────────────────
 
-  // [HOME-001] 인기 프롬프트(좋아요순)
-  http.get("/api/v1/home/prompts/popular", async ({ request }) => {
+  // [HOME-001] 홈 통합 목록 — 정렬·필터·검색을 서버가 처리한다.
+  http.get("/api/v1/home/prompts", async ({ request }) => {
     const edge = readDevEdge(request);
     const forced = await forceEdge(edge);
     if (forced) return forced;
@@ -123,21 +125,35 @@ export const handlers = [
     const page = Number(params.get("page") ?? "0");
     const size = Number(params.get("size") ?? "12");
 
-    return jsonEnvelope(paginate(edge === "empty" ? [] : popularCards(), page, size));
+    const cards = edge === "empty" ? [] : filteredCards(params);
+    return jsonEnvelope(paginate(cards, page, size));
   }),
 
-  // [HOME-002] 직군별 프롬프트(최신순)
-  http.get("/api/v1/home/prompts/jobs/:jobTagId", async ({ params: pathParams, request }) => {
-    const edge = readDevEdge(request);
-    const forced = await forceEdge(edge);
+  // [HOME-002] 인기(호환용) · [HOME-003] 직군별(호환용) — 새 화면은 통합 API 만 쓴다.
+  http.get("/api/v1/home/prompts/popular", async ({ request }) => {
+    const forced = await forceEdge(readDevEdge(request));
     if (forced) return forced;
-
     const params = new URL(request.url).searchParams;
-    const page = Number(params.get("page") ?? "0");
-    const size = Number(params.get("size") ?? "12");
-    const cards = edge === "empty" ? [] : jobCards(Number(pathParams.jobTagId));
+    return jsonEnvelope(
+      paginate(
+        popularCards(),
+        Number(params.get("page") ?? "0"),
+        Number(params.get("size") ?? "12"),
+      ),
+    );
+  }),
 
-    return jsonEnvelope(paginate(cards, page, size));
+  http.get("/api/v1/home/prompts/jobs/:jobTagId", async ({ params: pathParams, request }) => {
+    const forced = await forceEdge(readDevEdge(request));
+    if (forced) return forced;
+    const params = new URL(request.url).searchParams;
+    return jsonEnvelope(
+      paginate(
+        jobCards(Number(pathParams.jobTagId)),
+        Number(params.get("page") ?? "0"),
+        Number(params.get("size") ?? "12"),
+      ),
+    );
   }),
 
   // 홈 갤러리 목록 — 필터/정렬/페이지네이션 (F-1.1)
@@ -350,10 +366,31 @@ export const handlers = [
     return jsonEnvelope({ promptId, liked: false, likeCount: toggleLikeState(promptId, false) });
   }),
 
-  // 북마크 토글 — **BE 에 API 가 없어 목 유지**(요청서 D-1). 상세 목과 상태를 공유한다.
-  http.post("/api/prompts/:id/bookmark", ({ params }) =>
-    HttpResponse.json({ bookmarked: toggleBookmarkState(Number(params.id)) }),
+  // [COMMUNITY-003/004] 북마크 등록·취소
+  http.post("/api/v1/prompts/:id/bookmarks", ({ params }) =>
+    jsonEnvelope(
+      { bookmarked: setBookmarkState(Number(params.id), true), bookmarkedAt: null },
+      201,
+    ),
   ),
+  http.delete("/api/v1/prompts/:id/bookmarks", ({ params }) =>
+    jsonEnvelope({ bookmarked: setBookmarkState(Number(params.id), false), bookmarkedAt: null }),
+  ),
+
+  // [COMMERCE-001] 잠금 해제 — 응답 본문 없음(Void). 화면은 상세를 재조회한다.
+  http.post("/api/v1/prompts/:id/unlock", ({ params }) => {
+    unlockPromptState(Number(params.id));
+    return jsonEnvelope(null);
+  }),
+
+  // [PROMPT-013] 복사 기록
+  http.post("/api/v1/prompts/:id/copies", ({ params }) =>
+    jsonEnvelope({ promptId: Number(params.id), copyCount: bumpCopyCount(Number(params.id)) }),
+  ),
+
+  // [MODERATION-001/002] 신고 접수 — 목은 접수만 확인하고 저장하지 않는다.
+  http.post("/api/v1/reports/posts/:postId", () => jsonEnvelope(null, 201)),
+  http.post("/api/v1/reports/comments/:commentId", () => jsonEnvelope(null, 201)),
 
   // ── 어드민 ────────────────────────────────────────────────────────────
   // 신고 게시글 목록 (PS-49)

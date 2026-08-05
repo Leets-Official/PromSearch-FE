@@ -79,13 +79,16 @@ function buildTags(record: PromptRecord): ApiTag[] {
  * 잠금 판정 + 본문 노출 범위 — **서버가 하는 일을 그대로 흉내 낸다.**
  * 잠긴 본문을 통째로 내려보내면 프론트에서 우회 노출될 수 있어, 목에서도 잘라서 준다.
  */
-function resolveAccess(record: PromptRecord, viewer: DevAuth, body: string) {
+function resolveAccess(promptId: number, record: PromptRecord, viewer: DevAuth, body: string) {
   if (viewer === "anonymous") {
     // 비회원: 본문 미전송(Swagger 기준 빈 문자열)
     return { access: { locked: true, reason: "ANONYMOUS" as const }, promptBody: "" };
   }
   if (record.tier === "free") {
     return { access: { locked: false, reason: "FREE" as const }, promptBody: body };
+  }
+  if (unlockedState.has(promptId)) {
+    return { access: { locked: false, reason: "UNLOCKED" as const }, promptBody: body };
   }
   // 프리미엄 미결제: 앞 10% 이내이면서 최대 200자
   const limit = Math.min(Math.floor(body.length * PREVIEW_RATIO), PREVIEW_MAX);
@@ -106,9 +109,24 @@ export function readBookmarkState(promptId: number): boolean {
   return bookmarkedState.get(promptId) ?? false;
 }
 
-export function toggleBookmarkState(promptId: number): boolean {
-  const next = !readBookmarkState(promptId);
-  bookmarkedState.set(promptId, next);
+/** 서버가 등록/취소로 갈려 있으므로 목도 "토글"이 아니라 값을 지정해 저장한다. */
+export function setBookmarkState(promptId: number, bookmarked: boolean): boolean {
+  bookmarkedState.set(promptId, bookmarked);
+  return bookmarked;
+}
+
+/** 포인트 열람 — MVP 정책상 차감 없이 열람 권한만 준다. */
+const unlockedState = new Set<number>();
+export function unlockPromptState(promptId: number): void {
+  unlockedState.add(promptId);
+}
+
+/** 복사 수 증가 */
+const copyCountState = new Map<number, number>();
+export function bumpCopyCount(promptId: number): number {
+  const base = PROMPT_SEED[promptId - 1]?.stats.copies ?? 0;
+  const next = (copyCountState.get(promptId) ?? base) + 1;
+  copyCountState.set(promptId, next);
   return next;
 }
 
@@ -122,7 +140,7 @@ export function promptDetail(
   if (!record) return null;
 
   const fullBody = buildPromptBody(record, content);
-  const { access, promptBody } = resolveAccess(record, viewer, fullBody);
+  const { access, promptBody } = resolveAccess(promptId, record, viewer, fullBody);
 
   return {
     promptId,
@@ -152,7 +170,7 @@ export function promptDetail(
     tags: buildTags(record),
     statistics: {
       viewCount: record.stats.views,
-      copyCount: record.stats.copies,
+      copyCount: copyCountState.get(promptId) ?? record.stats.copies,
       commentCount: commentCount(promptId),
       likeCount: record.stats.likes + (likedState.get(promptId) ? 1 : 0),
     },

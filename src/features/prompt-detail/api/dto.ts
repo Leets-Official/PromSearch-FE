@@ -84,6 +84,21 @@ export type ApiPromptDetail = {
   updatedAt: string;
 };
 
+/** [COMMUNITY-003/004] 북마크 등록·취소 응답 */
+export type ApiBookmarkResult = {
+  bookmarked: boolean;
+  bookmarkedAt: string | null;
+};
+
+/** [PROMPT-013] 복사 기록 응답 */
+export type ApiCopyResult = {
+  promptId: number;
+  copyCount: number;
+};
+
+/** 신고 사유 (MODERATION-001/002) */
+export type ApiReportReason = "SPAM" | "INAPPROPRIATE" | "COPYRIGHT" | "LOW_QUALITY" | "ETC";
+
 /** [COMMUNITY-001/002] 좋아요 등록·취소 응답 */
 export type ApiLikeResult = {
   promptId: number;

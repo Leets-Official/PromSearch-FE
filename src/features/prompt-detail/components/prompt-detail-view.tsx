@@ -17,10 +17,14 @@ import { cn } from "@/lib/utils";
 import { MobilePageHeader } from "@/components/layout/mobile-page-header";
 import { LoginModal } from "@/components/modals/login/login-modal";
 import { Button } from "@/components/ui/button";
-import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useBookmark } from "@/features/prompt-detail/hooks/use-bookmark";
 import { useDetailTab } from "@/features/prompt-detail/hooks/use-detail-tab";
+import {
+  useCreateReport,
+  useRecordCopy,
+  useUnlockPrompt,
+} from "@/features/prompt-detail/hooks/use-prompt-actions";
 import { useLikePrompt } from "@/features/prompt-detail/hooks/use-like-prompt";
 import type { PromptDetail } from "@/features/prompt-detail/types";
 
@@ -31,6 +35,7 @@ import { DetailFloatingActions, COMMENT_INPUT_ANCHOR_ID } from "./detail-floatin
 import { DetailTabs } from "./detail-tabs";
 import { OutputCarousel } from "./output-carousel";
 import { PointUnlockModal } from "./point-unlock-modal";
+import { ReportModal } from "./report-modal";
 import { RecipePanel } from "./recipe-panel";
 
 /** 상세 본문 조립 — 좌(이미지) / 우(정보 + 탭). 진입 시 prompt_view 1회 발송. */
@@ -40,6 +45,9 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const { tab, setTab } = useDetailTab();
   const like = useLikePrompt(detail.id);
   const bookmark = useBookmark(detail.id);
+  const unlock = useUnlockPrompt(detail.id);
+  const copy = useRecordCopy(detail.id);
+  const report = useCreateReport();
   const [copied, setCopied] = useState(false);
   // 신고 / 로그인 / 포인트 결제 모달
   const [reportOpen, setReportOpen] = useState(false);
@@ -55,6 +63,8 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(detail.recipeBody);
     setCopied(true);
+    // 복사 집계는 곁다리다 — 실패해도 사용자에게 알리지 않는다(복사는 이미 됐다).
+    copy.mutate();
     track("prompt_copy_click", {
       prompt_id: detail.id,
       user_status: status,
@@ -86,6 +96,12 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const handleToggleLike = () => {
     if (like.isPending) return;
     like.mutate(detail.liked);
+  };
+
+  /** 북마크 토글 — 좋아요와 같은 이유로 요청 중 클릭을 무시한다. */
+  const handleToggleBookmark = () => {
+    if (bookmark.isPending) return;
+    bookmark.mutate(detail.bookmarked);
   };
 
   /** 레시피 잠금 CTA — 비회원은 로그인 모달, 프리미엄은 포인트 결제 모달 */
@@ -132,7 +148,8 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
               size="icon-sm"
               aria-label="북마크"
               aria-pressed={detail.bookmarked}
-              onClick={() => bookmark.mutate()}
+              disabled={bookmark.isPending}
+              onClick={handleToggleBookmark}
             >
               {detail.bookmarked ? <BookmarkFilledIcon /> : <BookmarkIcon />}
             </Button>
@@ -150,7 +167,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
           liked={detail.liked}
           onToggleLike={handleToggleLike}
           bookmarked={detail.bookmarked}
-          onToggleBookmark={() => bookmark.mutate()}
+          onToggleBookmark={handleToggleBookmark}
           onReport={handleReport}
         />
 
@@ -202,16 +219,13 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
       {/* 모바일 우하단 플로팅 — 댓글로 이동 / 맨 위로(1360:7666) */}
       <DetailFloatingActions onCommentClick={handleGoToComments} />
 
-      {/* 신고 확인 모달(시안 1517:8893) — 사유 선택 UI 는 기획 확정 후 추가 */}
-      <ConfirmModal
+      {/* 게시글 신고 — 사유 택1 + 상세 사유(선택) */}
+      <ReportModal
         open={reportOpen}
         onOpenChange={setReportOpen}
-        title="이 게시글을 신고할까요?"
-        description="신고 내용은 검토 후 운영 정책에 따라 조치됩니다."
-        cancelLabel="취소"
-        confirmLabel="신고하기"
-        onConfirm={() => {
-          // TODO: 신고 API 연동(사유 선택 스펙 확정 후)
+        target="게시글"
+        onConfirm={(reason, description) => {
+          report.mutate({ target: "post", targetId: detail.id, reason, description });
           setReportOpen(false);
         }}
       />
@@ -232,7 +246,8 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
         onOpenChange={setPointOpen}
         requiredPoints={detail.pricePoint}
         onConfirm={() => {
-          // TODO: 포인트 열람 API 연동 후 상세 재조회 (요청서 D-2 — 엔드포인트 대기)
+          // 응답이 비어 있어 훅이 상세를 다시 조회한다(열린 본문을 받기 위해).
+          unlock.mutate();
           setPointOpen(false);
         }}
       />

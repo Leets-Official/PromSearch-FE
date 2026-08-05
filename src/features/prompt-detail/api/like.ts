@@ -5,7 +5,7 @@
  * 응답으로 확정된 `liked`/`likeCount` 가 오므로 화면은 그 값으로 맞춘다.
  */
 
-import { api } from "@/lib/api";
+import { api, toNumber } from "@/lib/api";
 
 import type { ApiLikeResult } from "./dto";
 import type { LikeToggleResponse } from "../types";
@@ -18,5 +18,6 @@ export async function toggleLike(id: string, liked: boolean): Promise<LikeToggle
     ? await api.delete<ApiLikeResult>(`/prompts/${id}/likes`)
     : await api.post<ApiLikeResult>(`/prompts/${id}/likes`);
 
-  return { liked: result.liked, likeCount: result.likeCount };
+  // likeCount 가 문자열로 오면 낙관적 갱신에서 "32"+1="321" 이 된다(lib/api/number.ts)
+  return { liked: result.liked, likeCount: toNumber(result.likeCount) };
 }

@@ -6,11 +6,13 @@ import { XIcon } from "@/components/ui/icons";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { TextField } from "@/components/ui/text-field";
 import { useCommentMutations } from "@/features/prompt-detail/hooks/use-comment-mutations";
+import { useCreateReport } from "@/features/prompt-detail/hooks/use-prompt-actions";
 import { useComments } from "@/features/prompt-detail/hooks/use-comments";
 import type { PromptComment } from "@/features/prompt-detail/types";
 import { getErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { CommentItem } from "./comment-item";
+import { ReportModal } from "./report-modal";
 import { COMMENT_INPUT_ANCHOR_ID } from "./detail-floating-actions";
 
 /**
@@ -42,6 +44,7 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
   const { data, isPending, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useComments(promptId);
   const { create, reply, update, remove } = useCommentMutations(promptId);
+  const report = useCreateReport();
 
   const [text, setText] = useState("");
   const [draft, setDraft] = useState<Draft>(null);
@@ -216,18 +219,17 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
         }}
       />
 
-      {/* 댓글 신고 확인 — 게시글 신고(PromptDetailView)와 같은 ConfirmModal 규칙 */}
-      <ConfirmModal
+      {/* 댓글 신고 — 게시글 신고와 같은 모달·사유 목록을 쓴다 */}
+      <ReportModal
         open={reportTarget !== null}
         onOpenChange={(open) => {
           if (!open) setReportTarget(null);
         }}
-        title="이 댓글을 신고할까요?"
-        description="신고 내용은 검토 후 운영 정책에 따라 조치됩니다."
-        cancelLabel="취소"
-        confirmLabel="신고하기"
-        onConfirm={() => {
-          // TODO: 신고 접수 API 연동 (요청서 D-3 — 엔드포인트·사유 enum 대기)
+        target="댓글"
+        onConfirm={(reason, description) => {
+          if (reportTarget) {
+            report.mutate({ target: "comment", targetId: reportTarget.id, reason, description });
+          }
           setReportTarget(null);
         }}
       />

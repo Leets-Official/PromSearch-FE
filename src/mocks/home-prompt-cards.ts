@@ -110,3 +110,38 @@ export function paginate(cards: ApiPromptCard[], page: number, size: number) {
     },
   };
 }
+
+/**
+ * [HOME-001] 통합 목록 — 정렬·필터·검색을 서버처럼 처리한다.
+ * 축 내부 OR, 축 간 AND (BE 규격). 검색은 제목+설명 부분일치인데 카드에 설명이 없어 제목만 본다.
+ */
+export function filteredCards(params: URLSearchParams): ApiPromptCard[] {
+  const ids = (key: string) =>
+    (params.get(key) ?? "")
+      .split(",")
+      .map((v) => Number(v.trim()))
+      .filter((v) => Number.isFinite(v) && v !== 0);
+
+  const jobTagId = params.get("jobTagId") ? Number(params.get("jobTagId")) : null;
+  const taskTagIds = ids("taskTagIds");
+  const aiModelTagIds = ids("aiModelTagIds");
+  const outputTypes = (params.get("outputTypes") ?? "").split(",").filter(Boolean);
+  const keyword = (params.get("q") ?? "").trim().toLowerCase();
+
+  const hasTag = (card: ApiPromptCard, type: ApiTag["tagType"], wanted: number[]) =>
+    wanted.length === 0 ||
+    card.tags.some((tag) => tag.tagType === type && wanted.includes(tag.tagId));
+
+  const filtered = ACTIVE_CARDS.filter((card) => {
+    if (jobTagId !== null && !hasTag(card, "JOB", [jobTagId])) return false;
+    if (!hasTag(card, "TASK", taskTagIds)) return false;
+    if (!hasTag(card, "AI_MODEL", aiModelTagIds)) return false;
+    if (outputTypes.length > 0 && !outputTypes.includes(card.outputType)) return false;
+    if (keyword && !card.title.toLowerCase().includes(keyword)) return false;
+    return true;
+  });
+
+  return params.get("sort") === "POPULAR"
+    ? [...filtered].sort((a, b) => b.statistics.likeCount - a.statistics.likeCount)
+    : [...filtered].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+}

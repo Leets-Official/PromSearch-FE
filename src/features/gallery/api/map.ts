@@ -11,6 +11,7 @@
  */
 
 import { AI_MODELS, JOB_CATEGORIES, TASKS, type Option } from "@/features/gallery/categories";
+import { toNumber } from "@/lib/api";
 import type {
   AiModel,
   ContentTier,
@@ -103,10 +104,11 @@ export function toPromptSummary(card: ApiPromptCard): PromptSummary {
       name: card.author.nickname,
       avatarUrl: card.author.profileImageUrl ?? undefined,
     },
+    // 서버가 숫자를 문자열로 준다 → 반드시 정규화(lib/api/number.ts)
     stats: {
-      views: card.statistics.viewCount,
-      copies: card.statistics.copyCount,
-      likes: card.statistics.likeCount,
+      views: toNumber(card.statistics.viewCount),
+      copies: toNumber(card.statistics.copyCount),
+      likes: toNumber(card.statistics.likeCount),
     },
     createdAt: card.createdAt,
   };

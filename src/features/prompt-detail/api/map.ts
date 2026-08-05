@@ -5,6 +5,7 @@
  * (라벨 단일 출처 유지).
  */
 
+import { toNumber } from "@/lib/api";
 import {
   pickJobTags,
   pickTaskTags,
@@ -56,7 +57,7 @@ export function toPromptDetail(detail: ApiPromptDetail): PromptDetail {
   const { statistics, viewerInteraction } = detail;
 
   // 좋아요 네이밍이 like 로 통일되는 중이라(요청서 7-1) 배포 전 구 필드도 받아둔다.
-  const likeCount = statistics.likeCount ?? statistics.recommendCount ?? 0;
+  const likeCount = toNumber(statistics.likeCount ?? statistics.recommendCount);
   const liked = viewerInteraction.liked ?? viewerInteraction.recommended ?? false;
 
   return {
@@ -74,10 +75,10 @@ export function toPromptDetail(detail: ApiPromptDetail): PromptDetail {
       name: detail.author.nickname,
       avatarUrl: detail.author.profileImageUrl ?? undefined,
     },
-    authorId: detail.author.userId,
+    authorId: toNumber(detail.author.userId),
     stats: {
-      views: statistics.viewCount,
-      copies: statistics.copyCount,
+      views: toNumber(statistics.viewCount),
+      copies: toNumber(statistics.copyCount),
       likes: likeCount,
     },
     createdAt: detail.createdAt,
@@ -88,10 +89,10 @@ export function toPromptDetail(detail: ApiPromptDetail): PromptDetail {
     descriptionBody: detail.description,
     recipeBody: detail.promptBody,
     access: toRecipeAccess(detail.access),
-    pricePoint: detail.pricePoint,
+    pricePoint: toNumber(detail.pricePoint),
     liked,
     bookmarked: viewerInteraction.bookmarked,
-    commentCount: statistics.commentCount,
+    commentCount: toNumber(statistics.commentCount),
   };
 }
 
@@ -108,7 +109,7 @@ export function toPromptComment(comment: ApiComment): PromptComment {
     status: COMMENT_STATUS_BY_API[comment.status] ?? "active",
     isAuthor: comment.promptAuthor,
     isMine: comment.mine,
-    replyCount: comment.replyCount ?? 0,
+    replyCount: toNumber(comment.replyCount),
   };
 }
 
