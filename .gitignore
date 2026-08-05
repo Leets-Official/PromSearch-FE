@@ -45,3 +45,6 @@ next-env.d.ts
 # AI agent instruction files (kept local, not committed)
 AGENTS.md
 CLAUDE.md
+
+# Claude Code 로컬 설정(개인 환경)
+.claude/

@@ -1,18 +1,23 @@
 /**
- * 추천(좋아요) 토글 API.
+ * 좋아요 API — `[COMMUNITY-001/002] POST|DELETE /prompts/{promptId}/likes`.
  *
- * 현재는 MSW 목(`POST /api/prompts/:id/like`)을 호출한다. 서버가 토글된 상태를 돌려주고,
- * 프론트는 낙관적 갱신 후 이 응답으로 확정한다(실패 시 롤백).
+ * 서버는 토글이 아니라 **등록/취소가 분리**돼 있어 현재 상태를 보고 메서드를 고른다.
+ * 응답으로 확정된 `liked`/`likeCount` 가 오므로 화면은 그 값으로 맞춘다.
  */
 
-import type { LikeToggleResponse } from "@/features/prompt-detail/types";
+import { api, toNumber } from "@/lib/api";
 
-export async function toggleLike(id: string): Promise<LikeToggleResponse> {
-  const res = await fetch(`/api/prompts/${id}/like`, { method: "POST" });
+import type { ApiLikeResult } from "./dto";
+import type { LikeToggleResponse } from "../types";
 
-  if (!res.ok) {
-    throw new Error(`추천 토글 실패: ${res.status}`);
-  }
+/**
+ * @param liked 현재(요청 전) 좋아요 상태. true 면 취소, false 면 등록한다.
+ */
+export async function toggleLike(id: string, liked: boolean): Promise<LikeToggleResponse> {
+  const result = liked
+    ? await api.delete<ApiLikeResult>(`/prompts/${id}/likes`)
+    : await api.post<ApiLikeResult>(`/prompts/${id}/likes`);
 
-  return (await res.json()) as LikeToggleResponse;
+  // likeCount 가 문자열로 오면 낙관적 갱신에서 "32"+1="321" 이 된다(lib/api/number.ts)
+  return { liked: result.liked, likeCount: toNumber(result.likeCount) };
 }

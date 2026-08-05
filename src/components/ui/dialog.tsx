@@ -5,7 +5,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { XIcon } from "lucide-react";
+import { XIcon } from "@/components/ui/icons";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -28,8 +28,7 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        // Opacity/dim 토큰 (gray-900 / 50%) — 디자인 시스템의 딤 처리
-        "fixed inset-0 isolate z-50 bg-dim duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "overlay-fill isolate z-50 bg-dim duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className,
       )}
       {...props}
@@ -42,13 +41,14 @@ function DialogContent({
   children,
   showCloseButton = true,
   initialFocus,
+  fullScreenOnMobile = false,
   ref,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
+  /** 모바일에서 전체화면 시트로, sm+ 에서 중앙 카드로 전환 */
+  fullScreenOnMobile?: boolean;
 }) {
-  // 기본 초기 포커스를 팝업 컨테이너로. 기본값(첫 tabbable 요소)은 스크롤이 생기는
-  // 긴 모달에서 푸터 버튼으로 포커스가 가며 열리자마자 바닥까지 스크롤되는 문제가 있음.
   const popupRef = React.useRef<HTMLDivElement | null>(null);
   const mergedRef = (node: HTMLDivElement | null) => {
     popupRef.current = node;
@@ -63,9 +63,19 @@ function DialogContent({
         initialFocus={initialFocus ?? popupRef}
         data-slot="dialog-content"
         className={cn(
-          // 콘텐츠가 화면보다 길어지면 모달 내부에서 스크롤 (body 스크롤은 Base UI가 잠금).
-          // overscroll-contain: 내부 스크롤이 끝에 닿아도 배경으로 스크롤이 새지 않게 차단.
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-4rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto overscroll-contain rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed z-50 overflow-y-auto overscroll-contain bg-popover text-sm text-popover-foreground duration-100 outline-none",
+          fullScreenOnMobile
+            ? [
+                // 모바일: 전체화면 시트 (하단까지 꽉 — min-h-dvh, grid/translate 없음)
+                "inset-0 flex min-h-dvh w-screen max-w-none flex-col gap-4 p-6",
+                // sm+: 중앙 카드 복원
+                "sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-auto sm:max-h-[calc(100dvh-4rem)] sm:min-h-0 sm:w-full sm:max-w-sm sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:p-4 sm:ring-1 sm:ring-foreground/10",
+                "data-open:animate-in data-open:fade-in-0 sm:data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 sm:data-closed:zoom-out-95",
+              ]
+            : [
+                "top-1/2 left-1/2 grid max-h-[calc(100dvh-4rem)] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl p-4 ring-1 ring-foreground/10 sm:max-w-sm",
+                "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+              ],
           className,
         )}
         {...props}

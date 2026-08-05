@@ -14,11 +14,18 @@ export function DetailHeader({ detail }: { detail: PromptDetail }) {
   const tags = buildDetailTags(detail);
 
   return (
-    <div className="flex w-full flex-col gap-4">
-      <h1 className="text-heading-1 text-text-primary">{detail.title}</h1>
+    // 모바일 시안(1345:6707)은 요소 간격 12px · 아바타 32px
+    <div className="flex w-full flex-col gap-3 sm:gap-4">
+      {/* 크기는 전역 모바일 스케일이 처리(24→20). 행간만 이 화면에서 디자이너가 26px 로 직접 잡았다. */}
+      <h1 className="text-heading-1 text-text-primary max-sm:leading-6.5">{detail.title}</h1>
 
       <div className="flex items-center gap-4">
-        <ProfileAvatar name={detail.author.name} src={detail.author.avatarUrl} size="md" />
+        <ProfileAvatar
+          name={detail.author.name}
+          src={detail.author.avatarUrl}
+          size="md"
+          className="size-8 sm:size-11"
+        />
         <div className="flex min-w-0 flex-col gap-1">
           <span className="truncate text-title-2 text-text-secondary">{detail.author.name}</span>
           {/* 좁아지면 단어(세그먼트) 단위로만 줄바꿈 — 글자 단위로 깨지지 않게 */}

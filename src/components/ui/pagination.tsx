@@ -2,7 +2,7 @@
 
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
-import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, MoreIcon } from "@/components/ui/icons";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -22,9 +22,11 @@ import { cn } from "@/lib/utils";
 
 // 버튼 1칸 공통 스타일. selected/default 상태는 cva variant로, pressed/hover는 CSS 상태로 매핑.
 const paginationButtonVariants = cva(
-  // 모바일(Pagination/Button(Mobile) 1206:3243)은 24x24 · radius/sm(6px) · Title 3(14/20),
-  // sm 이상에서 시안 데스크톱 값(36x36 · radius 4px · Title 2)으로 전환. 아이콘은 20px 공통.
-  "inline-flex size-6 shrink-0 items-center justify-center rounded-sm border border-transparent text-title-3 outline-none transition-all select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:text-text-disabled sm:size-9 sm:rounded-[4px] sm:text-title-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
+  // 모바일(Pagination/Button(Mobile) 1206:3243)은 24x24 · radius/sm(6px),
+  // sm 이상에서 시안 데스크톱 값(36x36 · radius 4px)으로 전환. 아이콘은 20px 공통.
+  // 숫자 타이포는 Title 2 하나로 두고, 모바일 14px 축소는 전역 타이포 스케일이 처리한다.
+  // leading-none: 버튼 높이가 고정(24/36)이라 행간이 남으면 숫자가 아래로 밀려 화살표와 어긋난다.
+  "inline-flex size-6 shrink-0 items-center justify-center rounded-sm border border-transparent text-title-2 leading-none outline-none transition-all select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:text-text-disabled sm:size-9 sm:rounded-[4px] [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
   {
     variants: {
       isActive: {
@@ -59,14 +61,19 @@ function PaginationContent({ className, ...props }: React.ComponentProps<"ul">) 
   return (
     <ul
       data-slot="pagination-content"
-      className={cn("flex flex-row items-center gap-1", className)}
+      className={cn("flex flex-row items-center gap-1 leading-none", className)}
       {...props}
     />
   );
 }
 
-function PaginationItem({ ...props }: React.ComponentProps<"li">) {
-  return <li data-slot="pagination-item" {...props} />;
+// li 는 기본이 list-item(블록)이라 안의 inline-flex 버튼이 **텍스트 베이스라인**에 얹힌다.
+// 숫자 버튼(텍스트 있음)과 화살표 버튼(아이콘만)의 베이스라인이 달라 세로로 어긋나므로
+// li 자체를 flex 로 만들어 베이스라인 정렬에서 빼낸다.
+function PaginationItem({ className, ...props }: React.ComponentProps<"li">) {
+  return (
+    <li data-slot="pagination-item" className={cn("flex items-center", className)} {...props} />
+  );
 }
 
 type PaginationLinkProps = {
@@ -127,7 +134,8 @@ function PaginationEllipsis({ className, ...props }: React.ComponentProps<"span"
       )}
       {...props}
     >
-      <MoreHorizontalIcon />
+      {/* 디자인 시스템에는 세로 점 3개(icon=more)만 있어 90도 회전해 가로 말줄임으로 쓴다 */}
+      <MoreIcon className="rotate-90" />
       <span className="sr-only">더 많은 페이지</span>
     </span>
   );

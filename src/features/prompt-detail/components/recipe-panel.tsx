@@ -1,6 +1,8 @@
 "use client";
 
-import { Lock, Sparkles } from "lucide-react";
+// Sparkles 는 디자인 시스템 세트에 없어 lucide 를 유지한다(시안 추가 시 icons.tsx 로 이동).
+import { Sparkles } from "lucide-react";
+import { LockIcon } from "@/components/ui/icons";
 
 import { track } from "@/analytics/track";
 import type { UserStatus } from "@/analytics/events";
@@ -51,13 +53,15 @@ export function RecipePanel({
     );
   }
 
-  // 잠금(2026-07-22 개정):
-  // - 비회원(anonymous) → 미리보기 살짝 노출 후 그 아래 블러 + 로그인 CTA
-  // - 프리미엄(premium, 유료 미결제) → 전체 블러 + 포인트 CTA
+  // 잠금 시 CTA 는 사유로 갈린다 — 비회원은 로그인, 프리미엄 미결제는 포인트.
+  //
+  // 미리보기 노출 여부는 **서버가 본문을 보냈는지**로 판단한다. 잘라 보내는 범위를 서버가 정하고
+  // (비회원 → 빈 문자열 / 프리미엄 → 원문 앞 10% 이내·최대 200자), 프론트는 받은 만큼만 보여준다.
+  // 프론트가 사유로 미리보기를 켜고 끄면 서버 정책이 바뀔 때마다 어긋난다.
   const isAnonymous = access.reason === "anonymous";
-  const showTeaser = isAnonymous; // 비회원만 프리뷰 노출
+  const showTeaser = recipeBody.length > 0;
   const cta = isAnonymous
-    ? { label: "로그인하고 프롬프트 보기", icon: <Lock />, reason: "anonymous" as const }
+    ? { label: "로그인하고 프롬프트 보기", icon: <LockIcon />, reason: "anonymous" as const }
     : { label: "포인트로 전문 보기", icon: <Sparkles />, reason: "premium" as const };
 
   return (

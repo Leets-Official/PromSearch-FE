@@ -1,7 +1,10 @@
 "use client";
 
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox";
-import { CheckIcon, MinusIcon } from "lucide-react";
+// 부분 선택(indeterminate) 아이콘은 디자인 시스템 세트에 없어 lucide 를 유지한다.
+import { MinusIcon } from "lucide-react";
+
+import { CheckIcon } from "@/components/ui/icons";
 
 import { cn } from "@/lib/utils";
 
@@ -37,7 +40,7 @@ function Checkbox({ className, indeterminate, children, ...props }: CheckboxPrim
           (indeterminate ? (
             <MinusIcon className="size-3.5" strokeWidth={3} />
           ) : (
-            <CheckIcon className="size-3.5" strokeWidth={3} />
+            <CheckIcon className="size-3.5" />
           ))}
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>

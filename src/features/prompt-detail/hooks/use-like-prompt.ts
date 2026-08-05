@@ -13,20 +13,24 @@ function patchLike(detail: PromptDetail, liked: boolean, likes: number): PromptD
 }
 
 /**
- * 추천(좋아요) 토글. 클릭 즉시 낙관적으로 카운트/상태를 뒤집고, 서버 응답으로 확정한다.
+ * 좋아요 토글. 클릭 즉시 낙관적으로 카운트/상태를 뒤집고, 서버 응답으로 확정한다.
  * 실패하면 이전 스냅샷으로 롤백한다.
+ *
+ * 서버는 등록(POST)/취소(DELETE)가 나뉘어 있어 **호출 시점의 상태**를 넘겨줘야 한다.
+ * 낙관적 갱신으로 캐시가 이미 뒤집힌 뒤에 읽으면 반대 메서드가 나가므로,
+ * `onMutate` 보다 먼저 평가되는 `mutationFn` 인자로 받는다.
  */
 export function useLikePrompt(id: string) {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: () => toggleLike(id),
-    onMutate: async () => {
+    mutationFn: (liked: boolean) => toggleLike(id, liked),
+    onMutate: async (liked) => {
       await qc.cancelQueries(detailFilter(id));
       const snapshots = qc.getQueriesData<PromptDetail>(detailFilter(id));
 
       qc.setQueriesData<PromptDetail>(detailFilter(id), (old) =>
-        old ? patchLike(old, !old.liked, old.stats.likes + (old.liked ? -1 : 1)) : old,
+        old ? patchLike(old, !liked, old.stats.likes + (liked ? -1 : 1)) : old,
       );
 
       return { snapshots };

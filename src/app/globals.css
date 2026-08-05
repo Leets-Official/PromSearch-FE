@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+/* Pretendard dynamic subset(92개 @font-face). 통짜 2MB woff2 를 대체한다 — 사유는 해당 파일 주석 참고. */
+@import "./fonts/pretendard-dynamic.css";
 
 /* 다크 모드는 디자인 시스템에 정의되어 있지 않아 사용하지 않습니다 (라이트 온리).
  * `.dark` 클래스를 붙이지 않는 한 `dark:` 유틸리티는 모두 비활성 상태입니다. */
@@ -102,6 +104,35 @@
 }
 
 /* ================================================================
+ * Typography — 모바일 스케일 (전역)
+ *
+ * 시안은 텍스트 스타일(Heading 1, Title 1 …)을 PC/모바일 공용으로 쓰고,
+ * 그 아래 primitive 인 `Typography/Font Size/*` 변수에만 **모드 두 개**를 걸어 둔다:
+ *   24 → 20 · 20 → 16 · 16 → 14 · 14 → 12 · 12 → 12(동일)
+ * `Line Height/*` 와 `Font Weight/*` 는 두 모드가 같다 — **크기만** 한 칸 내려간다.
+ *
+ * Tailwind v4 의 text-* 유틸은 `font-size: var(--text-*)` 로 컴파일되므로,
+ * 여기서 변수만 덮으면 컴포넌트를 건드리지 않고 전 화면에 적용된다.
+ * → 컴포넌트에 `sm:text-*` 를 다는 방식은 **쓰지 않는다**(이중 축소가 된다).
+ *
+ * 경계는 Tailwind `sm`(40rem)과 동일하게 맞춰, 남아 있는 `sm:` 레이아웃 유틸과 어긋나지 않게 한다.
+ * display-1/2 는 모바일 시안에 등장하지 않아(루트 랜딩 전용) 그대로 둔다.
+ * ================================================================ */
+@media (width < 40rem) {
+  :root {
+    --text-heading-1: 1.25rem; /* 24 → 20 */
+    --text-heading-2: 1rem; /* 20 → 16 */
+    --text-title-1: 0.875rem; /* 16 → 14 */
+    --text-title-2: 0.875rem; /* 16 → 14 */
+    --text-title-3: 0.75rem; /* 14 → 12 */
+    --text-body-1: 0.875rem; /* 16 → 14 */
+    --text-body-2: 0.875rem; /* 16 → 14 */
+    --text-body-3: 0.75rem; /* 14 → 12 */
+    /* caption-1/2 는 12 그대로 */
+  }
+}
+
+/* ================================================================
  * Design System — Semantic Tokens
  * 원본: Color (Semantic) 시안. primitive 를 참조하는 별칭.
  * 사용 예: text-text-primary / bg-bg-brand / border-stroke-strong
@@ -148,8 +179,9 @@
   --color-interaction-neutral-selected: rgb(255 110 121 / 25%); /* red-400 / 25% */
   --color-interaction-neutral-disabled: var(--color-gray-150); /* = Background/disabled #ececec */
 
-  /* Font */
-  --font-sans: var(--font-pretendard), "Pretendard Variable", Pretendard, sans-serif;
+  /* Font — 패밀리명은 dynamic subset 의 @font-face 가 선언한 'Pretendard Variable' 이다.
+     (`--font-pretendard` 는 next/font/local 을 걷어내면서 함께 사라졌다) */
+  --font-sans: "Pretendard Variable", Pretendard, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
 
@@ -213,7 +245,37 @@
   }
   html {
     @apply font-sans;
+
+    /*
+     * 스크롤바 자리를 **항상** 비워 둔다.
+     *
+     * Base UI 스크롤락은 모달이 열릴 때 <html> 에 `scrollbar-gutter: stable` 을 건다
+     * (@base-ui/utils useScrollLock 의 updateGutterOnly 경로). 그래서 스크롤바가 있던
+     * 페이지에서 모달을 열면 그 순간 거터가 새로 생기고, 페이지가 그만큼 좁아지면서
+     * 딤이 덮지 못한 띠가 오른쪽에 남는다(스크롤바가 없던 페이지에선 안 생긴다).
+     *
+     * 처음부터 거터를 예약해 두면 모달을 열어도 레이아웃이 그대로라 띠가 생기지 않는다.
+     * 덤으로 스크롤 유무에 따라 콘텐츠가 좌우로 튀는 것도 사라진다.
+     */
+    scrollbar-gutter: stable;
   }
+}
+
+/* 모달·시트 백드롭 전용 전체 화면 채우기.
+ *
+ * `fixed inset-0` 을 쓰면 안 되는 이유: Base UI 스크롤락은 모달이 열릴 때 <html> 에
+ * `scrollbar-gutter: stable` 을 걸어 스크롤바 폭만큼 자리를 남긴다(레이아웃 시프트 방지).
+ * fixed 의 기준(ICB)은 그 거터를 제외한 영역이라 `right: 0` 이 거터 앞에서 끝나고,
+ * 딤이 못 덮은 그 폭만큼 배경색 띠가 화면 우측에 남는다.
+ * `100vw` 는 정의상 스크롤바 영역을 포함하므로 거터까지 덮인다.
+ * (스크롤바가 오버레이인 macOS 기본 설정에선 차이가 없지만, Windows/인셋 스크롤바에선 보인다)
+ */
+@utility overlay-fill {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;
 }
 
 /* 미니멀 스크롤바 — 트랙(배경) 없이 얇은 thumb 만. 상세 우측 스크롤 영역 등에 사용. */

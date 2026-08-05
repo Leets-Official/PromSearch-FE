@@ -1,10 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { ImageZoomModal } from "@/features/prompt-detail/components/image-zoom-modal";
 
-const IMAGES = ["a.png", "b.png", "c.png"];
+const IMAGES = ["/a.png", "/b.png", "/c.png"];
 
 describe("ImageZoomModal", () => {
   it("dialog + 초기 이미지 + 카운트(현재/전체)를 노출한다", () => {
@@ -27,16 +27,19 @@ describe("ImageZoomModal", () => {
     expect(screen.getByText("3/3")).toBeInTheDocument();
   });
 
+  // 전환은 트랙 슬라이드 애니메이션이 끝난 뒤 index 가 바뀐다(애니메이션 중 클릭은 무시) → waitFor
   it("좌우 화살표로 이미지를 순환한다", async () => {
     const user = userEvent.setup();
     render(<ImageZoomModal images={IMAGES} title="제목" initialIndex={0} onClose={vi.fn()} />);
 
     await user.click(screen.getByRole("button", { name: "다음 이미지" }));
-    expect(screen.getByText("2/3")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText("2/3")).toBeInTheDocument());
 
     await user.click(screen.getByRole("button", { name: "이전 이미지" }));
+    await waitFor(() => expect(screen.getByText("1/3")).toBeInTheDocument());
+
     await user.click(screen.getByRole("button", { name: "이전 이미지" }));
-    expect(screen.getByText("3/3")).toBeInTheDocument(); // 0→wrap→마지막
+    await waitFor(() => expect(screen.getByText("3/3")).toBeInTheDocument()); // 0→wrap→마지막
   });
 
   it("X 버튼과 ESC 로 닫힌다", async () => {

@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { GALLERY_PAGE_SIZE } from "@/features/gallery/constants";
 
 /** 최초 로딩 — 카드 자리 스켈레톤 그리드 */
-export function GallerySkeleton({ count = 9 }: { count?: number }) {
+export function GallerySkeleton({ count = GALLERY_PAGE_SIZE }: { count?: number }) {
   return (
     <div
       data-slot="gallery-skeleton"
@@ -22,10 +23,28 @@ export function GallerySkeleton({ count = 9 }: { count?: number }) {
 }
 
 /** 다음 페이지 로딩 등 인라인 스피너 */
-export function GalleryInlineLoading() {
+/**
+ * 재조회 중 표시 — 필터·페이지를 바꿨을 때.
+ *
+ * 이전 결과를 유지한 채(keepPreviousData) **그 위에 겹쳐** 보여준다.
+ * 예전에는 그리드 **아래**에 스피너만 뒀는데, 카드가 몇 장 없으면 화면 밖이라 안 보였고
+ * "필터가 안 먹은 건지 불러오는 중인지" 구분이 안 됐다.
+ *
+ * 이전 결과는 흐리게 깔아 두고 클릭을 막는다 — 곧 사라질 목록을 누르면 엉뚱한 상세로 간다.
+ */
+export function GalleryFetching({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex w-full justify-center py-6">
-      <Spinner />
+    <div className="relative" aria-busy>
+      <div className="pointer-events-none opacity-40 transition-opacity duration-150">
+        {children}
+      </div>
+      {/* 첫 화면(스켈레톤)과 위치를 맞춰 위쪽에 띄운다 — 긴 목록에서 화면 밖으로 나가지 않게 sticky. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-center pt-16">
+        <span className="sticky top-1/2 flex items-center gap-2 rounded-full bg-bg-primary px-4 py-2 text-body-3 text-text-secondary shadow-[0_4px_8px_rgb(35_35_33/0.13)]">
+          <Spinner className="size-4" />
+          불러오는 중
+        </span>
+      </div>
     </div>
   );
 }

@@ -1,19 +1,42 @@
 "use client";
 
-import { Bookmark, ChevronLeft, ChevronRight, Flag, Heart } from "lucide-react";
+import {
+  ArrowExpandIcon,
+  BookmarkFilledIcon,
+  BookmarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  FlagIcon,
+  HeartFilledIcon,
+  HeartIcon,
+} from "@/components/ui/icons";
+import dynamic from "next/dynamic";
+import NextImage from "next/image";
 import { useState } from "react";
 
+import { useCarouselSwipe } from "@/hooks/use-carousel-swipe";
 import { cn } from "@/lib/utils";
-import { ImageZoomModal } from "./image-zoom-modal";
+
+/**
+ * 확대 모달은 **열릴 때 받는다**(지연 로딩).
+ *
+ * 이 모달만 `react-zoom-pan-pinch` 를 쓰는데, 정적 import 로 두면 확대를 한 번도 안 누른
+ * 사용자까지 상세 페이지 초기 번들로 그 라이브러리를 받게 된다.
+ * `ssr: false` — 뷰포트·포인터 이벤트에 의존하는 클라이언트 전용 UI라 서버에서 그릴 이유가 없다.
+ */
+const ImageZoomModal = dynamic(() => import("./image-zoom-modal").then((m) => m.ImageZoomModal), {
+  ssr: false,
+});
 
 /** 아웃풋 이미지 최대 개수(BE 제약과 동일) */
 export const MAX_OUTPUT_IMAGES = 10;
 
-/** 현재 인덱스 기준 인접(±1, 순환) 인덱스 집합 — 프리로드 대상 */
-function windowIndices(index: number, total: number): Set<number> {
-  if (total <= 1) return new Set([0]);
-  return new Set([(index - 1 + total) % total, index, (index + 1) % total]);
-}
+/**
+ * 캐러셀 표시 폭 힌트 — 컨테이너 클래스(`-mx-4` 풀블리드 / `sm:w-full` / `xl:w-108`)와 맞춘다.
+ * xl 의 `w-108` 은 432px 이다. 이 값이 실제 레이아웃과 어긋나면 필요보다 큰 이미지를 받는다.
+ */
+// sm~xl 은 단일 컬럼이라 콘텐츠 폭을 그대로 쓴다(최대 1280 컨테이너 - 좌우 여백).
+const CAROUSEL_SIZES = "(min-width: 1280px) 432px, (min-width: 640px) 90vw, 100vw";
 
 type OutputCarouselProps = {
   images: string[];
@@ -32,6 +55,15 @@ type OutputCarouselProps = {
  * 아웃풋 이미지 캐러셀 — 다중 이미지, `현재/전체` 인디케이터, 이전/다음(순환).
  * 개정: 이미지 좌상단에 3개 액션(♡ 추천 · 🔖 북마크 · 🚩 신고) 오버레이.
  * 이미지 클릭 시 확대 모달을 열 수 있게 onImageClick 을 노출한다.
+ *
+ * 반응형(Figma "프롬프트 상세 - 설명" 1345:6702):
+ * - mobile : 화면 폭을 꽉 채우는 375x281(=4:3) 풀블리드, 모서리 각짐.
+ *            좌상단 액션 오버레이 대신 **좌하단 확대 버튼**만 두고(추천/북마크/신고는 페이지 헤더로 이동),
+ *            좌우 화살표 대신 **스와이프**로 넘긴다. 인디케이터는 우상단 8px.
+ * - desktop: 기존 그대로(오버레이 액션 + 화살표).
+ *
+ * 전환은 opacity 크로스페이드가 아니라 **가로 트랙 슬라이드**다(useCarouselSwipe).
+ * 드래그 중에는 트랙이 손가락을 따라오고, 손을 떼면 이어서 다음 장까지 붙는다.
  */
 export function OutputCarousel({
   images,
@@ -44,83 +76,131 @@ export function OutputCarousel({
 }: OutputCarouselProps) {
   const items = images.slice(0, MAX_OUTPUT_IMAGES);
   const total = items.length;
-  const [index, setIndex] = useState(0);
-  // 로드된(=DOM에 src가 걸린) 인덱스. 초기엔 인접 ±1만, 이동하며 누적(한 번 로드하면 유지 → 재방문 즉시).
-  const [loaded, setLoaded] = useState<Set<number>>(() => windowIndices(0, total));
   const [zoomOpen, setZoomOpen] = useState(false);
   const hasMultiple = total > 1;
-
-  const goTo = (next: number) => {
-    setIndex(next);
-    setLoaded((prev) => new Set([...prev, ...windowIndices(next, total)]));
-  };
-  const go = (delta: number) => goTo((index + delta + total) % total);
+  // 훅 반환값은 반드시 구조분해로 받는다 — 객체째 들고 프로퍼티로 접근하면
+  // 컴파일러가 "렌더 중 ref 접근"으로 본다(react-hooks/refs).
+  const { index, isVisible, setContainer, go, didSwipe, touchHandlers, trackStyle, slideStyle } =
+    useCarouselSwipe({ total });
 
   return (
-    <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-md bg-bg-disabled xl:aspect-auto xl:h-156 xl:w-108">
+    <div
+      ref={setContainer}
+      className={cn(
+        "relative shrink-0 overflow-hidden bg-bg-disabled",
+        // mobile: 셸 좌우 여백(16px)을 상쇄한 풀블리드 4:3, 모서리 각짐
+        "-mx-4 aspect-[375/281] w-auto rounded-none",
+        // tablet(sm~xl): 단일 컬럼이라 폭이 그대로 콘텐츠 폭이다. 정사각으로 두면
+        // 1000px 넘는 화면에서 이미지 한 장이 화면을 통째로 먹는다.
+        // 4:3 으로 눕히고 뷰포트 높이의 60% 로 상한을 둬서 스크롤 없이 아래 내용이 보이게 한다.
+        "sm:mx-0 sm:aspect-[4/3] sm:max-h-[60svh] sm:w-full sm:rounded-md",
+        // xl: 좌측 고정 컬럼(시안 값) — 상한이 필요 없다
+        "xl:aspect-auto xl:h-156 xl:max-h-none xl:w-108",
+      )}
+    >
       <button
         type="button"
         aria-label={`${title} 이미지 확대`}
-        onClick={() => setZoomOpen(true)}
-        className="relative size-full cursor-zoom-in"
+        // 스와이프 끝에 딸려 오는 click 으로 모달이 열리지 않게 막는다
+        onClick={() => {
+          if (!didSwipe()) setZoomOpen(true);
+        }}
+        {...touchHandlers}
+        // 세로 스크롤은 브라우저에, 가로 제스처는 우리가 처리한다
+        className="relative size-full cursor-zoom-in touch-pan-y"
       >
-        {/* 이미지 스택(opacity 크로스페이드). src 는 인접 프리로드된(loaded) 것만 걸어
-            초기 로드를 ±1로 제한하고, 이동 시 다음 이웃을 미리 받아 전환을 즉시(0ms)로 유지 */}
-        {items.map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={i}
-            src={loaded.has(i) ? src : undefined}
-            alt={i === index ? `${title} 아웃풋 ${index + 1}` : ""}
-            aria-hidden={i !== index}
-            className={cn(
-              "absolute inset-0 size-full object-contain transition-opacity duration-150",
-              i === index ? "opacity-100" : "opacity-0",
-            )}
-          />
-        ))}
+        {/* 가로 트랙 — 드래그 중엔 손가락을 따라오고, 놓으면 다음 장까지 이어서 붙는다.
+            각 슬라이드는 현재 장 기준 최단 순환 거리(±1칸)에 놓이고,
+            화면에 걸치는 ±1 에만 src 를 걸어 초기 로드를 제한한다(= 자연스러운 프리로드). */}
+        <div className="absolute inset-0" style={trackStyle}>
+          {items.map((src, i) => (
+            // 슬라이드 위치(translate %)는 래퍼가 맡는다 — `fill` 이미지는 자기 위치를 직접
+            // 잡으므로 transform 을 같이 걸 수 없다. 래퍼가 컨테이너와 같은 크기라 % 기준은 동일하다.
+            <div
+              key={i}
+              aria-hidden={i !== index}
+              style={slideStyle(i)}
+              className="absolute inset-0"
+            >
+              {isVisible(i) ? (
+                <NextImage
+                  src={src}
+                  alt={i === index ? `${title} 아웃풋 ${index + 1}` : ""}
+                  fill
+                  sizes={CAROUSEL_SIZES}
+                  // 현재 장은 상세 페이지의 LCP 요소다. 좌우 프리로드분(±1)은 lazy 로 둔다.
+                  loading={i === index ? "eager" : "lazy"}
+                  fetchPriority={i === index ? "high" : "auto"}
+                  // mobile 시안은 4:3 프레임을 꽉 채우는 크롭(cover), 데스크톱은 원본 비율 유지(contain)
+                  className="object-cover select-none sm:object-contain"
+                  draggable={false}
+                />
+              ) : null}
+            </div>
+          ))}
+        </div>
       </button>
 
-      {/* 좌상단 액션 오버레이 */}
-      <div className="absolute top-4 left-4 flex items-center gap-2">
+      {/* 우하단 확대 버튼 — 모바일 전용(시안 1345:6285, dim 배경 24px 아이콘 박스).
+          이미지 전체 버튼과 동일한 동작의 시각적 어포던스라 보조기술에는 중복 노출하지 않는다. */}
+      <button
+        type="button"
+        aria-hidden
+        tabIndex={-1}
+        onClick={() => setZoomOpen(true)}
+        className="absolute right-2 bottom-2 flex size-6 items-center justify-center rounded-[4px] bg-dim text-white sm:hidden"
+      >
+        <ArrowExpandIcon className="size-3.5" />
+      </button>
+
+      {/* 좌상단 액션 오버레이 — 데스크톱 전용(모바일은 페이지 헤더에서 제공) */}
+      <div className="absolute top-4 left-4 hidden items-center gap-2 sm:flex">
         <OverlayAction
           label="추천"
           active={liked}
           onClick={onToggleLike}
-          icon={<Heart className={cn("size-6", liked && "fill-current")} />}
+          icon={liked ? <HeartFilledIcon className="size-6" /> : <HeartIcon className="size-6" />}
         />
         <OverlayAction
           label="북마크"
           active={bookmarked}
           onClick={onToggleBookmark}
-          icon={<Bookmark className={cn("size-6", bookmarked && "fill-current")} />}
+          icon={
+            bookmarked ? (
+              <BookmarkFilledIcon className="size-6" />
+            ) : (
+              <BookmarkIcon className="size-6" />
+            )
+          }
         />
-        <OverlayAction label="신고" onClick={onReport} icon={<Flag className="size-6" />} />
+        <OverlayAction label="신고" onClick={onReport} icon={<FlagIcon className="size-6" />} />
       </div>
 
       {hasMultiple ? (
         <>
           <span
             data-testid="carousel-indicator"
-            className="absolute top-4 right-4 rounded bg-dim px-2 py-0.5 text-title-3 text-white"
+            // mobile: 좌상단(시안) / desktop: 우상단(좌상단은 액션 오버레이 자리)
+            className="absolute top-2 left-2 rounded bg-dim px-1.5 py-0.5 text-title-3 text-white sm:top-4 sm:right-4 sm:left-auto sm:px-2"
           >
             {index + 1}/{total}
           </span>
+          {/* 화살표는 데스크톱 전용 — 모바일 시안은 스와이프로 넘긴다 */}
           <button
             type="button"
             aria-label="이전 이미지"
             onClick={() => go(-1)}
-            className="absolute top-1/2 left-3 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80"
+            className="absolute top-1/2 left-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80 sm:flex"
           >
-            <ChevronLeft className="size-6" />
+            <ChevronLeftIcon className="size-6" />
           </button>
           <button
             type="button"
             aria-label="다음 이미지"
             onClick={() => go(1)}
-            className="absolute top-1/2 right-3 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80"
+            className="absolute top-1/2 right-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80 sm:flex"
           >
-            <ChevronRight className="size-6" />
+            <ChevronRightIcon className="size-6" />
           </button>
         </>
       ) : null}

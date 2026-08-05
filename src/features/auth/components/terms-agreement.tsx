@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon } from "@/components/ui/icons";
 
 import { cn } from "@/lib/utils";
 import {
@@ -103,7 +103,7 @@ export function TermsAgreement({ agreed, onChange }: TermsAgreementProps) {
               </button>
             </>
           ) : (
-            <p className="line-clamp-5">
+            <p className="[display:-webkit-box] overflow-hidden [-webkit-box-orient:vertical] [-webkit-line-clamp:7] sm:[-webkit-line-clamp:5]">
               {PRIVACY_NOTICE_SUMMARY}{" "}
               <button
                 type="button"

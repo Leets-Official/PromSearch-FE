@@ -1,12 +1,12 @@
 import * as React from "react";
 import { Input as InputPrimitive } from "@base-ui/react/input";
-import { SearchIcon } from "lucide-react";
+import { SearchIcon } from "@/components/ui/icons";
 
 import { cn } from "@/lib/utils";
 
 /**
  * Search Bar (Figma 238:296)
- * - 좌측 검색 아이콘 + 인풋을 감싼 래퍼. 기본 폭 348px, 높이 48px(h-12), radius 8px(rounded-md).
+ * - 인풋 + **우측** 검색 아이콘을 감싼 래퍼. 기본 폭 348px, 높이 48px(h-12), radius 8px(rounded-md).
  * - 상태별 border(시맨틱 토큰 매핑, focus-within 으로 내부 인풋 포커스 반영):
  *   · default → stroke-disabled(gray-400)
  *   · hover / active(focus) → stroke-strong(black), focus 시 Interaction 그림자
@@ -33,8 +33,6 @@ function SearchBar({ className, disabled, ...props }: React.ComponentProps<"inpu
         className,
       )}
     >
-      {/* 검색 아이콘 — placeholder 대비 톤을 맞추기 위해 disabled 색 사용 */}
-      <SearchIcon className="size-6 shrink-0 text-text-disabled" aria-hidden="true" />
       <InputPrimitive
         type="search"
         disabled={disabled}
@@ -47,6 +45,8 @@ function SearchBar({ className, disabled, ...props }: React.ComponentProps<"inpu
         )}
         {...props}
       />
+      {/* 검색 아이콘 — 시안(1378:4726)은 인풋 우측. placeholder 와 톤을 맞춰 disabled 색 사용 */}
+      <SearchIcon className="size-6 shrink-0 text-text-disabled" aria-hidden="true" />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { PencilIcon } from "lucide-react";
+import { PencilIcon } from "@/components/ui/icons";
 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ interface ProfileNicknameFieldProps {
   avatarFile: File | null;
   onAvatarChange: (file: File | null) => void;
   /** 프로필+닉네임 배치 (회원가입=가로, 온보딩=세로) */
-  layout?: "horizontal" | "vertical";
+  layout?: "horizontal" | "vertical" | "responsive";
 }
 
 /**
@@ -54,10 +54,14 @@ export function ProfileNicknameField({
 
   return (
     <div
+      // layout prop 타입: "horizontal" | "vertical" | "responsive"
+      // 컨테이너 className 분기를 아래로 교체
       className={
-        layout === "horizontal"
-          ? "flex w-full items-start justify-center gap-6"
-          : "flex w-full flex-col items-center gap-4"
+        layout === "responsive"
+          ? "flex w-full flex-col items-center gap-4 sm:flex-row sm:items-start sm:justify-center sm:gap-6"
+          : layout === "horizontal"
+            ? "flex w-full items-start justify-center gap-6"
+            : "flex w-full flex-col items-center gap-4"
       }
     >
       {/* 프로필 이미지 */}
@@ -81,7 +85,7 @@ export function ProfileNicknameField({
 
       {/* 닉네임 */}
       <div className="flex w-full flex-col gap-1.5">
-        <label htmlFor={nicknameId} className="text-title-3 text-text-primary">
+        <label htmlFor={nicknameId} className="text-title-1 text-text-primary">
           닉네임
         </label>
         <Input

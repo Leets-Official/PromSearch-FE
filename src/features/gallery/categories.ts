@@ -50,7 +50,6 @@ export const OUTPUT_TYPES: readonly Option<OutputType>[] = [
 export const TIERS: readonly Option<ContentTier>[] = [
   { value: "free", label: "무료" },
   { value: "premium", label: "프리미엄" },
-  { value: "master", label: "마스터" },
 ] as const;
 
 // value → label 조회용 맵(카드 태그 표시 등)

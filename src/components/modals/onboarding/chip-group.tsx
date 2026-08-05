@@ -13,7 +13,7 @@ export function ChipGroup({ label, hint, options, selected, onToggle }: ChipGrou
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline gap-2">
-        <span className="text-title-3 text-text-primary">{label}</span>
+        <span className="text-title-1 text-text-primary">{label}</span>
         <span className="text-caption-1 text-text-brand">{hint}</span>
       </div>
       <div className="grid grid-cols-3 gap-2">

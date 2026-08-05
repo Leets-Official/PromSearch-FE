@@ -93,7 +93,30 @@ NEXT_PUBLIC_ANALYTICS_ENDPOINT=<prod analytics endpoint>
 - `dev`: endpoint가 있으면 dev analytics로 전송하고, 없으면 console로 확인한다.
 - `prod`: endpoint가 있으면 production analytics로 전송한다.
 
-`.env*` 파일은 `.gitignore`에 포함되어 있으므로 실제 값은 커밋하지 않는다.
+## API 환경 변수
+
+BE 오리진. `next.config.ts`의 rewrites가 `/api/v1/*`를 이 주소로 프록시한다(브라우저는 동일 출처로 호출 → CORS 설정 불필요).
+
+```txt
+NEXT_PUBLIC_API_ORIGIN=https://api.promsearch.kr
+```
+
+`.env.development`에 기본값이 들어 있어 별도 설정 없이 동작한다. 로컬 BE를 띄웠다면 `http://localhost:8080` 등으로 바꾼다.
+
+주의: `.env.development`는 `next dev`에서만 로드된다. 배포 환경(Vercel)에서는 프로젝트 환경 변수에 직접 등록한다. 등록하지 않으면 코드 기본값(`https://api.promsearch.kr`)으로 동작한다.
+
+API 사용법은 [`src/lib/api/README.md`](../src/lib/api/README.md) 참고.
+
+## 환경 변수 파일과 git
+
+```txt
+.env.development   커밋됨    시크릿이 아닌 팀 공용 dev 토글 (.gitignore에 !.env.development 예외)
+.env.local         커밋 안 됨  개인 로컬 오버라이드 · 실제 시크릿
+```
+
+`.gitignore`는 `.env*`로 전부 무시한 뒤 `.env.development`만 예외로 되살린다. 이 파일에는 `NEXT_PUBLIC_` 값만 두는데, 이 접두사가 붙은 값은 빌드 시 브라우저 번들에 그대로 포함되어 애초에 비밀이 될 수 없기 때문이다.
+
+접두사 없는 실제 시크릿(API 키, 토큰 등)은 `.env.local` 또는 배포 플랫폼의 환경 변수에만 두고 커밋하지 않는다.
 
 ## 파일 네이밍 컨벤션
 

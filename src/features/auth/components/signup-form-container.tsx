@@ -11,17 +11,17 @@ export function SignUpFormContainer() {
   const router = useRouter();
 
   const checkNickname = useCallback(async (nickname: string, signal: AbortSignal) => {
+    // TODO: 실제 닉네임 중복확인 API 로 교체
     await new Promise((r) => setTimeout(r, 300));
     if (signal.aborted) throw new Error("aborted");
-    return nickname !== "관리자"; //
+    return nickname !== "관리자"; // 목: "관리자"만 사용 불가로 처리
   }, []);
 
   const { setNickname, status } = useNicknameCheck({ checkNickname });
 
   const handleSubmit = (values: SignUpValues) => {
-    // TODO: 회원가입 API 호출 후 성공 시 이동
+    // TODO: 회원가입 API 호출 후 성공 시 router.push("/home")
     console.log("signup", values);
-    // router.push("/home");
   };
 
   return (
