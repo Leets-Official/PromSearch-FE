@@ -19,6 +19,7 @@
  *
  * ⚠️ 생성물이다. 랜딩 카피를 고치면 `node scripts/build-landing-font-subset.mjs` 를 다시 돌릴 것.
  *    안 돌려도 화면은 멀쩡하지만(폴백) 조각을 더 받게 되어 이득이 줄어든다.
+ *    `src/features/landing/landing-font-subset.test.tsx` 가 이 누락을 자동으로 잡아 준다.
  */
 @font-face {
   font-family: "Pretendard Landing";

@@ -27,6 +27,8 @@
  *
  * ⚠️ 랜딩 카피를 고치면 이 스크립트를 다시 돌려야 한다. 안 돌려도 화면은 멀쩡하지만
  *    (폴백이 받쳐 준다) 새 글자 때문에 92조각 중 일부를 추가로 받게 되어 이득이 줄어든다.
+ *    기억에 의존하지 않도록 `src/features/landing/landing-font-subset.test.tsx` 가
+ *    랜딩을 렌더해 글자를 대조한다 — 새 글자가 생기면 그 테스트가 실패하며 위 명령을 안내한다.
  */
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, statSync, writeFileSync } from "node:fs";
