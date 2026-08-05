@@ -13,6 +13,7 @@ import {
   checkNicknameAvailability,
   type MyProfile,
 } from "@/features/auth/api/profile";
+import { uploadProfileImage } from "@/features/profile-image/api/image";
 import { toJobTagIds, toTaskTagIds } from "@/features/auth/lib/tag-mapping";
 import { useNicknameCheck } from "@/features/auth/hooks/use-nickname-check";
 import { getErrorMessage } from "@/lib/api";
@@ -53,13 +54,17 @@ function MyProfileEditForm({ profile }: { profile: MyProfile }) {
   };
 
   const { mutate: submitUpdate, isPending } = useMutation({
-    mutationFn: () =>
-      updateMyProfile({
+    mutationFn: async () => {
+      // 새 이미지를 골랐으면 먼저 S3 에 업로드하고, 그 결과 URL 을 프로필 수정 요청에 실어 보낸다.
+      const profileImageUrl = avatarFile ? await uploadProfileImage(avatarFile) : undefined;
+
+      return updateMyProfile({
         nickname,
         interestJobTagIds: toJobTagIds(jobs),
         interestTaskTagIds: toTaskTagIds(tasks),
-        // TODO: avatarFile → 프로필 이미지 업로드(USER-007~009) 연동 후 profileImageUrl 채우기
-      }),
+        ...(profileImageUrl && { profileImageUrl }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-profile"] });
       router.push("/mypage");
