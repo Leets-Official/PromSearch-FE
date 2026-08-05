@@ -10,6 +10,9 @@ mocks/
   MswProvider.tsx   # dev 브라우저 워커 시작 게이트 (NEXT_PUBLIC_API_MOCKING=enabled)
   prompt-query.ts   # 갤러리 목록 질의(필터/정렬/페이지네이션) 순수 함수 — 핸들러·테스트 공유
   admin-query.ts    # 어드민 목록 질의(탭/검색/정렬/페이지네이션) 순수 함수
+
+> 홈·상세·업로드 목은 모두 제거했다(2026-08-06). 실서버에 직접 붙는다.
+> 남은 목은 **어드민뿐**이고, FE 연동이 PS-70 브랜치에 있어 이 브랜치는 구 경로를 쓴다.
   data/
     prompts.ts      # 홈 갤러리 시드 데이터(48개, status/tier 혼합)
     admin.ts        # 어드민 시드 데이터(신고 게시글·댓글, 등급 신청) + 처리 반영 인메모리 상태
