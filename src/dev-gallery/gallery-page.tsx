@@ -1,3 +1,18 @@
+/*
+ * 공통 컴포넌트 갤러리 — **라우트가 아니다.**
+ *
+ * 예전에는 `src/app/dev/components/page.tsx` 였는데, app 디렉터리에 있으면 그대로
+ * 배포돼서 `https://promsearch.kr/dev/components` 가 아무나 200 으로 열렸다.
+ * 내부용 화면이라 프로덕션에 노출할 이유가 없어 **라우트에서 떼어 냈다.**
+ * (여기 있으면 라우트가 아니므로 번들에도 들어가지 않는다)
+ *
+ * 다시 보고 싶을 때 — 임시로 라우트를 만들었다가 지운다:
+ *
+ *   // src/app/dev/components/page.tsx
+ *   export { default } from "@/dev-gallery/gallery-page";
+ *
+ * ⚠️ 그 파일은 **커밋하지 말 것.** 커밋하는 순간 다시 프로덕션에 열린다.
+ */
 import type { Metadata } from "next";
 
 import { ButtonSection } from "./sections/button-section";

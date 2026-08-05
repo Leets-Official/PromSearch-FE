@@ -8,6 +8,7 @@ import { UserIcon, XIcon } from "@/components/ui/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { AuthUser } from "@/hooks/use-auth-status";
+import { formatGrade } from "@/lib/grade";
 
 /**
  * 모바일 네비게이션 드로어 — Figma "홈 - 햄버거 메뉴(사이드바)"(1382:6016 / 1382:6022).
@@ -99,7 +100,9 @@ export function MobileNavDrawer({
                   {isAuthenticated && user ? (
                     <span className="flex min-w-0 flex-col">
                       {user.grade ? (
-                        <span className="text-caption-1 text-text-brand">{user.grade}</span>
+                        <span className="text-caption-1 text-text-brand">
+                          {formatGrade(user.grade)}
+                        </span>
                       ) : null}
                       <span className="truncate text-heading-2 text-text-primary">{user.name}</span>
                     </span>

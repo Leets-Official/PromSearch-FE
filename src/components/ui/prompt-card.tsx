@@ -44,6 +44,12 @@ type PromptCardProps = useRender.ComponentProps<"div"> & {
   /** 썸네일 이미지 URL */
   thumbnailSrc?: string;
   /**
+   * 썸네일의 뷰포트별 표시 폭 힌트(`Thumbnail.sizes` 로 그대로 전달).
+   * 기본값은 홈 갤러리 그리드 기준이라, **갤러리가 아닌 곳에 카드를 쓰면 반드시 넘긴다**
+   * (안 넘기면 실제 표시 폭보다 큰 후보를 받아 대역폭을 낭비한다).
+   */
+  thumbnailSizes?: string;
+  /**
    * 첫 화면에 보이는 카드면 `true` — 썸네일 지연 로딩을 끈다.
    * 홈 갤러리의 LCP 요소가 이 썸네일이라 상단 카드에만 켠다.
    */
@@ -59,6 +65,7 @@ function PromptCard({
   title,
   tags,
   thumbnailSrc,
+  thumbnailSizes,
   eagerThumbnail,
   badge,
   author,
@@ -69,7 +76,7 @@ function PromptCard({
     <>
       {/* 썸네일 16:9 (+ 우하단 결과물타입 배지) */}
       <div className="relative w-full">
-        <Thumbnail src={thumbnailSrc} alt={title} eager={eagerThumbnail} />
+        <Thumbnail src={thumbnailSrc} alt={title} sizes={thumbnailSizes} eager={eagerThumbnail} />
         {badge ? <div className="absolute right-2 bottom-2">{badge}</div> : null}
       </div>
 
@@ -109,8 +116,8 @@ function PromptCard({
     props: mergeProps<"div">(
       {
         className: cn(
-          // 레이아웃: 세로 스택, 시안 gap 16px
-          "group/prompt-card flex w-full flex-col items-start gap-4",
+          // 레이아웃: 세로 스택. 시안 gap 은 모바일 12px / 데스크톱 16px (디자인 QA 반영)
+          "group/prompt-card flex w-full flex-col items-start gap-3 sm:gap-4",
           // 클릭 영역: 패딩 + 음수마진으로 컨텐츠 정렬 유지하며 히트영역 확보
           "cursor-pointer rounded-lg p-2 outline-none transition-all",
           // hover: 떠오름(elevated + shadow), pressed: 눌림(secondary)

@@ -23,10 +23,16 @@ export function GalleryGrid({ prompts, userStatus, onResetFilters }: GalleryGrid
   }
 
   return (
-    // 모바일 시안(1206:3574)은 1열 · 카드 간격 32px, 데스크톱은 24px
+    /*
+      간격 (디자인 QA 반영):
+      - 모바일 1열 — 카드 사이 24px (세로만 의미 있다)
+      - sm+ 2·3열  — 가로 8px / 세로 24px. 가로를 좁게 두는 이유는 카드가 이미
+        좌우 8px 패딩(PromptCard 의 히트영역)을 갖고 있어, 8 + 8 + 8 = 24px 로
+        보이기 때문이다. 여기에 24를 주면 실제로는 40px 로 벌어진다.
+    */
     <ul
       data-slot="gallery-grid"
-      className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3"
+      className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-x-2 sm:gap-y-6 lg:grid-cols-3"
     >
       {prompts.map((prompt, index) => (
         <li key={prompt.id}>
