@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 
 import type { UserStatus } from "@/analytics/events";
 import { getAccessToken, onTokensChanged } from "@/lib/api";
+import { useMyProfile } from "@/hooks/use-my-profile";
 
 /**
  * 인증 상태 어댑터.
@@ -12,8 +13,9 @@ import { getAccessToken, onTokensChanged } from "@/lib/api";
  * (`lib/api/token-store`)는 이미 공용이라 여기서 바로 읽을 수 있다.
  * 로그인이 붙으면 `setTokens()` 만 호출하면 헤더 분기·액션 게이팅이 자동으로 따라온다.
  *
- * 사용자 정보(닉네임·아바타)는 토큰에 없다. 로그인 응답이나 `GET /users/me` 를 캐시에
- * 넣는 작업이 아직 없어 지금은 `user: null` 이고, 헤더는 기본 아바타를 그린다.
+ * 사용자 정보(닉네임·아바타)는 토큰에 없어서 `GET /users/me` 로 따로 받는다.
+ * 프로필이 아직 안 왔어도 **`isAuthenticated` 는 즉시 true** 다 — 로그인 여부 판정을
+ * 네트워크 응답까지 기다리게 하면 헤더가 깜빡이고 액션 게이팅이 늦게 걸린다.
  */
 export type AuthUser = {
   name: string;
@@ -54,5 +56,16 @@ function getSnapshot(): AuthStatus {
 }
 
 export function useAuthStatus(): AuthStatus {
-  return useSyncExternalStore(onTokensChanged, getSnapshot, getServerSnapshot);
+  const base = useSyncExternalStore(onTokensChanged, getSnapshot, getServerSnapshot);
+  const { data: profile } = useMyProfile();
+
+  if (!base.isAuthenticated) return base;
+
+  return {
+    ...base,
+    user: profile
+      ? { name: profile.nickname, avatarUrl: profile.avatarUrl, grade: profile.grade }
+      : // 프로필이 오기 전에도 회원 UI 를 그린다(닉네임 자리는 비워 둔다).
+        { name: "" },
+  };
 }
