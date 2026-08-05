@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { SearchBar } from "@/components/ui/search-bar";
 import { useAuthStatus } from "@/hooks/use-auth-status";
-import { LoginModal } from "@/components/modals/login/login-modal";
+import { LoginModalContainer } from "@/features/auth/components/login-modal-container";
 
 // 헤더 공용 인프라 — features/gallery 에서 중립 위치로 이전한 것들
 import { HeaderAuthArea } from "@/components/layout/header-auth-area";
@@ -176,21 +176,7 @@ export function MyPageTopBar() {
       </MobileNavDrawer>
 
       {/* 로그인 모달 */}
-      <LoginModal
-        open={loginOpen}
-        onOpenChange={setLoginOpen}
-        onSignUp={() => router.push("/signup")}
-        onLogin={(id, password) => {
-          // TODO: 로그인 API 연동
-          console.log("login", id, password);
-        }}
-        onGoogleLogin={() => {
-          // TODO: OAuth 연동
-        }}
-        onKakaoLogin={() => {
-          // TODO: OAuth 연동
-        }}
-      />
+      <LoginModalContainer open={loginOpen} onOpenChange={setLoginOpen} />
     </>
   );
 }

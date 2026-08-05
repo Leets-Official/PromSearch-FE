@@ -13,7 +13,7 @@ import { Logo } from "@/components/ui/logo";
 import { SearchBar } from "@/components/ui/search-bar";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters";
-import { LoginModal } from "@/components/modals/login/login-modal";
+import { LoginModalContainer } from "@/features/auth/components/login-modal-container";
 
 import { HeaderAuthArea } from "@/components/layout/header-auth-area";
 import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
@@ -224,21 +224,7 @@ export function GalleryTopBar() {
       </MobileNavDrawer>
 
       {/* 로그인 모달 */}
-      <LoginModal
-        open={loginOpen}
-        onOpenChange={setLoginOpen}
-        onSignUp={() => router.push("/signup")}
-        onLogin={(id, password) => {
-          // TODO: 로그인 API 연동
-          console.log("login", id, password);
-        }}
-        onGoogleLogin={() => {
-          // TODO: OAuth 연동
-        }}
-        onKakaoLogin={() => {
-          // TODO: OAuth 연동
-        }}
-      />
+      <LoginModalContainer open={loginOpen} onOpenChange={setLoginOpen} />
     </>
   );
 }

@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { AppHeader } from "@/components/ui/app-header";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
-import { LoginModal } from "@/components/modals/login/login-modal";
+import { LoginModalContainer } from "@/features/auth/components/login-modal-container";
 import { HeaderAuthArea } from "@/components/layout/header-auth-area";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 
@@ -25,7 +24,6 @@ import { useAuthStatus } from "@/hooks/use-auth-status";
  * 일어나지 않고, `/home` 으로 보내면 랜딩을 읽던 사람을 밖으로 밀어낸다.
  */
 export function LandingHeader() {
-  const router = useRouter();
   const { isAuthenticated, user } = useAuthStatus();
   const [loginOpen, setLoginOpen] = useState(false);
 
@@ -74,20 +72,7 @@ export function LandingHeader() {
         />
       </div>
 
-      <LoginModal
-        open={loginOpen}
-        onOpenChange={setLoginOpen}
-        onSignUp={() => router.push("/signup")}
-        onLogin={() => {
-          // TODO: 로그인 API 연동
-        }}
-        onGoogleLogin={() => {
-          // TODO: OAuth 연동
-        }}
-        onKakaoLogin={() => {
-          // TODO: OAuth 연동
-        }}
-      />
+      <LoginModalContainer open={loginOpen} onOpenChange={setLoginOpen} />
     </>
   );
 }

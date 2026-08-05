@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { track } from "@/analytics/track";
 import { cn } from "@/lib/utils";
 import { MobilePageHeader } from "@/components/layout/mobile-page-header";
-import { LoginModal } from "@/components/modals/login/login-modal";
+import { LoginModalContainer } from "@/features/auth/components/login-modal-container";
 import { Button } from "@/components/ui/button";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useBookmark } from "@/features/prompt-detail/hooks/use-bookmark";
@@ -236,24 +236,10 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
       />
 
       {/* 비회원이 로그인 필요한 액션을 눌렀을 때 */}
-      <LoginModal
-        open={gate.loginOpen}
-        onOpenChange={gate.setLoginOpen}
-        onSignUp={() => router.push("/signup")}
-        onLogin={() => {
-          // TODO: 로그인 API 연동
-        }}
-      />
+      <LoginModalContainer open={gate.loginOpen} onOpenChange={gate.setLoginOpen} />
 
       {/* 잠금 CTA — 비회원 로그인 유도 */}
-      <LoginModal
-        open={loginOpen}
-        onOpenChange={setLoginOpen}
-        onSignUp={() => router.push("/signup")}
-        onLogin={() => {
-          // TODO: 로그인 API 연동
-        }}
-      />
+      <LoginModalContainer open={loginOpen} onOpenChange={setLoginOpen} />
 
       {/* 잠금 CTA — 프리미엄 포인트 결제 확인. 가격은 상세 응답의 pricePoint 를 그대로 쓴다. */}
       <PointUnlockModal

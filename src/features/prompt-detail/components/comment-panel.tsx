@@ -13,7 +13,7 @@ import type { PromptComment } from "@/features/prompt-detail/types";
 import { getErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { CommentItem } from "./comment-item";
-import { LoginModal } from "@/components/modals/login/login-modal";
+import { LoginModalContainer } from "@/features/auth/components/login-modal-container";
 
 import { ReportModal } from "./report-modal";
 import { COMMENT_INPUT_ANCHOR_ID } from "./detail-floating-actions";
@@ -216,7 +216,7 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
       </div>
 
       {/* 비회원이 댓글·답글·신고를 시도했을 때 */}
-      <LoginModal open={gate.loginOpen} onOpenChange={gate.setLoginOpen} />
+      <LoginModalContainer open={gate.loginOpen} onOpenChange={gate.setLoginOpen} />
 
       {/* 삭제 확인 — 논리 삭제라 목록에는 "삭제된 댓글입니다"로 남는다 */}
       <ConfirmModal
