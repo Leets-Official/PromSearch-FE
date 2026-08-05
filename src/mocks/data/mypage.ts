@@ -3,17 +3,17 @@
  * BE 연동 시 MOCK_* 는 API 응답으로 교체한다.
  */
 import { AI_MODELS, OUTPUT_TYPES, TASKS } from "@/features/gallery/categories";
-import type { PromptSummary } from "@/features/gallery/types";
+import type { JobCategory, PromptSummary } from "@/features/gallery/types";
 
 export type PostStatus = "published" | "draft" | "private";
 
-export interface MyPost {
-  id: string;
-  title: string;
-  /** 표시용 포맷 문자열 (예: "2026.07.12") */
+/**
+ * 내 게시글 = 내가 올린 프롬프트이므로 PromptSummary(썸네일·작성자·태그)를 확장한다.
+ * date(표시용 게시일)와 status(탭 필터)만 마이페이지 전용 필드로 추가.
+ */
+export interface MyPost extends PromptSummary {
+  /** 표시용 포맷 문자열 (예: "2026.07.12") — 표 뷰(sm+)에서 사용 */
   date: string;
-  views: number;
-  likes: number;
   status: PostStatus;
 }
 
@@ -42,13 +42,30 @@ const SAMPLE_TITLES = [
   "프롬프트제목프롬프트제목",
 ];
 
+// 마이페이지 카드/표에 노출할 직군 태그 순환용
+const SAMPLE_JOB_CATEGORIES: JobCategory[] = [
+  "student",
+  "worker",
+  "planner",
+  "designer",
+  "developer",
+  "self_employed",
+];
+
 // 페이지네이션 확인용 — 게시완료 40개 (임시저장·비공개는 비어 있는 상태 확인용)
 export const MOCK_POSTS: MyPost[] = Array.from({ length: 40 }, (_, i) => ({
   id: `post-${i + 1}`,
   title: SAMPLE_TITLES[i % SAMPLE_TITLES.length],
+  thumbnailUrl: "",
+  outputType: OUTPUT_TYPES[i % OUTPUT_TYPES.length].value,
+  model: AI_MODELS[i % AI_MODELS.length].value,
+  tasks: [TASKS[i % TASKS.length].value],
+  jobCategories: [SAMPLE_JOB_CATEGORIES[i % SAMPLE_JOB_CATEGORIES.length]],
+  tier: "free",
+  author: { name: MOCK_PROFILE.username, avatarUrl: MOCK_PROFILE.avatarUrl ?? undefined },
+  stats: { views: 1821, copies: 132, likes: 1906 },
+  createdAt: "2026-07-12T00:00:00.000Z",
   date: "2026.07.12",
-  views: 1821,
-  likes: 1906,
   status: "published",
 }));
 
