@@ -48,3 +48,16 @@ export async function fetchMyProfile(): Promise<MyProfile> {
     interestTaskTags: result.interestTaskTags ?? [],
   };
 }
+/** [USER-002] 프로필 수정 요청 바디 */
+export interface UpdateProfileRequest {
+  nickname?: string;
+  interestJobTagIds?: number[];
+  interestTaskTagIds?: number[];
+  /** 프로필 이미지 업로드(USER-007~009) 완료 후 받은 URL. src/features/upload/api/image.ts 연동 전까지 미사용. */
+  profileImageUrl?: string;
+}
+
+/** [USER-002] 프로필 수정 — 온보딩 모달(소셜 로그인 전용)의 onComplete 에서 호출 */
+export function updateMyProfile(payload: UpdateProfileRequest) {
+  return api.patch<void>("/users/me", payload);
+}
