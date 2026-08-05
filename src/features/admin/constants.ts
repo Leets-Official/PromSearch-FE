@@ -1,3 +1,4 @@
+import type { ApiReportReason } from "@/features/admin/api/dto";
 import type { GradeTab, ModerationStatus, ReportTab, ReportTarget } from "@/features/admin/types";
 
 /** 어드민 표 1페이지 행 수 — 시안(551:3682) 이 8행이다 */
@@ -33,6 +34,18 @@ export const GRADE_TABS = [
 ] as const satisfies readonly { value: GradeTab; label: string }[];
 
 export const GRADE_TAB_VALUES = GRADE_TABS.map((t) => t.value);
+
+/**
+ * 신고 사유 라벨 — 서버는 코드(`SPAM` …)로 주고 표에는 한글로 보여준다.
+ * 신고 접수 모달(MODERATION-001/002)과 같은 enum 이라 문구를 맞춰 둔다.
+ */
+export const REPORT_REASON_LABELS = {
+  SPAM: "스팸/도배",
+  INAPPROPRIATE: "부적절한 콘텐츠",
+  COPYRIGHT: "저작권 침해",
+  LOW_QUALITY: "낮은 품질",
+  ETC: "기타",
+} as const satisfies Record<ApiReportReason, string>;
 
 /** 신고 대상별 화면 문구 — 두 화면이 같은 표 컴포넌트를 공유한다 */
 export const REPORT_TARGET_COPY = {
