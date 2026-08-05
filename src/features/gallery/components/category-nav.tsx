@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { MouseEvent } from "react";
 
 import { Sidebar, SidebarGroupLabel, SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { JOB_CATEGORIES } from "@/features/gallery/categories";
-import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters";
 import type { JobCategory } from "@/features/gallery/types";
 
 /** 홈 갤러리 경로 — 사이드바는 어느 페이지에서든 홈으로 이동한다 */
@@ -44,12 +43,26 @@ function blurOnMouseClick(e: MouseEvent<HTMLElement>) {
  */
 export function CategoryNav({ variant = "sidebar" }: { variant?: "sidebar" | "drawer" }) {
   const pathname = usePathname();
-  const { query } = useGalleryFilters();
   const onHome = pathname === HOME_PATH;
   const isDrawer = variant === "drawer";
 
+  /*
+    활성 표시는 **URL 을 직접 읽어서** 정한다.
+
+    예전에는 `useGalleryFilters()`(nuqs)의 파싱된 상태를 봤는데, 이 컴포넌트는 (main)
+    **레이아웃**에 살아 있어서 `<Link>` 로 쿼리만 바뀌는 이동에서는 그 값이 갱신되지 않았다.
+    증상: 새로고침하면 맞는데 사이드바를 눌러 이동하면 활성 표시가 이전 항목에 머문다
+    (직장인 화면인데 "인기 프롬프트"가 빨간 상태).
+
+    `useSearchParams` 는 Next 라우터를 구독하므로 클라이언트 이동에도 바로 따라온다.
+    파라미터 이름은 위 `navHref` 가 만드는 것과 같다(nav / job).
+  */
+  const searchParams = useSearchParams();
+  const currentNav = searchParams.get("nav") ?? "home";
+  const currentJob = searchParams.get("job");
+
   const isActive = (nav: Nav, job?: JobCategory) =>
-    onHome && query.nav === nav && (nav === "job" ? query.job === job : true);
+    onHome && currentNav === nav && (nav === "job" ? currentJob === job : true);
 
   return (
     <Sidebar className={isDrawer ? "w-full gap-2" : undefined}>
