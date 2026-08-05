@@ -3,6 +3,8 @@
 @import "shadcn/tailwind.css";
 /* Pretendard dynamic subset(92개 @font-face). 통짜 2MB woff2 를 대체한다 — 사유는 해당 파일 주석 참고. */
 @import "./fonts/pretendard-dynamic.css";
+/* 랜딩(/) 전용 서브셋 한 조각. `.font-landing` 을 붙인 곳에서만 쓰이므로 다른 페이지는 받지 않는다. */
+@import "./fonts/pretendard-landing.css";
 
 /* 다크 모드는 디자인 시스템에 정의되어 있지 않아 사용하지 않습니다 (라이트 온리).
  * `.dark` 클래스를 붙이지 않는 한 `dark:` 유틸리티는 모두 비활성 상태입니다. */
@@ -247,17 +249,28 @@
     @apply font-sans;
 
     /*
-     * 스크롤바 자리를 **항상** 비워 둔다.
+     * 스크롤바 거터를 **쓰지 않는다.**
      *
-     * Base UI 스크롤락은 모달이 열릴 때 <html> 에 `scrollbar-gutter: stable` 을 건다
-     * (@base-ui/utils useScrollLock 의 updateGutterOnly 경로). 그래서 스크롤바가 있던
-     * 페이지에서 모달을 열면 그 순간 거터가 새로 생기고, 페이지가 그만큼 좁아지면서
-     * 딤이 덮지 못한 띠가 오른쪽에 남는다(스크롤바가 없던 페이지에선 안 생긴다).
+     * Base UI 스크롤락은 모달이 열릴 때 <html> 에 `scrollbar-gutter: stable` 을 인라인으로
+     * 건다(@base-ui/utils useScrollLock 의 updateGutterOnly). 스크롤바가 사라지며 콘텐츠가
+     * 좌우로 튀는 걸 막으려는 것인데, 우리 화면에서는 **더 나쁜 부작용**이 있었다.
      *
-     * 처음부터 거터를 예약해 두면 모달을 열어도 레이아웃이 그대로라 띠가 생기지 않는다.
-     * 덤으로 스크롤 유무에 따라 콘텐츠가 좌우로 튀는 것도 사라진다.
+     * 거터가 걸리면 그 폭만큼:
+     *   - `100vw` 가 줄어들고 (실측 innerWidth 912 → 100vw 897)
+     *   - fixed 요소의 컨테이닝 블록(ICB)도 같이 줄어든다 (inset:0 도 897)
+     * 즉 **페이지 안의 어떤 요소로도 거터 영역에 닿을 수 없다.** 딤이 못 덮는 15px 짜리
+     * 흰 띠가 모달 오른쪽에 항상 남았다(실측: 딤 0~897, 뷰포트 912).
+     *
+     * 예전에는 여기서 거터를 항상 예약해 "열 때 새로 생기는" 것만 막았는데, 그건 띠를
+     * 상시화할 뿐 없애지 못했다. 그래서 방향을 뒤집어 **거터 자체를 끈다.**
+     * `!important` 인 이유: Base UI 가 인라인 스타일로 걸기 때문에 그걸 이겨야 한다
+     * (스타일시트의 !important 는 non-important 인라인보다 우선한다).
+     *
+     * 대가: 클래식 스크롤바(Windows 기본)에서는 모달을 열 때 스크롤바가 사라지며 콘텐츠가
+     * 스크롤바 폭만큼 한 번 움직인다. 오버레이 스크롤바(macOS 기본)에서는 폭이 0이라
+     * 아무 변화도 없다. 상시로 남는 흰 띠보다 이쪽이 낫다고 판단했다.
      */
-    scrollbar-gutter: stable;
+    scrollbar-gutter: auto !important;
   }
 }
 

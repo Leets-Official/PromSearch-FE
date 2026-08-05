@@ -64,6 +64,9 @@ export function LandingProblem() {
                   src={problem.icon}
                   alt=""
                   aria-hidden
+                  // 접힘 아래 섹션이라 지연 로딩. 빼먹으면 React 가 SSR 중
+                  // <link rel="preload" as="image"> 를 head 에 끼워 넣어 첫 화면과 대역폭을 다툰다.
+                  loading="lazy"
                   className={`absolute ${problem.iconInset}`}
                 />
               </div>

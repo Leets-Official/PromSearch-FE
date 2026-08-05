@@ -143,7 +143,7 @@ function CommentBody({
           {comment.isAuthor ? (
             <span className="text-caption-1 whitespace-nowrap text-text-brand">작성자</span>
           ) : null}
-          <span className="text-text-disabled">・</span>
+          <span className="text-text-disabled">·</span>
           <span className="whitespace-nowrap text-text-disabled">
             {formatDetailDate(comment.createdAt)}
           </span>

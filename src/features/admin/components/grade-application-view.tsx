@@ -1,9 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { PaginationRoot } from "@/components/ui/pagination";
-import { SearchBar } from "@/components/ui/search-bar";
 import {
   AdminEmpty,
   AdminError,
@@ -29,39 +26,31 @@ import {
   useGradeApplicationList,
 } from "@/features/admin/hooks/use-grade-applications";
 import { useAdminFilters } from "@/features/admin/hooks/use-admin-filters";
-
-/** 검색 입력 → URL 반영 디바운스(헤더 검색과 동일 값) */
-const SEARCH_DEBOUNCE_MS = 300;
+import { useToast } from "@/components/ui/toast";
 
 /**
  * 유저 등급 관리 화면 (시안 1434:5839).
- * 검색(아이디/닉네임) → 탭(심사 대기중 / 승인 완료) → 표 → 페이지네이션.
+ * 탭(심사 대기중 / 승인 완료) → 표 → 페이지네이션. (검색은 서버 미지원 — 아래 주석 참고)
  * 승인 액션은 "심사 대기중" 행에만 있고, 승인 완료 행은 상태 라벨로 표시한다.
  */
 export function GradeApplicationView() {
-  const { query, setTab, setSearch, setPage } = useAdminFilters(GRADE_TAB_VALUES, "pending");
+  const { query, setTab, setPage } = useAdminFilters(GRADE_TAB_VALUES, "pending");
   const { data, isPending, isError, refetch } = useGradeApplicationList(query);
   const approve = useApproveGradeApplication();
-  const [keyword, setKeyword] = useState(query.q);
-
-  useEffect(() => {
-    if (keyword === query.q) return;
-    const timer = setTimeout(() => setSearch(keyword), SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [keyword, query.q, setSearch]);
+  const { toastSuccess, toastApiError } = useToast();
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-heading-1 text-text-primary">유저 등급 관리</h1>
 
-      {/* 시안 폭 348px — 좁은 화면에서는 컨테이너 폭까지 줄어든다(SearchBar 기본 max-w-87) */}
-      <SearchBar
-        value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-        placeholder="아이디 또는 닉네임으로 검색"
-        aria-label="유저 검색"
-      />
+      {/*
+        유저 검색은 **의도적으로 빼 둔다**(2026-08-06 BE 결정: 서버 미지원 → 미구현으로 남김).
 
+        시안(1434:5839)에는 검색바가 있지만, 서버가 `q` 를 모르는 상태에서 붙여 두면
+        받아 온 앞쪽 100건 안에서만 걸러진다 → 실제로 존재하는 유저를 "없음"으로 보여 준다.
+        조용히 틀린 결과를 주느니 없는 편이 낫다. 서버 검색이 붙으면 되살릴 것
+        (`fetchGradeApplications` 의 클라이언트 필터 경로는 그대로 남아 있다).
+      */}
       <AdminTabs label="등급 신청 상태" tabs={GRADE_TABS} value={query.tab} onChange={setTab} />
 
       {isError ? (
@@ -99,7 +88,12 @@ export function GradeApplicationView() {
                         tone="brand"
                         disabled={approve.isPending}
                         aria-label={`${item.userId} 등급 승인`}
-                        onClick={() => approve.mutate(item.id)}
+                        onClick={() =>
+                          approve.mutate(item.id, {
+                            onSuccess: () => toastSuccess("등급을 승인했어요."),
+                            onError: toastApiError,
+                          })
+                        }
                       >
                         승인
                       </AdminRowAction>

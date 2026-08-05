@@ -82,7 +82,7 @@ describe("GalleryCard", () => {
 });
 
 describe("buildCardTags", () => {
-  it("사용 AI·직군·태스크·결과물타입 라벨을 구성한다", () => {
+  it("홈 필터와 같은 순서로 라벨을 구성한다 — 직군·태스크·AI모델·결과물타입", () => {
     const tags = buildCardTags(
       makePrompt({
         model: "chatgpt",
@@ -91,11 +91,11 @@ describe("buildCardTags", () => {
         outputType: "image",
       }),
     );
-    expect(tags).toEqual(["ChatGPT", "개발자", "PPT", "이미지"]);
+    expect(tags).toEqual(["개발자", "PPT", "ChatGPT", "이미지"]);
   });
 
   it("모델이 기타면 직접입력명(modelEtcName)을 노출한다", () => {
     const tags = buildCardTags(makePrompt({ model: "etc", modelEtcName: "뤼튼" }));
-    expect(tags[0]).toBe("뤼튼");
+    expect(tags).toContain("뤼튼");
   });
 });

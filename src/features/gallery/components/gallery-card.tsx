@@ -46,9 +46,12 @@ export function buildCardTags(prompt: PromptSummary): string[] {
       ? (prompt.modelEtcName ?? AI_MODEL_LABEL.etc)
       : AI_MODEL_LABEL[prompt.model];
 
-  const tags = [modelLabel];
+  // 순서는 **홈 필터 드롭다운과 같게** 둔다: 직군 · 태스크 · AI 모델 · 결과물 유형.
+  // 필터에서 고른 것과 카드에 찍힌 것을 눈으로 대조하게 되므로 순서가 어긋나면 읽기 어렵다.
+  const tags: string[] = [];
   if (prompt.jobCategories[0]) tags.push(JOB_CATEGORY_LABEL[prompt.jobCategories[0]]);
   if (prompt.tasks[0]) tags.push(TASK_LABEL[prompt.tasks[0]]);
+  tags.push(modelLabel);
   tags.push(OUTPUT_TYPE_LABEL[prompt.outputType]);
   return tags;
 }

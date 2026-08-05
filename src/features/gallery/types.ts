@@ -30,6 +30,13 @@ export type PostStatus = "active" | "hidden" | "draft";
 export type PromptAuthor = {
   name: string;
   avatarUrl?: string;
+  /**
+   * 등급 — 서버가 주는 **대문자 enum** 그대로다(`NODE` 등). 표기는 `formatGrade` 로 바꾼다.
+   *
+   * 상세(`PROMPT-001`)만 내려주고 목록·댓글에는 아직 없어 옵셔널이다.
+   * 없으면 화면에서 등급 자리를 그리지 않는다.
+   */
+  grade?: string;
 };
 
 /** 갤러리 카드 1장에 필요한 요약 데이터 */

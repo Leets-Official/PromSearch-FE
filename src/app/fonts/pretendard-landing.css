@@ -1,0 +1,42 @@
+/*
+ * Pretendard — **랜딩 전용 서브셋** (self-hosted)
+ *
+ * 옆 파일 `pretendard-dynamic.css`(92조각) 위에 한 겹 더 얹는 것이다. 둘의 역할이 다르다:
+ *
+ *   pretendard-dynamic.css : 서비스 전체용 **범용** 분할. 어떤 글자가 나올지 모르는
+ *                            페이지(홈·상세·마이페이지 등)를 유니코드 범위별로 커버한다.
+ *   이 파일                : 랜딩(/) 전용. 카피가 전부 하드코딩이라 **쓰이는 글자가 고정**이라서,
+ *                            그 313자만 담은 조각 하나로 끝낼 수 있다.
+ *
+ * 왜 필요했나 — 범용 분할은 조각 경계가 유니코드 범위 기준이라, 랜딩의 한글이 하필 14조각에
+ * 흩어져 **359KB** 를 받고 있었다. 실측(Lighthouse 모바일, 3회 중앙값)에서 이 폰트가
+ * FCP +2.4s / LCP +1.7s 를 먹었다(웹폰트 제거 대조군 perf 74 → 92, FCP 3.3s → 0.9s).
+ * 랜딩만 따로 자르니 359KB → 41KB(파일 14개 → 1개).
+ *
+ * 폴백 — 서브셋에 없는 글자(예: 로그인한 유저의 닉네임)는 아래 `.font-landing` 의 스택을 타고
+ * `Pretendard Variable`(=92조각)로 자동으로 넘어간다. 글리프 누락으로 깨지지 않으며,
+ * 그 글자가 속한 조각만 추가로 받을 뿐이다.
+ *
+ * ⚠️ 생성물이다. 랜딩 카피를 고치면 `node scripts/build-landing-font-subset.mjs` 를 다시 돌릴 것.
+ *    안 돌려도 화면은 멀쩡하지만(폴백) 조각을 더 받게 되어 이득이 줄어든다.
+ *    `src/features/landing/landing-font-subset.test.tsx` 가 이 누락을 자동으로 잡아 준다.
+ */
+@font-face {
+  font-family: "Pretendard Landing";
+  font-style: normal;
+  font-display: swap;
+  /* 서브셋 생성 시 축을 400..700 으로 좁혔다 — 디자인 토큰이 쓰는 굵기(400/500/600/700) 전부를 덮는다.
+     이 범위를 벗어난 굵기를 새로 쓰게 되면 서브셋부터 다시 만들어야 한다. */
+  font-weight: 400 700;
+  src: url(/fonts/pretendard/PretendardVariable.landing.woff2) format("woff2-variations");
+  /* unicode-range 를 적지 않는 이유: 범위를 좁히면 그 밖의 글자가 이 패밀리를 아예 건너뛴다.
+     여기서는 "있으면 쓰고 없으면 다음 패밀리" 가 필요하므로 범위를 열어 두고 폴백에 맡긴다. */
+}
+
+/*
+ * 랜딩 루트에 붙이는 클래스. `--font-sans`(= "Pretendard Variable", Pretendard, sans-serif)를
+ * 뒤에 두어, 서브셋에 없는 글자만 범용 조각으로 넘어가게 한다.
+ */
+.font-landing {
+  font-family: "Pretendard Landing", var(--font-sans);
+}
