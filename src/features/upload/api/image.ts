@@ -16,6 +16,7 @@
 
 import { api } from "@/lib/api";
 
+import type { PromptImageValue } from "../schema";
 import type {
   ApiCompleteUploadResult,
   ApiImageStatus,
@@ -69,6 +70,31 @@ export function fetchImageStatuses(imageIds: string[]): Promise<ApiImageStatusRe
   return api.get<ApiImageStatusResult>("/prompt-images/statuses", {
     params: { imageIds: imageIds.join(",") },
   });
+}
+
+/** 서버 상태 → 폼 이미지 상태 */
+export const IMAGE_STATUS_BY_API: Record<ApiImageStatus, PromptImageValue["status"]> = {
+  UPLOADING: "uploading",
+  UPLOADED: "processing",
+  PROCESSING: "processing",
+  READY: "ready",
+  FAILED: "failed",
+};
+
+/**
+ * imageId 목록으로 상태와 미리보기 URL 을 채운다.
+ *
+ * 임시저장 복원에 쓴다 — 초안 응답에는 `imageUrl` 이 없어서(BE 스펙) 이 API 로만 얻을 수 있다.
+ * 하나라도 없거나 남의 이미지면 **요청 전체가 실패**하므로, 실패하면 호출부가
+ * 미리보기 없이(자리표시 타일) 진행하도록 그대로 던진다.
+ */
+export async function fetchImagePreviews(imageIds: string[]): Promise<PromptImageValue[]> {
+  const result = await fetchImageStatuses(imageIds);
+  return result.images.map((image) => ({
+    imageId: image.imageId,
+    previewUrl: image.imageUrl ?? undefined,
+    status: IMAGE_STATUS_BY_API[image.status] ?? "processing",
+  }));
 }
 
 /** 파일에서 픽셀 크기를 읽는다(업로드 URL 발급 요청에 필요). */

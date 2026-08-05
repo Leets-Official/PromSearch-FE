@@ -91,9 +91,9 @@ function toModel(result: ApiDraftResult): AiModel | undefined {
 /**
  * 임시저장 이미지 복원.
  *
- * ⚠️ 응답에 **조회용 URL 이 없다**(요청서 U-1). `imageId` 만 있어서 미리보기를 만들 수 없고,
- * 화면에는 자리표시 타일로만 뜬다. 서버가 보관 중인 이미지이므로 상태는 ready 로 본다
- * (게시 시 서버가 다시 검증한다). U-1 이 반영되면 `previewUrl` 을 채운다.
+ * 초안 응답에는 `imageId` 만 있고 조회용 URL 이 없다. 미리보기는 호출부(`api/upload.ts`)가
+ * 상태 API(`PROMPT-004`)를 한 번 더 태워 채운다 — 거기에만 `imageUrl` 이 있다.
+ * 여기서는 일단 서버가 보관 중인 이미지이므로 ready 로 두고, 상태 조회가 실제 값으로 덮는다.
  */
 function toDraftImages(result: ApiDraftResult): PromptImageValue[] {
   return (result.images ?? [])

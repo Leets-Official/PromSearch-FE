@@ -268,11 +268,16 @@ export const handlers = [
       .filter(Boolean);
 
     return jsonEnvelope({
-      images: ids.map((imageId) => ({
-        imageId,
-        status: imageStatusState.get(imageId) ?? "READY",
-        failureCode: null,
-      })),
+      images: ids.map((imageId) => {
+        const status = imageStatusState.get(imageId) ?? "READY";
+        return {
+          imageId,
+          status,
+          failureCode: null,
+          // 처리가 끝난 이미지에만 조회용 URL 이 붙는다(서버와 동일)
+          imageUrl: status === "READY" ? `https://picsum.photos/seed/${imageId}/900/900` : null,
+        };
+      }),
     });
   }),
 
@@ -510,7 +515,8 @@ const SEEDED_DRAFT: ApiDraftResult = {
   contentType: "FREE",
   promptBody: "너는 전문 블로그 작가야. 아래 주제에 대해 목차와 초안을 작성해줘: ",
   visibility: "PUBLIC",
-  images: [],
+  // 초안 복원 시 미리보기가 채워지는지 확인할 수 있게 이미지를 하나 넣어 둔다.
+  images: [{ imageId: "seed-draft-image-1", sortOrder: 0, thumbnail: true }],
   status: "DRAFT",
   pricePoint: 0,
   updatedAt: "2026-07-27T09:30:00.000Z",

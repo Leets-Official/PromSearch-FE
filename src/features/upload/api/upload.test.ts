@@ -1,7 +1,14 @@
+import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
+
+import { server } from "@/mocks/server";
 
 import { createPrompt, deleteDraft, fetchDraft, saveDraft } from "@/features/upload/api/upload";
 import type { PromptFormValues } from "@/features/upload/types";
+
+function envelope<T>(result: T) {
+  return HttpResponse.json({ success: true, code: "COMMON-200", message: "성공했습니다.", result });
+}
 
 function values(overrides: Partial<PromptFormValues> = {}): PromptFormValues {
   return {
@@ -43,5 +50,66 @@ describe("임시저장 라운드트립 (MSW 목 연동)", () => {
 
     const { draft } = await fetchDraft();
     expect(draft).toBeNull();
+  });
+});
+
+describe("임시저장 이미지 미리보기 (요청서 U-1)", () => {
+  it("초안 응답에 없는 imageUrl 을 상태 API 로 채운다", async () => {
+    server.use(
+      http.get("/api/v1/prompts/draft", () =>
+        envelope({
+          promptId: 1,
+          title: "이미지가 있는 초안",
+          images: [
+            { imageId: "img-b", sortOrder: 1, thumbnail: false },
+            { imageId: "img-a", sortOrder: 0, thumbnail: true },
+          ],
+          status: "DRAFT",
+          pricePoint: 0,
+          updatedAt: "2026-08-05T10:00:00Z",
+        }),
+      ),
+      http.get("/api/v1/prompt-images/statuses", ({ request }) => {
+        const ids = (new URL(request.url).searchParams.get("imageIds") ?? "").split(",");
+        return envelope({
+          images: ids.map((imageId) => ({
+            imageId,
+            status: "READY",
+            failureCode: null,
+            imageUrl: `https://cdn/${imageId}.jpg`,
+          })),
+        });
+      }),
+    );
+
+    const { draft } = await fetchDraft();
+
+    // sortOrder 순으로 복원되고 미리보기가 채워진다
+    expect(draft?.images).toEqual([
+      { imageId: "img-a", previewUrl: "https://cdn/img-a.jpg", status: "ready" },
+      { imageId: "img-b", previewUrl: "https://cdn/img-b.jpg", status: "ready" },
+    ]);
+  });
+
+  it("상태 조회가 실패해도 초안 복원 자체는 막지 않는다", async () => {
+    server.use(
+      http.get("/api/v1/prompts/draft", () =>
+        envelope({
+          promptId: 1,
+          title: "초안",
+          images: [{ imageId: "img-a", sortOrder: 0, thumbnail: true }],
+          status: "DRAFT",
+          pricePoint: 0,
+          updatedAt: "2026-08-05T10:00:00Z",
+        }),
+      ),
+      http.get("/api/v1/prompt-images/statuses", () => new HttpResponse(null, { status: 500 })),
+    );
+
+    const { draft } = await fetchDraft();
+
+    expect(draft?.title).toBe("초안");
+    // 미리보기 없이 자리표시 타일로 뜬다
+    expect(draft?.images).toEqual([{ imageId: "img-a", status: "ready" }]);
   });
 });

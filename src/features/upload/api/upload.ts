@@ -12,7 +12,9 @@
 import { api, isApiError } from "@/lib/api";
 
 import type { ApiDraftResult, ApiPromptWriteResult } from "./dto";
+import { fetchImagePreviews } from "./image";
 import { toPromptDraft, toWriteRequest } from "./map";
+import type { PromptImageValue } from "../schema";
 import type { CreatePromptResponse, DraftResponse, PromptDraft, PromptFormValues } from "../types";
 
 /** 프롬프트 게시 — 성공하면 상세로 이동할 id 를 돌려준다. */
@@ -28,12 +30,31 @@ export async function createPrompt(values: PromptFormValues): Promise<CreateProm
  * (그대로 두면 화면이 에러 상태로 빠진다).
  */
 export async function fetchDraft(): Promise<DraftResponse> {
+  let result: ApiDraftResult;
   try {
-    const result = await api.get<ApiDraftResult>("/prompts/draft");
-    return { draft: toPromptDraft(result) };
+    result = await api.get<ApiDraftResult>("/prompts/draft");
   } catch (error) {
     if (isApiError(error) && error.status === 404) return { draft: null };
     throw error;
+  }
+
+  const draft = toPromptDraft(result);
+  return { draft: { ...draft, images: await withPreviews(draft.images ?? []) } };
+}
+
+/**
+ * 초안 이미지에 미리보기 URL 을 채운다.
+ *
+ * 초안 응답에는 `imageId` 만 있고 조회용 URL 이 없어서(BE 스펙) 상태 API 를 한 번 더 태운다.
+ * 이건 **부가 정보**라 실패해도 초안 복원 자체를 막지 않는다 — 미리보기 없이
+ * 자리표시 타일로 뜨고, 게시할 때 서버가 어차피 다시 검증한다.
+ */
+async function withPreviews(images: PromptImageValue[]): Promise<PromptImageValue[]> {
+  if (images.length === 0) return images;
+  try {
+    return await fetchImagePreviews(images.map((image) => image.imageId));
+  } catch {
+    return images;
   }
 }
 

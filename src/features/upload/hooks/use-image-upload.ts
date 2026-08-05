@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   completeUpload,
   fetchImageStatuses,
+  IMAGE_STATUS_BY_API,
   isTerminal,
   issueUploadUrls,
   MAX_UPLOAD_BATCH,
@@ -13,19 +14,10 @@ import {
   putToS3,
   readImageSize,
 } from "../api/image";
-import type { ApiImageStatus } from "../api/dto";
 import type { PromptImageValue } from "../schema";
 
 /** 결과물 이미지 최대 장수 */
 export const MAX_IMAGES = MAX_UPLOAD_BATCH;
-
-const STATUS_BY_API: Record<ApiImageStatus, PromptImageValue["status"]> = {
-  UPLOADING: "uploading",
-  UPLOADED: "processing",
-  PROCESSING: "processing",
-  READY: "ready",
-  FAILED: "failed",
-};
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -69,9 +61,14 @@ export function useImageUpload({ value, onChange }: UseImageUploadOptions) {
 
   const patch = useCallback(
     (imageId: string, next: Partial<PromptImageValue>) => {
-      const updated = latest.current.map((image) =>
-        image.imageId === imageId ? { ...image, ...next } : image,
-      );
+      const updated = latest.current.map((image) => {
+        if (image.imageId !== imageId) return image;
+        // 로컬 미리보기를 서버 URL 로 교체할 때는 objectURL 을 해제한다(해제하지 않으면 누수).
+        if (next.previewUrl && image.previewUrl?.startsWith("blob:")) {
+          URL.revokeObjectURL(image.previewUrl);
+        }
+        return { ...image, ...next };
+      });
       latest.current = updated;
       onChange(updated);
     },
@@ -91,7 +88,12 @@ export function useImageUpload({ value, onChange }: UseImageUploadOptions) {
         const stillPending: string[] = [];
 
         for (const image of result.images) {
-          patch(image.imageId, { status: STATUS_BY_API[image.status] ?? "processing" });
+          patch(image.imageId, {
+            status: IMAGE_STATUS_BY_API[image.status] ?? "processing",
+            // 처리가 끝나면 서버가 워터마크 결과물 URL 을 준다 → 로컬 미리보기를 그것으로 바꾼다.
+            // (로컬 파일은 워터마크가 없어서 실제 게시물과 다르게 보인다)
+            ...(image.imageUrl ? { previewUrl: image.imageUrl } : {}),
+          });
           if (!isTerminal(image.status)) stillPending.push(image.imageId);
         }
         pending = stillPending;

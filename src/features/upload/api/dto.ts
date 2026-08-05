@@ -41,6 +41,13 @@ export type ApiImageStatusResult = {
     status: ApiImageStatus;
     /** 실패 사유 코드. 값 목록은 BE 회신 대기(요청서 7-9) */
     failureCode?: string | null;
+    /**
+     * 워터마크 처리본 조회용 URL.
+     *
+     * **임시저장 응답(`PROMPT-006`)에는 이 필드가 없다.** 그래서 초안을 복원할 때
+     * 이 API 를 한 번 더 태워 미리보기를 채운다. `READY` 가 아니면 `null` 이다.
+     */
+    imageUrl?: string | null;
   }[];
 };
 

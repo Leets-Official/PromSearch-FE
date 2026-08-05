@@ -101,7 +101,7 @@ function OutputImageUploader({
                 className="pointer-events-none absolute inset-0 size-full rounded-md border border-stroke-primary object-cover"
               />
             ) : (
-              /* 임시저장에서 복원한 이미지 — 응답에 조회용 URL 이 없어 자리표시만 둔다(요청서 U-1) */
+              /* 미리보기를 못 받은 이미지 — 상태 조회가 실패했거나 아직 처리 중이라 URL 이 없다 */
               <div className="absolute inset-0 flex items-center justify-center rounded-md border border-stroke-primary bg-bg-secondary text-text-disabled">
                 <ImageIcon className="size-6" />
               </div>
