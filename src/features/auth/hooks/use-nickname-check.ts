@@ -1,79 +1,63 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { NICKNAME_MAX } from "@/components/modals/onboarding/constants";
+import { useCallback, useEffect, useState } from "react";
 
 export type NicknameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
-const DEBOUNCE_MS = 300;
 
-// 닉네임 형식: 한글/영어/숫자만, 1~NICKNAME_MAX자
-const NICKNAME_PATTERN = new RegExp(`^[가-힣a-zA-Z0-9]{1,${NICKNAME_MAX}}$`);
-
-function isValidFormat(nickname: string) {
-  return NICKNAME_PATTERN.test(nickname.trim());
-}
+const NICKNAME_PATTERN = /^[가-힣a-zA-Z0-9]{1,10}$/;
 
 interface UseNicknameCheckOptions {
   checkNickname: (nickname: string, signal: AbortSignal) => Promise<boolean>;
+  debounceMs?: number;
 }
 
-/** API 호출 결과만 담는 상태. 어떤 닉네임에 대한 결과인지 함께 저장해 stale 방지 */
-type CheckResult =
-  | { phase: "idle" }
-  | { phase: "checking"; nickname: string }
-  | { phase: "done"; nickname: string; available: boolean };
+/** 닉네임 입력값 변경 시 디바운스 후 checkNickname 을 호출한다. 실제 API 호출은 주입받는다. */
+export function useNicknameCheck({ checkNickname, debounceMs = 400 }: UseNicknameCheckOptions) {
+  const [nickname, setNicknameState] = useState("");
+  const [requestStatus, setRequestStatus] = useState<NicknameStatus>("idle");
+  const [respondedNickname, setRespondedNickname] = useState<string | null>(null);
 
-export function useNicknameCheck({ checkNickname }: UseNicknameCheckOptions) {
-  const [nickname, setNickname] = useState("");
-  const [result, setResult] = useState<CheckResult>({ phase: "idle" });
-  const abortRef = useRef<AbortController | null>(null);
+  const setNickname = useCallback((value: string) => {
+    setNicknameState(value);
+  }, []);
 
-  // checkNickname을 ref에 담아 deps에서 제외
-  // → 부모가 useCallback으로 감싸지 않아도 리렌더마다 디바운스가 초기화되지 않음
-  const checkNicknameRef = useRef(checkNickname);
-  useEffect(() => {
-    checkNicknameRef.current = checkNickname;
-  });
+  const isValidNickname = NICKNAME_PATTERN.test(nickname);
 
   useEffect(() => {
-    abortRef.current?.abort();
-
-    // 형식 미달이거나 빈 값이면 API 호출 안 함 (setState 없음 → cascading render 경고 해소)
-    if (!isValidFormat(nickname)) return;
+    // 빈 값, 형식 오류는 API를 호출하지 않는다.
+    if (!nickname || !isValidNickname) {
+      return;
+    }
 
     const controller = new AbortController();
-    abortRef.current = controller;
-
-    // checking 표시는 콜백 안에서 (effect 본문의 동기 setState가 아님)
     const timer = setTimeout(async () => {
-      setResult({ phase: "checking", nickname });
       try {
-        // ref로 최신 함수 참조 (deps엔 nickname만)
-        const available = await checkNicknameRef.current(nickname, controller.signal);
-        if (!controller.signal.aborted) {
-          setResult({ phase: "done", nickname, available });
-        }
+        const available = await checkNickname(nickname, controller.signal);
+        if (controller.signal.aborted) return;
+
+        setRespondedNickname(nickname);
+        setRequestStatus(available ? "available" : "taken");
       } catch {
-        if (!controller.signal.aborted) setResult({ phase: "idle" });
+        if (controller.signal.aborted) return;
+
+        setRespondedNickname(nickname);
+        setRequestStatus("idle");
       }
-    }, DEBOUNCE_MS);
+    }, debounceMs);
 
-    return () => clearTimeout(timer);
-  }, [nickname]);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [nickname, isValidNickname, checkNickname, debounceMs]);
 
-  // status는 렌더 중 파생값으로 계산 (effect에서 setState 하지 않음)
-  const status = deriveStatus(nickname, result);
+  const status: NicknameStatus = !nickname
+    ? "idle"
+    : !isValidNickname
+      ? "invalid"
+      : respondedNickname !== nickname
+        ? "checking"
+        : requestStatus;
 
   return { nickname, setNickname, status };
-}
-
-/** nickname과 API 결과로부터 표시용 status 계산 */
-function deriveStatus(nickname: string, result: CheckResult): NicknameStatus {
-  if (nickname.length === 0) return "idle";
-  if (!isValidFormat(nickname)) return "invalid";
-  // 결과가 현재 입력값과 일치할 때만 유효 (입력이 바뀌면 이전 결과는 무시)
-  if (result.phase === "done" && result.nickname === nickname) {
-    return result.available ? "available" : "taken";
-  }
-  return "checking";
 }

@@ -2,6 +2,7 @@
 
 import { Logo } from "@/components/ui/logo";
 import { SocialLoginButton } from "@/components/ui/social-login-button";
+import { useSocialLoginRedirect } from "@/features/auth/hooks/use-social-login-redirect";
 
 /**
  * 마지막 CTA (Figma 1637:11655) — gray-900 배경 + 세로 로고 + 2줄 카피 + 소셜 로그인 2종.
@@ -10,6 +11,8 @@ import { SocialLoginButton } from "@/components/ui/social-login-button";
  * 시안이 확정되며 "지금 시작하기" 한 줄 헤드라인이 [로고 + 서비스 한 줄 소개]로 바뀌었다.
  */
 export function LandingCta() {
+  const redirectToOAuth = useSocialLoginRedirect();
+
   return (
     <section className="w-full bg-gray-900">
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-8 px-4 py-15 sm:px-8 xl:px-20">
@@ -26,16 +29,12 @@ export function LandingCta() {
           <SocialLoginButton
             provider="kakao"
             shape="square"
-            onClick={() => {
-              // TODO: OAuth 연동
-            }}
+            onClick={() => redirectToOAuth("kakao")}
           />
           <SocialLoginButton
             provider="google"
             shape="square"
-            onClick={() => {
-              // TODO: OAuth 연동
-            }}
+            onClick={() => redirectToOAuth("google")}
           />
         </div>
       </div>

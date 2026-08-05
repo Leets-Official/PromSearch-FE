@@ -14,7 +14,7 @@ import { SearchBar } from "@/components/ui/search-bar";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { LOGIN_REQUIRED_PARAM, LOGIN_REQUIRED_VALUE } from "@/lib/auth-routes";
 import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters";
-import { LoginModal } from "@/components/modals/login/login-modal";
+import { LoginModalContainer } from "@/features/auth/components/login-modal-container";
 
 import { HeaderAuthArea } from "@/components/layout/header-auth-area";
 import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
@@ -255,25 +255,7 @@ export function GalleryTopBar() {
       </MobileNavDrawer>
 
       {/* 로그인 모달 */}
-      <LoginModal
-        open={loginOpen}
-        onOpenChange={setLoginOpen}
-        onSignUp={() => router.push("/signup")}
-        onLogin={() => {
-          // TODO: 로그인 API 연동. 성공하면 `setTokens()` 뒤에 아래를 호출해
-          //       원래 가려던 보호 라우트로 돌려보낼 것 — proxy 가 실어 보낸 `?redirect=` 다.
-          //         const back = searchParams.get(REDIRECT_PARAM);
-          //         router.replace(back ?? pathname);
-          //       (`redirect` 는 사용자 입력이 아니라 proxy 가 붙인 값이지만, 외부 URL 이
-          //        섞이지 않도록 `/` 로 시작하는 경로인지 확인한 뒤 쓰는 편이 안전하다)
-        }}
-        onGoogleLogin={() => {
-          // TODO: OAuth 연동
-        }}
-        onKakaoLogin={() => {
-          // TODO: OAuth 연동
-        }}
-      />
+      <LoginModalContainer open={loginOpen} onOpenChange={setLoginOpen} />
     </>
   );
 }

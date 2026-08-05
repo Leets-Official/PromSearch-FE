@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronRightIcon, PencilIcon } from "@/components/ui/icons";
 
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PostStatusTabs } from "@/features/mypage/components/post-status-tabs";
@@ -29,7 +30,7 @@ export default function MyProfilePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="hidden text-heading-2 text-text-primary sm:block">프로필</h1>
+      <h1 className="hidden text-heading-1 text-text-primary sm:block">프로필</h1>
 
       {/* 상단 카드: 프로필 · 보유 포인트 · 현재 등급 */}
       <div className="flex flex-col gap-4 lg:flex-row">
@@ -47,12 +48,9 @@ export default function MyProfilePage() {
             {/* sm+: 관심 태그 */}
             <div className="hidden flex-wrap gap-1.5 sm:flex">
               {profile.interests.map((interest) => (
-                <span
-                  key={interest}
-                  className="inline-flex h-7 items-center rounded-md border border-stroke-brand bg-interaction-neutral-selected px-2 text-body-3 text-text-brand"
-                >
+                <Badge key={interest} variant="default">
                   {interest}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>
@@ -101,7 +99,7 @@ export default function MyProfilePage() {
       <section className="hidden flex-col gap-4 sm:flex">
         <div className="flex items-end justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-heading-2 text-text-primary">내 게시글</h2>
+            <h2 className="text-heading-1 text-text-primary">내 게시글</h2>
             <span className="text-body-3 text-text-secondary">
               최근 {RECENT_LIMIT}개 게시물이 노출됩니다.
             </span>

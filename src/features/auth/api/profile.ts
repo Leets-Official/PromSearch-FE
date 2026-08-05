@@ -24,6 +24,19 @@ export type ApiUserProfile = {
   interestTaskTags: ApiInterestTag[];
 };
 
+/** [USER-005] 닉네임 중복 확인. 형식 검증(패턴/길이)은 useNicknameCheck 훅이 담당하고,
+ +  *  여기는 서버 중복 조회만 한다. */
+export async function checkNicknameAvailability(
+  nickname: string,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  const result = await api.get<{ available: boolean }>("/users/nicknames/availability", {
+    params: { nickname },
+    signal,
+  });
+  return result.available;
+}
+
 export type MyProfile = {
   nickname: string;
   avatarUrl?: string;
@@ -47,4 +60,17 @@ export async function fetchMyProfile(): Promise<MyProfile> {
     interestJobTags: result.interestJobTags ?? [],
     interestTaskTags: result.interestTaskTags ?? [],
   };
+}
+/** [USER-002] 프로필 수정 요청 바디 */
+export interface UpdateProfileRequest {
+  nickname?: string;
+  interestJobTagIds?: number[];
+  interestTaskTagIds?: number[];
+  /** 프로필 이미지 업로드(USER-007~009) 완료 후 받은 URL. src/features/upload/api/image.ts 연동 전까지 미사용. */
+  profileImageUrl?: string;
+}
+
+/** [USER-002] 프로필 수정 — 온보딩 모달(소셜 로그인 전용)의 onComplete 에서 호출 */
+export function updateMyProfile(payload: UpdateProfileRequest) {
+  return api.patch<void>("/users/me", payload);
 }

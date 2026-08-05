@@ -5,7 +5,10 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { GoogleIcon, KakaoIcon } from "@/components/ui/brand-icons";
+import { useLogout } from "@/features/auth/hooks/use-logout";
+import { useWithdrawal } from "@/features/auth/hooks/use-withdrawal";
 import { MOCK_ACCOUNT, MOCK_NOTIFICATIONS, type AuthProvider } from "@/mocks/data/mypage";
 
 const PROVIDER_ICON: Partial<Record<AuthProvider, React.ReactNode>> = {
@@ -18,23 +21,37 @@ export default function SettingsPage() {
   const isEmailAccount = account.provider === "email";
 
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [withdrawConfirmOpen, setWithdrawConfirmOpen] = useState(false);
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  const { mutate: withdraw, isPending: isWithdrawing } = useWithdrawal();
 
   const toggleNotification = (id: string, next: boolean) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, enabled: next } : n)));
     // TODO: PATCH /settings/notifications { id, enabled: next }
   };
 
+  const handleLogoutConfirm = () => {
+    logout();
+    setLogoutConfirmOpen(false);
+  };
+
+  const handleWithdrawConfirm = () => {
+    withdraw();
+    setWithdrawConfirmOpen(false);
+  };
+
   return (
     <div className="flex flex-col gap-12">
       {/* 계정 설정 */}
       <section className="flex flex-col gap-6">
-        <h1 className="text-heading-2 text-text-primary">계정 설정</h1>
+        <h1 className="text-heading-1 text-text-primary">계정 설정</h1>
 
         {/* 아이디(연결된 계정) */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-1">
-            <span className="text-title-3 text-text-primary">아이디 (연결된 계정)</span>
-            <span className="flex items-center gap-1.5 text-body-3 text-text-secondary">
+            <span className="text-title-1 text-text-primary">아이디 (연결된 계정)</span>
+            <span className="flex items-center gap-1.5 text-body-1 text-text-secondary">
               {account.email}
               {PROVIDER_ICON[account.provider]}
             </span>
@@ -61,8 +78,8 @@ export default function SettingsPage() {
         {isEmailAccount && (
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-title-3 text-text-primary">비밀번호 변경</span>
-              <span className="text-body-3 text-text-secondary">
+              <span className="text-title-1 text-text-primary">비밀번호 변경</span>
+              <span className="text-body-1 text-text-secondary">
                 최근 변경: {account.passwordUpdatedAt}
               </span>
             </div>
@@ -76,11 +93,21 @@ export default function SettingsPage() {
             </Button>
           </div>
         )}
+
+        {/* 로그아웃 — 계정 종류(이메일/소셜)와 무관하게 항상 노출 */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="text-title-1 text-text-primary">로그아웃</span>
+          </div>
+          <Button variant="neutral" size="sm" onClick={() => setLogoutConfirmOpen(true)}>
+            로그아웃하기
+          </Button>
+        </div>
       </section>
 
       {/* 알림 설정 */}
       <section className="flex flex-col gap-6">
-        <h2 className="text-heading-2 text-text-primary">알림 설정</h2>
+        <h2 className="text-heading-1 text-text-primary">알림 설정</h2>
 
         <ul className="flex flex-col">
           {notifications.map((item) => (
@@ -89,7 +116,7 @@ export default function SettingsPage() {
               className="flex items-center justify-between border-b border-stroke-primary py-4 last:border-b-0"
             >
               <div className="flex flex-col gap-1">
-                <span className="text-title-3 text-text-primary">{item.label}</span>
+                <span className="text-title-1 text-text-primary">{item.label}</span>
                 <span className="text-body-3 text-text-secondary">{item.description}</span>
               </div>
               <Switch
@@ -100,7 +127,44 @@ export default function SettingsPage() {
             </li>
           ))}
         </ul>
+
+        {/* 회원 탈퇴 — 알림 설정 섹션 하단, 브랜드(경고) 톤으로 구분 */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="text-title-1 text-text-primary">회원 탈퇴</span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setWithdrawConfirmOpen(true)}>
+            탈퇴하기
+          </Button>
+        </div>
       </section>
+
+      <ConfirmModal
+        open={logoutConfirmOpen}
+        onOpenChange={setLogoutConfirmOpen}
+        title="로그아웃 하시겠어요?"
+        confirmLabel="확인"
+        cancelLabel="취소"
+        onConfirm={handleLogoutConfirm}
+        confirmDisabled={isLoggingOut}
+      />
+
+      <ConfirmModal
+        open={withdrawConfirmOpen}
+        onOpenChange={setWithdrawConfirmOpen}
+        title="정말 탈퇴하시겠어요?"
+        description={
+          <>
+            회원 탈퇴 후에는 계정을 복구할 수 없습니다.
+            <br />
+            작성한 게시글은 탈퇴 후에도 삭제되지 않습니다.
+          </>
+        }
+        confirmLabel="탈퇴하기"
+        cancelLabel="취소"
+        onConfirm={handleWithdrawConfirm}
+        confirmDisabled={isWithdrawing}
+      />
     </div>
   );
 }
