@@ -1,86 +1,104 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { renderHook, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { describe, expect, it, beforeEach, vi } from "vitest";
+import { ReactNode } from "react";
 
-import { MyPostsTable } from "@/features/mypage/components/my-posts-table";
-import type { MyPost } from "@/mocks/data/mypage";
+import { useBookmarks } from "@/features/mypage/hooks/use-bookmarks";
+import type { PromptSummary } from "@/features/gallery/types";
 
-const push = vi.fn();
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push }),
+let mockQuery = {
+  tasks: [] as string[],
+  models: [] as string[],
+  outputTypes: [] as string[],
+  page: 1,
+};
+
+vi.mock("@/features/gallery/hooks/use-gallery-filters", () => ({
+  useGalleryFilters: () => ({ query: mockQuery }),
 }));
 
-function makePost(overrides: Partial<MyPost> = {}): MyPost {
-  return {
-    id: "post-1",
-    title: "테스트 게시글",
-    date: "2026.07.12",
-    thumbnailUrl: "",
-    outputType: "text",
-    model: "chatgpt",
-    tasks: [],
-    jobCategories: [],
-    tier: "free",
-    author: { name: "작성자이름" },
-    stats: { views: 1821, copies: 132, likes: 1906 },
-    createdAt: "2026-07-12T00:00:00.000Z",
-    status: "published",
-    ...overrides,
+interface MockBookmarkResponse {
+  prompts: PromptSummary[];
+  page: {
+    totalElements: number;
   };
 }
 
-describe("MyPostsTable", () => {
-  beforeEach(() => push.mockClear());
+interface FetchMyBookmarksParams {
+  taskTagIds: string[];
+  aiModelTagIds: string[];
+  outputTypes: string[];
+  page: number;
+  size: number;
+}
 
-  it("게시물이 있으면 제목·조회·추천을 렌더한다", () => {
-    render(<MyPostsTable posts={[makePost({ title: "마케팅 카피 프롬프트" })]} />);
+// 목 데이터: 30개
+const ALL_PROMPTS: PromptSummary[] = Array.from({ length: 30 }, (_, i) => ({
+  id: `prompt-${i + 1}`,
+  model: ["model-a", "model-b", "model-c"][i % 3],
+  title: `Prompt ${i + 1}`,
+})) as PromptSummary[];
 
-    expect(screen.getByText("마케팅 카피 프롬프트")).toBeInTheDocument();
-    expect(screen.getByText("1,821")).toBeInTheDocument();
-    expect(screen.getByText("1,906")).toBeInTheDocument();
+vi.mock("@/features/mypage/api/bookmarks", () => ({
+  fetchMyBookmarks: vi.fn(
+    async ({ page, size }: FetchMyBookmarksParams): Promise<MockBookmarkResponse> => {
+      const start = page * size;
+      const end = start + size;
+      const prompts = ALL_PROMPTS.slice(start, end);
+
+      return {
+        prompts,
+        page: {
+          totalElements: ALL_PROMPTS.length,
+        },
+      };
+    },
+  ),
+  tasksToTagIds: (tasks: string[]) => tasks,
+  aiModelsToTagIds: (models: string[]) => models,
+  toPromptSummary: (p: PromptSummary) => p,
+}));
+
+describe("useBookmarks", () => {
+  beforeEach(() => {
+    mockQuery = { tasks: [], models: [], outputTypes: [], page: 1 };
   });
 
-  it("게시물이 없으면 빈 상태 문구를 보여준다", () => {
-    render(<MyPostsTable posts={[]} />);
+  const createWrapper = () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
 
-    expect(screen.getByText("게시물이 없습니다.")).toBeInTheDocument();
+    const Wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    Wrapper.displayName = "QueryClientWrapper";
+
+    return Wrapper;
+  };
+
+  it("필터가 비어 있으면 첫 페이지(6개)를 반환한다", async () => {
+    const { result } = renderHook(() => useBookmarks(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.prompts).toHaveLength(6);
+    expect(result.current.totalPages).toBeGreaterThan(1);
   });
 
-  it("행을 클릭하면 상세 경로로 이동한다", async () => {
-    const user = userEvent.setup();
-    render(<MyPostsTable posts={[makePost({ id: "post-42" })]} />);
+  it("page 를 바꾸면 다른 슬라이스를 반환한다", async () => {
+    mockQuery = { ...mockQuery, page: 1 };
+    const { result: p1 } = renderHook(() => useBookmarks(), { wrapper: createWrapper() });
+    await waitFor(() => expect(p1.current.isLoading).toBe(false));
+    const firstOfPage1 = p1.current.prompts[0]?.id;
 
-    await user.click(screen.getByText("테스트 게시글"));
+    mockQuery = { ...mockQuery, page: 2 };
+    const { result: p2 } = renderHook(() => useBookmarks(), { wrapper: createWrapper() });
+    await waitFor(() => expect(p2.current.isLoading).toBe(false));
 
-    expect(push).toHaveBeenCalledWith("/prompts/post-42");
-  });
-
-  it("showActions=false 면 수정/삭제 버튼이 없다", () => {
-    render(<MyPostsTable posts={[makePost()]} />);
-
-    expect(screen.queryByRole("button", { name: "수정" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "삭제" })).not.toBeInTheDocument();
-  });
-
-  it("showActions=true: 수정 클릭 시 onEdit 호출 + 행 이동은 하지 않는다", async () => {
-    const onEdit = vi.fn();
-    const user = userEvent.setup();
-    render(<MyPostsTable posts={[makePost({ id: "post-7" })]} showActions onEdit={onEdit} />);
-
-    await user.click(screen.getByRole("button", { name: "수정" }));
-
-    expect(onEdit).toHaveBeenCalledWith("post-7");
-    expect(push).not.toHaveBeenCalled();
-  });
-
-  it("showActions=true: 삭제 클릭 시 onDelete 호출 + 행 이동은 하지 않는다", async () => {
-    const onDelete = vi.fn();
-    const user = userEvent.setup();
-    render(<MyPostsTable posts={[makePost({ id: "post-9" })]} showActions onDelete={onDelete} />);
-
-    await user.click(screen.getByRole("button", { name: "삭제" }));
-
-    expect(onDelete).toHaveBeenCalledWith("post-9");
-    expect(push).not.toHaveBeenCalled();
+    expect(p2.current.prompts[0]?.id).not.toBe(firstOfPage1);
   });
 });
