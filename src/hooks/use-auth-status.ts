@@ -27,7 +27,7 @@ export type AuthUser = {
 export type AuthStatus = {
   status: UserStatus; // "anonymous" | "authenticated"
   isAuthenticated: boolean;
-  /** 어드민 권한 — `/admin/*` 접근 가능 여부. BE role/claim 연동 전까지는 false. */
+  /** 어드민 권한 — `/admin/*` 접근 가능 여부. access token 의 `role` 클레임으로 판정한다. */
   isAdmin: boolean;
   user: AuthUser | null;
 };
@@ -39,20 +39,58 @@ const ANONYMOUS: AuthStatus = {
   user: null,
 };
 
-const AUTHENTICATED: AuthStatus = {
-  status: "authenticated",
-  isAuthenticated: true,
-  isAdmin: false,
-  user: null,
-};
+/**
+ * access token(JWT) 의 `role` 클레임을 읽는다. 실측 페이로드:
+ * `{ sub, userId, role: "USER" | "ADMIN", iat, exp }`
+ *
+ * **서명은 검증하지 않는다.** 여기서 정하는 건 "어드민 화면을 그려 줄지"라는 UX 판단이고,
+ * 권한의 최종 근거는 서버다. 토큰을 위조해 화면을 열어도 어드민 API 는 `AUTH-005` 로 막힌다.
+ * (그래서 이 값을 보안 경계로 쓰면 안 된다 — AdminGuard 주석과 같은 이야기)
+ *
+ * 형식이 예상과 다르면 조용히 비어드민으로 떨어뜨린다. 파싱 실패로 화면이 죽는 편보다 낫다.
+ */
+function readRoleFromToken(token: string): string | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    // JWT 는 base64url — atob 가 읽는 base64 로 바꾸고 패딩을 채운다
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+    const claims: unknown = JSON.parse(atob(padded));
+    const role = (claims as { role?: unknown }).role;
+    return typeof role === "string" ? role : null;
+  } catch {
+    return null;
+  }
+}
 
 /** 서버 렌더에서는 쿠키를 읽지 않는다 — 첫 페인트는 비회원으로 그리고 마운트 후 맞춘다. */
 function getServerSnapshot(): AuthStatus {
   return ANONYMOUS;
 }
 
+/*
+  같은 토큰이면 **같은 객체**를 돌려줘야 한다.
+  useSyncExternalStore 는 스냅샷을 Object.is 로 비교하므로, 매번 새 객체를 만들면
+  "값이 계속 바뀐다"고 보고 무한 렌더에 빠진다. 토큰이 바뀔 때만 새로 만든다.
+*/
+let cachedToken: string | null = null;
+let cachedSnapshot: AuthStatus = ANONYMOUS;
+
 function getSnapshot(): AuthStatus {
-  return getAccessToken() ? AUTHENTICATED : ANONYMOUS;
+  const token = getAccessToken();
+  if (token === cachedToken) return cachedSnapshot;
+
+  cachedToken = token;
+  cachedSnapshot = token
+    ? {
+        status: "authenticated",
+        isAuthenticated: true,
+        isAdmin: readRoleFromToken(token) === "ADMIN",
+        user: null,
+      }
+    : ANONYMOUS;
+  return cachedSnapshot;
 }
 
 export function useAuthStatus(): AuthStatus {
