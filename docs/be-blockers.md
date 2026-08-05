@@ -58,9 +58,25 @@ curl -X PUT -H "Content-Type: image/png" --data-binary @a.png "{uploadUrl}"
 | 프로필 이미지 업로드   | ❌ 같은 방식이면 동일하게 막힐 가능성 높음 (미확인)  |
 | 상태 폴링              | 계속 `UPLOADING` 에 머무름 (`failureCode` 도 `null`) |
 
+**게시까지 막히는 것을 확인했습니다.** 업로드 실패한 이미지로 게시를 시도하면:
+
+```
+POST /api/v1/prompts  →  409
+{ "code": "PROMPT-032", "message": "워터마크 처리가 완료되지 않은 이미지입니다." }
+```
+
+이미지가 `READY` 가 되어야 게시가 되는데, S3 업로드 자체가 막혀 있어 `READY` 에 도달할 수 없습니다.
+**즉 지금은 Swagger 로도 프롬프트를 만들 수 없습니다.**
+
 > 참고: 업로드가 실패해도 `GET /prompt-images/statuses` 는 `UPLOADING` 만 돌려주고
 > **실패를 알려주지 않습니다.** S3 업로드가 안 된 이미지는 일정 시간 뒤 `FAILED` 로 바꿔주시면
 > 프론트가 사용자에게 "업로드에 실패했어요"를 띄울 수 있습니다.
+
+### `/api/v1/auth/swagger-token` 은 배포 서버에 없습니다
+
+문서에 "local 환경에서는 Swagger 테스트용 토큰을 발급할 수 있다"고 되어 있는데,
+**배포 서버에서는 404** 이고 Swagger 스펙에도 등록돼 있지 않습니다(로컬 프로필 전용으로 보입니다).
+배포 서버에서 토큰이 필요하면 `POST /auth/login` 으로 받으면 됩니다.
 
 ---
 
