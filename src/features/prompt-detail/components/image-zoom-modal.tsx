@@ -25,7 +25,8 @@ type ImageZoomModalProps = {
  * 조건부 마운트 전제(부모가 열 때만 렌더) — 열릴 때마다 initialIndex 로 시작한다.
  *
  * 모바일(Figma "프롬프트 상세 - 사진 확대" 1345:6368)은 화면 폭을 채운 이미지 한 장 +
- * 상단 중앙 카운트만 남긴다(썸네일·좌우 화살표 없음 — 이미지 이동은 캐러셀 스와이프로).
+ * 상단 중앙 카운트 + 좌우 이동 버튼(썸네일 스트립은 없음). 시안에는 버튼이 없지만,
+ * 확대 보기에서 스와이프만으로는 넘기기 어려워 이동 수단을 남겨 둔다.
  *
  * 스와이프는 캐러셀과 같은 트랙 방식(useCarouselSwipe)이라 손가락을 따라 이어서 넘어간다.
  * 줌/팬은 **현재 장**에만 걸고(TransformWrapper), 확대(scale>1) 중에는 스와이프를 끈다 —
@@ -78,14 +79,18 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
         </button>
       </div>
 
-      {/* 좌우 화살표 — 데스크톱 전용(모바일 시안에는 없다) */}
+      {/*
+        이동 버튼은 **모바일에도 노출**한다(예전에는 sm 이상에서만 보였다).
+        확대 보기에서는 손가락이 줌/팬에 쓰여 스와이프가 잘 안 잡히는데, 컨트롤까지 없으면
+        장을 넘길 방법이 아예 없다. 좁은 화면에서는 좌우 여백만 8px 로 줄인다.
+      */}
       {total > 1 ? (
         <>
           <button
             type="button"
             aria-label="이전 이미지"
             onClick={() => go(-1)}
-            className="absolute top-1/2 left-4 z-10 hidden size-11 -translate-y-1/2 items-center justify-center rounded-md bg-dim text-white transition-colors hover:bg-dim/80 sm:flex"
+            className="absolute top-1/2 left-2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-md bg-dim text-white transition-colors hover:bg-dim/80 sm:left-4"
           >
             <ChevronLeftIcon className="size-6" />
           </button>
@@ -93,7 +98,7 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
             type="button"
             aria-label="다음 이미지"
             onClick={() => go(1)}
-            className="absolute top-1/2 right-4 z-10 hidden size-11 -translate-y-1/2 items-center justify-center rounded-md bg-dim text-white transition-colors hover:bg-dim/80 sm:flex"
+            className="absolute top-1/2 right-2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-md bg-dim text-white transition-colors hover:bg-dim/80 sm:right-4"
           >
             <ChevronRightIcon className="size-6" />
           </button>
@@ -133,6 +138,15 @@ export function ImageZoomModal({ images, title, initialIndex = 0, onClose }: Ima
                     doubleClick={{ mode: "toggle" }}
                     minScale={1}
                     maxScale={5}
+                    /*
+                      확대 전에는 팬(끌기)을 꺼 둔다.
+
+                      react-zoom-pan-pinch 는 배율이 1이어도 터치를 자기가 잡아먹어서,
+                      그 위에 얹힌 우리 스와이프 핸들러까지 touchmove 가 오지 않는다.
+                      → 모바일 확대 보기에서 장이 아예 안 넘어갔다.
+                      확대된 뒤에는(zoomed) 팬이 필요하므로 그때만 켠다.
+                    */
+                    panning={{ disabled: !zoomed }}
                     onTransform={(_, state) => setZoomedAt(state.scale > 1.01 ? index : null)}
                   >
                     <TransformComponent
