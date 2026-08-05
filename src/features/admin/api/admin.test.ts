@@ -246,3 +246,27 @@ describe("approveGradeApplication", () => {
     expect(sent).toEqual({ decision: "APPROVED" });
   });
 });
+
+// 서버가 숫자를 문자열로 내려주던 시기가 있어 방어를 유지한다(docs/be-blockers.md)
+describe("숫자 정규화", () => {
+  it("페이지 메타가 문자열로 와도 숫자로 계산한다", async () => {
+    server.use(
+      http.get("/api/v1/admin/reports", () =>
+        envelope({
+          content: [report()],
+          page: "1",
+          size: "8",
+          totalElements: "42",
+          totalPages: "6",
+          hasNext: true,
+        }),
+      ),
+    );
+
+    const result = await fetchReports("post", query);
+
+    expect(result.page).toBe(2);
+    expect(result.totalPages).toBe(6);
+    expect(result.totalCount).toBe(42);
+  });
+});

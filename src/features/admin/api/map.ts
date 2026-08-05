@@ -11,6 +11,7 @@ import type {
   ReportTab,
 } from "@/features/admin/types";
 
+import { toNumber } from "@/lib/api";
 import type {
   ApiAdminPage,
   ApiGradeRequest,
@@ -78,8 +79,8 @@ export function toGradeApplication(request: ApiGradeRequest): GradeApplication {
     userId: String(request.userId),
     nickname: request.nickname ?? request.username,
     // 승인 판단 지표도 아직 없다(요청서 A-2) → 0 으로 두고 표에 그대로 노출한다.
-    postCount: request.postCount ?? 0,
-    likeCount: request.totalLikeCount ?? 0,
+    postCount: toNumber(request.postCount),
+    likeCount: toNumber(request.totalLikeCount),
     appliedAt: request.requestedAt,
     status: GRADE_STATUS_BY_API[request.status] ?? "pending",
   };
@@ -92,8 +93,9 @@ export function toAdminListResponse<Api, Item>(
 ): AdminListResponse<Item> {
   return {
     items: page.content.map(map),
-    page: page.page + 1,
-    totalPages: Math.max(1, page.totalPages),
-    totalCount: page.totalElements,
+    // 숫자를 문자열로 내려주던 시기가 있어 방어를 유지한다 — "0" + 1 이 "01" 이 된다(lib/api/number.ts).
+    page: toNumber(page.page) + 1,
+    totalPages: Math.max(1, toNumber(page.totalPages, 1)),
+    totalCount: toNumber(page.totalElements),
   };
 }
