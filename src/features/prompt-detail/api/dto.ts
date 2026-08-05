@@ -20,12 +20,11 @@ export type ApiUserSummary = {
   nickname: string;
   profileImageUrl: string | null;
   /**
-   * 작성자 등급(Node → Link → Sync → Core → Prime → Origin).
+   * 작성자 등급 — 대문자 enum (`NODE` | `LINK` | `SYNC` | `CORE` | `PRIME` | `ORIGIN`).
    *
-   * ⚠️ **아직 서버가 안 준다.** 실서버(2026-08-06 확인) 응답은 위 세 필드뿐이라
-   * 지금은 항상 `undefined` 이고, 화면에서는 등급 자리가 그냥 비어 보인다.
-   * BE 가 `GET /users/me` 처럼 여기에도 `gradeName` 을 실어 주면 코드 변경 없이 표시된다
-   * (요청은 `docs/api-requests-be.md` 참고).
+   * `PROMPT-001` 상세 조회에 추가 요청해 BE 가 배포 중이다(2026-08-06).
+   * 목록(`/home/prompts`)·댓글에는 아직 없어 옵셔널로 둔다 — 없으면 화면에서 등급 자리를
+   * 그리지 않는다. 표기 변환은 `formatGrade`(src/lib/grade.ts)가 담당한다("NODE" → "Node").
    */
   gradeName?: string | null;
 };

@@ -2,6 +2,7 @@
 
 import { buildDetailTags } from "@/features/prompt-detail/detail-tags";
 import { formatDetailDate } from "@/features/prompt-detail/format";
+import { formatGrade } from "@/lib/grade";
 import type { PromptDetail } from "@/features/prompt-detail/types";
 import { ProfileAvatar } from "./profile-avatar";
 
@@ -12,6 +13,7 @@ import { ProfileAvatar } from "./profile-avatar";
  */
 export function DetailHeader({ detail }: { detail: PromptDetail }) {
   const tags = buildDetailTags(detail);
+  const authorGrade = formatGrade(detail.author.grade);
 
   return (
     // 모바일 시안(1345:6707)은 요소 간격 12px · 아바타 32px
@@ -28,12 +30,11 @@ export function DetailHeader({ detail }: { detail: PromptDetail }) {
         />
         <div className="flex min-w-0 flex-col gap-1">
           {/* 닉네임 + 등급(시안 499:2806 "전업프롬프트업로더 Node").
-              등급은 서버가 아직 안 주는 값이라 없으면 자리 자체를 그리지 않는다. */}
+              서버는 대문자 enum(`NODE`)을 주므로 formatGrade 로 표기를 맞춘다.
+              값이 없으면(구버전 응답 등) 자리 자체를 그리지 않는다. */}
           <span className="flex min-w-0 items-baseline gap-1 text-title-2">
             <span className="truncate text-text-secondary">{detail.author.name}</span>
-            {detail.author.grade ? (
-              <span className="shrink-0 text-text-brand">{detail.author.grade}</span>
-            ) : null}
+            {authorGrade ? <span className="shrink-0 text-text-brand">{authorGrade}</span> : null}
           </span>
           {/* 좁아지면 단어(세그먼트) 단위로만 줄바꿈 — 글자 단위로 깨지지 않게.
               구분자는 `·`(U+00B7). 전각 `・`(U+30FB)는 폭을 크게 먹어 들쭉날쭉해 보인다. */}

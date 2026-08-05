@@ -849,7 +849,7 @@ GET /api/v1/admin/reports?q=도배&targetType=POST&status=PENDING&page=0&size=20
 
 ---
 
-### <a id="a-4"></a>A-4. 작성자 등급(`gradeName`)을 `author` 에 포함 ➕ **P1**
+### <a id="a-4"></a>A-4. 작성자 등급(`gradeName`)을 `author` 에 포함 ➕ **P1** — 🟡 **상세 배포 중 (2026-08-06)**
 
 목록·상세·댓글의 `author` 에 등급이 없습니다. 실서버 확인(2026-08-06):
 
@@ -867,8 +867,15 @@ GET /api/v1/admin/reports?q=도배&targetType=POST&status=PENDING&page=0&size=20
 - 적용 대상: `GET /home/prompts`, `GET /prompts/{id}`, 댓글 목록의 `author`
 - FE 는 **이미 받을 준비가 되어 있습니다**(`ApiUserSummary.gradeName?`). 필드가 오면
   코드 변경 없이 화면에 뜨고, 없으면 등급 자리를 그리지 않습니다.
-- 표기는 서버 값을 그대로 쓸지(`NODE`) 표시용 대문자/파스칼(`Node`)로 줄지 알려주세요.
+- 표기는 서버 값을 그대로 쓸지(`NODE`) 표시용 파스칼(`Node`)로 줄지 알려주세요.
   시안은 `Node` 형태입니다.
+
+> **회신·조치 (2026-08-06)**
+> `PROMPT-001` 상세 조회에 추가 요청 → **배포 중**입니다.
+> `/users/me` 실측값이 `"NODE"`(대문자 enum)이라 FE 가 `formatGrade`(src/lib/grade.ts)로
+> `Node` 표기로 바꿔 씁니다. 서버는 enum 그대로 주시면 됩니다.
+> **아직 남은 곳**: 목록(`GET /home/prompts`)과 댓글 목록의 `author` — 카드/댓글에도
+> 등급을 노출하게 되면 같은 필드로 부탁드립니다.
 
 ---
 

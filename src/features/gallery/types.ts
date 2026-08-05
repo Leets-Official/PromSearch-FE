@@ -31,10 +31,10 @@ export type PromptAuthor = {
   name: string;
   avatarUrl?: string;
   /**
-   * 등급명(Node → Link → Sync → Core → Prime → Origin).
+   * 등급 — 서버가 주는 **대문자 enum** 그대로다(`NODE` 등). 표기는 `formatGrade` 로 바꾼다.
    *
-   * **서버가 아직 안 주는 값이다**(실서버 2026-08-06 확인: author 는 userId/nickname/
-   * profileImageUrl 뿐). 그래서 옵셔널이고, 없으면 화면에서 등급 자리를 그냥 그리지 않는다.
+   * 상세(`PROMPT-001`)만 내려주고 목록·댓글에는 아직 없어 옵셔널이다.
+   * 없으면 화면에서 등급 자리를 그리지 않는다.
    */
   grade?: string;
 };
