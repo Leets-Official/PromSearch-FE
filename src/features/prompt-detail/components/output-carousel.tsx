@@ -35,7 +35,8 @@ export const MAX_OUTPUT_IMAGES = 10;
  * 캐러셀 표시 폭 힌트 — 컨테이너 클래스(`-mx-4` 풀블리드 / `sm:w-full` / `xl:w-108`)와 맞춘다.
  * xl 의 `w-108` 은 432px 이다. 이 값이 실제 레이아웃과 어긋나면 필요보다 큰 이미지를 받는다.
  */
-const CAROUSEL_SIZES = "(min-width: 1280px) 432px, (min-width: 640px) 50vw, 100vw";
+// sm~xl 은 단일 컬럼이라 콘텐츠 폭을 그대로 쓴다(최대 1280 컨테이너 - 좌우 여백).
+const CAROUSEL_SIZES = "(min-width: 1280px) 432px, (min-width: 640px) 90vw, 100vw";
 
 type OutputCarouselProps = {
   images: string[];
@@ -89,8 +90,12 @@ export function OutputCarousel({
         "relative shrink-0 overflow-hidden bg-bg-disabled",
         // mobile: 셸 좌우 여백(16px)을 상쇄한 풀블리드 4:3, 모서리 각짐
         "-mx-4 aspect-[375/281] w-auto rounded-none",
-        // tablet~: 카드처럼 정사각 + 라운드, xl 부터는 좌측 고정 컬럼
-        "sm:mx-0 sm:aspect-square sm:w-full sm:rounded-md xl:aspect-auto xl:h-156 xl:w-108",
+        // tablet(sm~xl): 단일 컬럼이라 폭이 그대로 콘텐츠 폭이다. 정사각으로 두면
+        // 1000px 넘는 화면에서 이미지 한 장이 화면을 통째로 먹는다.
+        // 4:3 으로 눕히고 뷰포트 높이의 60% 로 상한을 둬서 스크롤 없이 아래 내용이 보이게 한다.
+        "sm:mx-0 sm:aspect-[4/3] sm:max-h-[60svh] sm:w-full sm:rounded-md",
+        // xl: 좌측 고정 컬럼(시안 값) — 상한이 필요 없다
+        "xl:aspect-auto xl:h-156 xl:max-h-none xl:w-108",
       )}
     >
       <button

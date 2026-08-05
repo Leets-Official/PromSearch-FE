@@ -52,15 +52,32 @@ export function getRefreshToken(): string | null {
 }
 
 /** 로그인·소셜로그인·재발급 성공 시 호출. 이후 모든 요청에 자동으로 토큰이 실린다. */
+/**
+ * 토큰 변화 구독 — 로그인/로그아웃 시 화면(헤더·액션 게이팅)이 따라오게 한다.
+ * `useSyncExternalStore` 규약에 맞춰 구독 해제 함수를 돌려준다.
+ */
+const tokenListeners = new Set<() => void>();
+
+export function onTokensChanged(listener: () => void): () => void {
+  tokenListeners.add(listener);
+  return () => tokenListeners.delete(listener);
+}
+
+function notifyTokensChanged(): void {
+  tokenListeners.forEach((listener) => listener());
+}
+
 export function setTokens(tokens: AuthTokens): void {
   writeCookie(ACCESS_TOKEN_COOKIE, tokens.accessToken, ACCESS_TOKEN_MAX_AGE);
   writeCookie(REFRESH_TOKEN_COOKIE, tokens.refreshToken, REFRESH_TOKEN_MAX_AGE);
+  notifyTokensChanged();
 }
 
 /** 로그아웃 시 호출. proxy 도 같은 쿠키를 보므로 보호 라우트 접근이 즉시 막힌다. */
 export function clearTokens(): void {
   deleteCookie(ACCESS_TOKEN_COOKIE);
   deleteCookie(REFRESH_TOKEN_COOKIE);
+  notifyTokensChanged();
 }
 
 type SessionExpiredHandler = () => void;

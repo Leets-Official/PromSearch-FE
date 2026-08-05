@@ -4,7 +4,6 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 
 import { approveGradeApplication, fetchGradeApplications } from "@/features/admin/api/admin";
 import type { AdminListQuery, GradeTab } from "@/features/admin/types";
-import { currentDevEdge } from "@/lib/dev-preview";
 
 /** 유저 등급 신청 목록 조회. */
 export function useGradeApplicationList(query: AdminListQuery<GradeTab>) {
@@ -12,7 +11,6 @@ export function useGradeApplicationList(query: AdminListQuery<GradeTab>) {
     queryKey: ["admin", "grade-applications", query],
     queryFn: () => fetchGradeApplications(query),
     placeholderData: keepPreviousData,
-    retry: (failureCount) => currentDevEdge() !== "error" && failureCount < 3,
   });
 }
 

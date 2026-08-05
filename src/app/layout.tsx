@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
-import { cookies } from "next/headers";
 import "./globals.css";
 import Providers from "./providers";
-import {
-  DEV_PREVIEW_COOKIE,
-  DEV_PREVIEW_DEFAULT,
-  DEV_TOOLBAR_ENABLED,
-  parseDevPreview,
-} from "@/lib/dev-preview";
 
 /**
  * Pretendard 는 `next/font/local` 로 싣지 않는다.
@@ -30,20 +23,15 @@ export const metadata: Metadata = {
   description: "아웃풋으로 검색하는 한국형 AI 프롬프트 엔진 & 직군별 커뮤니티 플랫폼",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Dev 툴바가 켜진 환경에서만 쿠키를 읽어 프리뷰 상태를 시드한다(프로덕션은 cookies() 미호출 → 정적 유지).
-  const initialDevPreview = DEV_TOOLBAR_ENABLED
-    ? parseDevPreview((await cookies()).get(DEV_PREVIEW_COOKIE)?.value)
-    : DEV_PREVIEW_DEFAULT;
-
   return (
     <html lang="ko" className={`${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
-        <Providers initialDevPreview={initialDevPreview}>{children}</Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

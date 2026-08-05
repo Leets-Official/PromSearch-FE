@@ -19,6 +19,7 @@ import { LoginModal } from "@/components/modals/login/login-modal";
 import { Button } from "@/components/ui/button";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 import { useBookmark } from "@/features/prompt-detail/hooks/use-bookmark";
+import { useAuthGate } from "@/features/prompt-detail/hooks/use-auth-gate";
 import { useDetailTab } from "@/features/prompt-detail/hooks/use-detail-tab";
 import {
   useCreateReport,
@@ -48,6 +49,8 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const unlock = useUnlockPrompt(detail.id);
   const copy = useRecordCopy(detail.id);
   const report = useCreateReport();
+  // 좋아요·북마크·신고·잠금해제는 로그인이 필요하다. 비회원이 누르면 로그인 모달을 연다.
+  const gate = useAuthGate();
   const [copied, setCopied] = useState(false);
   // 신고 / 로그인 / 포인트 결제 모달
   const [reportOpen, setReportOpen] = useState(false);
@@ -85,7 +88,7 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
     });
   }, [detail.id, detail.tier, status]);
 
-  const handleReport = () => setReportOpen(true);
+  const handleReport = () => gate.run(() => setReportOpen(true));
 
   /**
    * 좋아요 토글 — 요청 중이면 무시한다.
@@ -93,21 +96,23 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
    * 서버가 등록(POST)/취소(DELETE)로 갈려 있어 "누른 순간의 상태"를 인자로 넘기는데,
    * detail.liked 는 렌더 시점 값이라 리렌더보다 빠른 연타는 같은 값을 두 번 보낸다(409).
    */
-  const handleToggleLike = () => {
-    if (like.isPending) return;
-    like.mutate(detail.liked);
-  };
+  const handleToggleLike = () =>
+    gate.run(() => {
+      if (like.isPending) return;
+      like.mutate(detail.liked);
+    });
 
   /** 북마크 토글 — 좋아요와 같은 이유로 요청 중 클릭을 무시한다. */
-  const handleToggleBookmark = () => {
-    if (bookmark.isPending) return;
-    bookmark.mutate(detail.bookmarked);
-  };
+  const handleToggleBookmark = () =>
+    gate.run(() => {
+      if (bookmark.isPending) return;
+      bookmark.mutate(detail.bookmarked);
+    });
 
   /** 레시피 잠금 CTA — 비회원은 로그인 모달, 프리미엄은 포인트 결제 모달 */
   const handleUnlock = (reason: "anonymous" | "premium") => {
     if (reason === "anonymous") setLoginOpen(true);
-    else setPointOpen(true);
+    else gate.run(() => setPointOpen(true));
   };
 
   /** 댓글 플로팅 버튼 — 댓글 탭으로 전환하고 최하단 입력창까지 스크롤 */
@@ -227,6 +232,16 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
         onConfirm={(reason, description) => {
           report.mutate({ target: "post", targetId: detail.id, reason, description });
           setReportOpen(false);
+        }}
+      />
+
+      {/* 비회원이 로그인 필요한 액션을 눌렀을 때 */}
+      <LoginModal
+        open={gate.loginOpen}
+        onOpenChange={gate.setLoginOpen}
+        onSignUp={() => router.push("/signup")}
+        onLogin={() => {
+          // TODO: 로그인 API 연동
         }}
       />
 

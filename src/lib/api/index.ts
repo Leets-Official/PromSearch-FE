@@ -17,6 +17,7 @@ export {
   clearTokens,
   getAccessToken,
   onSessionExpired,
+  onTokensChanged,
   setTokens,
   type AuthTokens,
 } from "./token-store";

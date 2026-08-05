@@ -6,12 +6,15 @@ import { XIcon } from "@/components/ui/icons";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { TextField } from "@/components/ui/text-field";
 import { useCommentMutations } from "@/features/prompt-detail/hooks/use-comment-mutations";
+import { useAuthGate } from "@/features/prompt-detail/hooks/use-auth-gate";
 import { useCreateReport } from "@/features/prompt-detail/hooks/use-prompt-actions";
 import { useComments } from "@/features/prompt-detail/hooks/use-comments";
 import type { PromptComment } from "@/features/prompt-detail/types";
 import { getErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { CommentItem } from "./comment-item";
+import { LoginModal } from "@/components/modals/login/login-modal";
+
 import { ReportModal } from "./report-modal";
 import { COMMENT_INPUT_ANCHOR_ID } from "./detail-floating-actions";
 
@@ -45,6 +48,8 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
     useComments(promptId);
   const { create, reply, update, remove } = useCommentMutations(promptId);
   const report = useCreateReport();
+  // 댓글 작성·답글·신고는 로그인이 필요하다(수정·삭제는 본인 댓글에만 뜨므로 이미 로그인 상태).
+  const gate = useAuthGate();
 
   const [text, setText] = useState("");
   const [draft, setDraft] = useState<Draft>(null);
@@ -58,11 +63,12 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
   const pending = create.isPending || reply.isPending || update.isPending;
   const error = create.error ?? reply.error ?? update.error ?? remove.error;
 
-  const startReply = (target: PromptComment) => {
-    setDraft({ mode: "reply", target });
-    setText("");
-    inputRef.current?.focus();
-  };
+  const startReply = (target: PromptComment) =>
+    gate.run(() => {
+      setDraft({ mode: "reply", target });
+      setText("");
+      inputRef.current?.focus();
+    });
 
   const startEdit = (target: PromptComment) => {
     setDraft({ mode: "edit", target });
@@ -79,6 +85,10 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
   const submit = () => {
     const content = text.trim();
     if (content === "" || pending) return;
+    if (!gate.isAuthenticated) {
+      gate.setLoginOpen(true);
+      return;
+    }
 
     const done = { onSuccess: reset };
     if (draft?.mode === "reply") {
@@ -117,7 +127,7 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
                   onReply={startReply}
                   onEdit={startEdit}
                   onDelete={setDeleteTarget}
-                  onReport={setReportTarget}
+                  onReport={(comment) => gate.run(() => setReportTarget(comment))}
                   activeId={draft?.target.id ?? null}
                 />
               ))}
@@ -175,7 +185,13 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
                 ? "댓글 수정"
                 : "댓글 입력"
           }
-          placeholder={draft?.mode === "reply" ? "답글을 입력해주세요" : "댓글을 입력해주세요"}
+          placeholder={
+            !gate.isAuthenticated
+              ? "로그인 후 댓글을 남길 수 있어요"
+              : draft?.mode === "reply"
+                ? "답글을 입력해주세요"
+                : "댓글을 입력해주세요"
+          }
           maxLength={COMMENT_MAX}
           submitLabel={draft?.mode === "edit" ? "수정" : "등록"}
           value={text}
@@ -198,6 +214,9 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
           </p>
         ) : null}
       </div>
+
+      {/* 비회원이 댓글·답글·신고를 시도했을 때 */}
+      <LoginModal open={gate.loginOpen} onOpenChange={gate.setLoginOpen} />
 
       {/* 삭제 확인 — 논리 삭제라 목록에는 "삭제된 댓글입니다"로 남는다 */}
       <ConfirmModal
