@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { OnboardingModal } from "@/components/modals/onboarding/onboarding-modal";
@@ -79,7 +79,11 @@ describe("OnboardingModal", () => {
     it("직군을 하나 선택하면 저장 버튼이 활성화된다", async () => {
       const user = await goToStep2();
       await user.click(screen.getByRole("button", { name: "학생" }));
-      expect(screen.getByRole("button", { name: "저장하고 시작하기" })).toBeEnabled();
+
+      // canComplete = jobs.length > 0 || tasks.length > 0 (OR 조건)
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "저장하고 시작하기" })).toBeEnabled();
+      });
     });
 
     it("태스크는 최대 3개까지만 선택된다 (4번째는 무시)", async () => {
@@ -112,6 +116,10 @@ describe("OnboardingModal", () => {
 
       await user.click(screen.getByRole("button", { name: "학생" }));
       await user.click(screen.getByRole("button", { name: "PPT" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("button", { name: "저장하고 시작하기" })).toBeEnabled();
+      });
       await user.click(screen.getByRole("button", { name: "저장하고 시작하기" }));
 
       expect(onComplete).toHaveBeenCalledTimes(1);

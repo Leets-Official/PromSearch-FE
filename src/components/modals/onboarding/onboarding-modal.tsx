@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronLeftIcon } from "@/components/ui/icons";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { NicknameStatus } from "@/features/auth/hooks/use-nickname-check";
@@ -20,8 +21,8 @@ interface OnboardingModalProps {
 
 /**
  * 온보딩 모달 (Figma: 로그인 - 온보딩 1/2·2/2)
- * DialogContent 사용 — 오버레이(딤)·포커스트랩·스크롤잠금은 dialog.tsx가 처리.
- * 닫힐 때 step·입력값을 초기화해 다음에 열면 1단계부터 시작한다.
+ * 반응형: 모바일은 전체화면 시트 + 상단 뒤로가기, sm+ 는 중앙 카드.
+ * 스텝 영역이 flex-1 로 공간을 채워, 스텝의 하단 버튼(mt-auto)이 화면 아래에 고정된다.
  */
 function OnboardingModal({
   open,
@@ -54,12 +55,28 @@ function OnboardingModal({
     onNicknameChange?.(value);
   };
 
+  const handleBack = () => {
+    if (step === 2) setStep(1);
+    else handleOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="flex w-[440px] max-w-[calc(100%-2rem)] flex-col gap-6 rounded-2xl bg-bg-elevated p-8 sm:max-w-[440px]"
+        fullScreenOnMobile
+        className="gap-6 bg-bg-elevated sm:max-w-[440px] sm:rounded-2xl sm:p-8"
       >
+        {/* 상단 뒤로가기 (모바일 전용) — 로그인과 동일 스펙 */}
+        <button
+          type="button"
+          onClick={handleBack}
+          aria-label="뒤로 가기"
+          className="mb-2 -ml-2 flex size-11 items-center justify-center self-start rounded-md py-2 text-stroke-strong transition-colors hover:text-text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:hidden"
+        >
+          <ChevronLeftIcon className="size-7" />
+        </button>
+
         {/* 헤더 */}
         <div className="flex flex-col gap-1">
           <span className="text-title-3 text-text-brand">{step} / 2</span>
@@ -71,25 +88,28 @@ function OnboardingModal({
           )}
         </div>
 
-        {step === 1 ? (
-          <OnboardingStepProfile
-            nickname={nickname}
-            onNicknameChange={handleNicknameChange}
-            nicknameStatus={nicknameStatus}
-            avatarFile={avatarFile}
-            onAvatarChange={setAvatarFile}
-            onNext={() => setStep(2)}
-          />
-        ) : (
-          <OnboardingStepInterests
-            jobs={jobs}
-            tasks={tasks}
-            onJobsChange={setJobs}
-            onTasksChange={setTasks}
-            onComplete={() => onComplete?.({ nickname, avatarFile, jobs, tasks })}
-            onSkip={() => onSkip?.()}
-          />
-        )}
+        {/* 스텝 영역 — 모바일에서 남은 공간을 채워 하단 버튼을 아래로 밀어냄 */}
+        <div className="flex flex-1 flex-col sm:flex-none">
+          {step === 1 ? (
+            <OnboardingStepProfile
+              nickname={nickname}
+              onNicknameChange={handleNicknameChange}
+              nicknameStatus={nicknameStatus}
+              avatarFile={avatarFile}
+              onAvatarChange={setAvatarFile}
+              onNext={() => setStep(2)}
+            />
+          ) : (
+            <OnboardingStepInterests
+              jobs={jobs}
+              tasks={tasks}
+              onJobsChange={setJobs}
+              onTasksChange={setTasks}
+              onComplete={() => onComplete?.({ nickname, avatarFile, jobs, tasks })}
+              onSkip={() => onSkip?.()}
+            />
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
