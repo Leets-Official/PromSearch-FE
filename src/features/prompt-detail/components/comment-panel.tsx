@@ -7,7 +7,6 @@ import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { TextField } from "@/components/ui/text-field";
 import { useCommentMutations } from "@/features/prompt-detail/hooks/use-comment-mutations";
 import { useAuthGate } from "@/features/prompt-detail/hooks/use-auth-gate";
-import { useCreateReport } from "@/features/prompt-detail/hooks/use-prompt-actions";
 import { useComments } from "@/features/prompt-detail/hooks/use-comments";
 import type { PromptComment } from "@/features/prompt-detail/types";
 import { getErrorMessage } from "@/lib/api";
@@ -47,7 +46,6 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
   const { data, isPending, isError, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useComments(promptId);
   const { create, reply, update, remove } = useCommentMutations(promptId);
-  const report = useCreateReport();
   // 댓글 작성·답글·신고는 로그인이 필요하다(수정·삭제는 본인 댓글에만 뜨므로 이미 로그인 상태).
   const gate = useAuthGate();
 
@@ -244,13 +242,10 @@ export function CommentPanel({ promptId, className }: { promptId: string; classN
         onOpenChange={(open) => {
           if (!open) setReportTarget(null);
         }}
-        target="댓글"
-        onConfirm={(reason, description) => {
-          if (reportTarget) {
-            report.mutate({ target: "comment", targetId: reportTarget.id, reason, description });
-          }
-          setReportTarget(null);
-        }}
+        target="comment"
+        // 닫힌 뒤에도 잠깐 남아 있는 대상(애니메이션 중)에 대비해 빈 문자열로 방어한다.
+        targetId={reportTarget?.id ?? ""}
+        onReported={() => setReportTarget(null)}
       />
     </div>
   );

@@ -21,8 +21,19 @@ type CarouselNavigationProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   page: number;
   /** 전체 개수 */
   total: number;
-  /** 이동 콜백 — 범위를 벗어나는 요청은 컴포넌트가 막는다 */
+  /** 이동 콜백 — 범위를 벗어나는 요청은 컴포넌트가 막는다(`loop` 면 반대쪽 끝으로 넘긴다) */
   onPageChange?: (page: number) => void;
+  /**
+   * 끝에서 반대쪽 끝으로 넘어갈지. 기본은 `false`(양 끝에서 버튼 비활성 — 시안 기본형).
+   *
+   * 스와이프처럼 **다른 입력 수단이 이미 순환**하는 곳에서는 켜 준다. 버튼만 양 끝에서
+   * 막히면 같은 캐러셀이 입력 수단에 따라 다르게 동작해 혼란스럽다.
+   */
+  loop?: boolean;
+  /** 이전 버튼 접근성 라벨 — 한 화면에 캐러셀이 여럿이면 무엇의 이전인지 구분해 준다 */
+  prevLabel?: string;
+  /** 다음 버튼 접근성 라벨 */
+  nextLabel?: string;
 };
 
 function CarouselNavigation({
@@ -30,9 +41,18 @@ function CarouselNavigation({
   page,
   total,
   onPageChange,
+  loop = false,
+  prevLabel = "이전",
+  nextLabel = "다음",
   ...props
 }: CarouselNavigationProps) {
   const goTo = (next: number) => {
+    if (total < 1) return;
+    if (loop) {
+      // 1..total 범위로 감싼다 (0 → total, total+1 → 1)
+      onPageChange?.(((next - 1 + total) % total) + 1);
+      return;
+    }
     if (next < 1 || next > total || next === page) return;
     onPageChange?.(next);
   };
@@ -56,15 +76,15 @@ function CarouselNavigation({
 
       <div className="flex items-center">
         <CarouselNavigationButton
-          aria-label="이전"
-          disabled={page <= 1}
+          aria-label={prevLabel}
+          disabled={!loop && page <= 1}
           onClick={() => goTo(page - 1)}
         >
           <ChevronLeftIcon />
         </CarouselNavigationButton>
         <CarouselNavigationButton
-          aria-label="다음"
-          disabled={page >= total}
+          aria-label={nextLabel}
+          disabled={!loop && page >= total}
           onClick={() => goTo(page + 1)}
         >
           <ChevronRightIcon />

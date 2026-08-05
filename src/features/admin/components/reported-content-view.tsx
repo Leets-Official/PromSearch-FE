@@ -29,6 +29,7 @@ import {
 import { useAdminFilters } from "@/features/admin/hooks/use-admin-filters";
 import { useReportList, useUpdateReportStatus } from "@/features/admin/hooks/use-reports";
 import type { ReportTarget } from "@/features/admin/types";
+import { useToast } from "@/components/ui/toast";
 
 /**
  * 신고 게시글/댓글 관리 화면 (시안 551:3669 · 1434:6473).
@@ -44,6 +45,8 @@ export function ReportedContentView({ target }: { target: ReportTarget }) {
   const { query, setTab, setPage } = useAdminFilters(REPORT_TAB_VALUES, "all");
   const { data, isPending, isError, refetch } = useReportList(target, query);
   const updateStatus = useUpdateReportStatus(target);
+  // 표 안의 버튼 하나로 끝나는 액션이라 결과를 적을 자리가 없다 → 토스트.
+  const { toastSuccess, toastApiError } = useToast();
 
   return (
     <div className="flex flex-col gap-4">
@@ -90,7 +93,15 @@ export function ReportedContentView({ target }: { target: ReportTarget }) {
                           key={action.value}
                           disabled={updateStatus.isPending}
                           aria-label={`${item.content} ${action.label} 처리`}
-                          onClick={() => updateStatus.mutate({ id: item.id, status: action.value })}
+                          onClick={() =>
+                            updateStatus.mutate(
+                              { id: item.id, status: action.value },
+                              {
+                                onSuccess: () => toastSuccess(`${action.label} 처리했어요.`),
+                                onError: toastApiError,
+                              },
+                            )
+                          }
                         >
                           {action.label}
                         </AdminRowAction>

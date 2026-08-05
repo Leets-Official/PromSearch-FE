@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { BellIcon, ChevronLeftIcon, MenuIcon, PencilIcon, SearchIcon } from "@/components/ui/icons";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { SearchBar } from "@/components/ui/search-bar";
 import { useAuthStatus } from "@/hooks/use-auth-status";
+import { LOGIN_REQUIRED_PARAM, LOGIN_REQUIRED_VALUE } from "@/lib/auth-routes";
 import { useGalleryFilters } from "@/features/gallery/hooks/use-gallery-filters";
 import { LoginModalContainer } from "@/features/auth/components/login-modal-container";
 
@@ -46,6 +47,36 @@ export function GalleryTopBar() {
   // 모바일 전용 검색 모드(Header/mobile/search). 데스크톱은 검색바가 상시 노출이라 무관.
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const onHome = pathname === "/home";
+
+  /*
+    보호 라우트(`/upload` 등)에 비회원이 들어오면 `src/proxy.ts` 가 여기(`/home`)로 돌려보내며
+    `?login=required&redirect=원래경로` 를 붙인다. **그 신호를 받아 모달을 여는 쪽이 여기다.**
+    (이 컴포넌트가 (main) 레이아웃에 있어 리다이렉트 착지점을 항상 덮는다)
+
+    `login` 파라미터는 모달을 연 뒤 URL 에서 지운다 — 남겨 두면 새로고침·뒤로가기 때마다
+    다시 열린다. `redirect` 는 남긴다: 로그인이 성공하면 그 경로로 돌려보내야 한다.
+  */
+  const searchParams = useSearchParams();
+  const loginRequired = searchParams.get(LOGIN_REQUIRED_PARAM) === LOGIN_REQUIRED_VALUE;
+
+  // 모달 열기는 **렌더 중 조정**으로 처리한다(ReportModal 의 `wasOpen` 과 같은 패턴).
+  // effect 안에서 setState 하면 한 번 그린 뒤 다시 그리게 되고, 그래서 lint 도 막는다.
+  // 초기값이 false 라 "파라미터를 달고 처음 들어온 순간"이 변화로 잡힌다.
+  const [sawLoginRequired, setSawLoginRequired] = useState(false);
+  if (loginRequired !== sawLoginRequired) {
+    setSawLoginRequired(loginRequired);
+    // 이미 로그인한 채로 이 URL 에 닿았다면(뒤로가기 등) 열 이유가 없다 — 흔적만 지운다.
+    if (loginRequired && !isAuthenticated) setLoginOpen(true);
+  }
+
+  // URL 정리는 화면 상태가 아니라 바깥 세계(주소창)를 건드리는 일이라 effect 가 맞다.
+  useEffect(() => {
+    if (!loginRequired) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete(LOGIN_REQUIRED_PARAM);
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [loginRequired, searchParams, pathname, router]);
 
   useEffect(() => {
     if (keyword === query.q) return;

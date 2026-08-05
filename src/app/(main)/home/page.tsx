@@ -29,7 +29,9 @@ export default function HomePage() {
   const { data, isPending, isFetching, isError, refetch } = usePromptList(query);
 
   return (
-    <div className="flex flex-col gap-6">
+    // 필터 행 ↔ 카드 리스트 간격: 모바일 16 / 데스크톱 24 (디자인 QA 반영).
+    // 모바일에서 h1 은 sr-only(absolute)라 플렉스 흐름에서 빠지므로 간격에 끼어들지 않는다.
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* 모바일 시안(1206:3561)은 헤더 바로 아래가 필터 행이라 제목이 없다.
           문서 구조(h1)는 유지해야 하므로 sm 미만에서는 스크린리더 전용으로만 남긴다. */}
       <h1 className="sr-only text-heading-1 text-text-primary sm:not-sr-only">

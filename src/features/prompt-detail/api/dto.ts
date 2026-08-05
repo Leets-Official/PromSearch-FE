@@ -19,6 +19,14 @@ export type ApiUserSummary = {
   userId: number;
   nickname: string;
   profileImageUrl: string | null;
+  /**
+   * 작성자 등급 — 대문자 enum (`NODE` | `LINK` | `SYNC` | `CORE` | `PRIME` | `ORIGIN`).
+   *
+   * `PROMPT-001` 상세 조회에 추가 요청해 BE 가 배포 중이다(2026-08-06).
+   * 목록(`/home/prompts`)·댓글에는 아직 없어 옵셔널로 둔다 — 없으면 화면에서 등급 자리를
+   * 그리지 않는다. 표기 변환은 `formatGrade`(src/lib/grade.ts)가 담당한다("NODE" → "Node").
+   */
+  gradeName?: string | null;
 };
 
 /**

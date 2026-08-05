@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PostStatusTabs } from "@/features/mypage/components/post-status-tabs";
 import { MyPostsTable } from "@/features/mypage/components/my-posts-table";
 import { MOCK_ACCOUNT, MOCK_POSTS, MOCK_PROFILE, type PostStatus } from "@/mocks/data/mypage";
+import { formatGrade } from "@/lib/grade";
 
 const RECENT_LIMIT = 5;
 
@@ -75,7 +76,7 @@ export default function MyProfilePage() {
 
           <Card className="justify-between gap-4 lg:w-52">
             <span className="text-title-3 text-text-secondary">현재 등급</span>
-            <span className="text-heading-1 text-text-primary">{profile.grade}</span>
+            <span className="text-heading-1 text-text-primary">{formatGrade(profile.grade)}</span>
           </Card>
         </div>
       </div>
