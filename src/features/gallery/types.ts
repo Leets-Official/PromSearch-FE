@@ -30,6 +30,13 @@ export type PostStatus = "active" | "hidden" | "draft";
 export type PromptAuthor = {
   name: string;
   avatarUrl?: string;
+  /**
+   * 등급명(Node → Link → Sync → Core → Prime → Origin).
+   *
+   * **서버가 아직 안 주는 값이다**(실서버 2026-08-06 확인: author 는 userId/nickname/
+   * profileImageUrl 뿐). 그래서 옵셔널이고, 없으면 화면에서 등급 자리를 그냥 그리지 않는다.
+   */
+  grade?: string;
 };
 
 /** 갤러리 카드 1장에 필요한 요약 데이터 */

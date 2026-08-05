@@ -19,6 +19,15 @@ export type ApiUserSummary = {
   userId: number;
   nickname: string;
   profileImageUrl: string | null;
+  /**
+   * 작성자 등급(Node → Link → Sync → Core → Prime → Origin).
+   *
+   * ⚠️ **아직 서버가 안 준다.** 실서버(2026-08-06 확인) 응답은 위 세 필드뿐이라
+   * 지금은 항상 `undefined` 이고, 화면에서는 등급 자리가 그냥 비어 보인다.
+   * BE 가 `GET /users/me` 처럼 여기에도 `gradeName` 을 실어 주면 코드 변경 없이 표시된다
+   * (요청은 `docs/api-requests-be.md` 참고).
+   */
+  gradeName?: string | null;
 };
 
 /**

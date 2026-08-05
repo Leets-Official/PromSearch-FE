@@ -74,6 +74,8 @@ export function toPromptDetail(detail: ApiPromptDetail): PromptDetail {
     author: {
       name: detail.author.nickname,
       avatarUrl: detail.author.profileImageUrl ?? undefined,
+      // 서버가 주기 시작하면 그대로 화면에 뜬다(지금은 항상 undefined — dto.ts 주석 참고)
+      grade: detail.author.gradeName ?? undefined,
     },
     authorId: toNumber(detail.author.userId),
     stats: {

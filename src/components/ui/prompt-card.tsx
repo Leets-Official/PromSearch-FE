@@ -116,8 +116,8 @@ function PromptCard({
     props: mergeProps<"div">(
       {
         className: cn(
-          // 레이아웃: 세로 스택, 시안 gap 16px
-          "group/prompt-card flex w-full flex-col items-start gap-4",
+          // 레이아웃: 세로 스택. 시안 gap 은 모바일 12px / 데스크톱 16px (디자인 QA 반영)
+          "group/prompt-card flex w-full flex-col items-start gap-3 sm:gap-4",
           // 클릭 영역: 패딩 + 음수마진으로 컨텐츠 정렬 유지하며 히트영역 확보
           "cursor-pointer rounded-lg p-2 outline-none transition-all",
           // hover: 떠오름(elevated + shadow), pressed: 눌림(secondary)

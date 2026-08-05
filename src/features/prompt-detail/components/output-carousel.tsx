@@ -4,8 +4,6 @@ import {
   ArrowExpandIcon,
   BookmarkFilledIcon,
   BookmarkIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   FlagIcon,
   HeartFilledIcon,
   HeartIcon,
@@ -14,6 +12,7 @@ import dynamic from "next/dynamic";
 import NextImage from "next/image";
 import { useState } from "react";
 
+import { CarouselNavigation } from "@/components/ui/carousel-navigation";
 import { useCarouselSwipe } from "@/hooks/use-carousel-swipe";
 import { cn } from "@/lib/utils";
 
@@ -58,9 +57,9 @@ type OutputCarouselProps = {
  *
  * 반응형(Figma "프롬프트 상세 - 설명" 1345:6702):
  * - mobile : 화면 폭을 꽉 채우는 375x281(=4:3) 풀블리드, 모서리 각짐.
- *            좌상단 액션 오버레이 대신 **좌하단 확대 버튼**만 두고(추천/북마크/신고는 페이지 헤더로 이동),
- *            좌우 화살표 대신 **스와이프**로 넘긴다. 인디케이터는 우상단 8px.
- * - desktop: 기존 그대로(오버레이 액션 + 화살표).
+ *            좌상단 액션 오버레이 대신 **우하단 확대 버튼**만 두고(추천/북마크/신고는 페이지 헤더로 이동),
+ *            화살표 대신 **스와이프**로 넘긴다. 카운터는 좌상단 8px.
+ * - desktop: 좌상단 액션 오버레이 + **우하단 Carousel Navigation**(카운터·화살표 일체형, 499:2806).
  *
  * 전환은 opacity 크로스페이드가 아니라 **가로 트랙 슬라이드**다(useCarouselSwipe).
  * 드래그 중에는 트랙이 손가락을 따라오고, 손을 떼면 이어서 다음 장까지 붙는다.
@@ -178,30 +177,29 @@ export function OutputCarousel({
 
       {hasMultiple ? (
         <>
+          {/* mobile: 좌상단 카운터만(시안). 넘기는 건 스와이프라 화살표가 필요 없다. */}
           <span
             data-testid="carousel-indicator"
-            // mobile: 좌상단(시안) / desktop: 우상단(좌상단은 액션 오버레이 자리)
-            className="absolute top-2 left-2 rounded bg-dim px-1.5 py-0.5 text-title-3 text-white sm:top-4 sm:right-4 sm:left-auto sm:px-2"
+            className="absolute top-2 left-2 rounded bg-dim px-1.5 py-0.5 text-title-3 text-white sm:hidden"
           >
             {index + 1}/{total}
           </span>
-          {/* 화살표는 데스크톱 전용 — 모바일 시안은 스와이프로 넘긴다 */}
-          <button
-            type="button"
-            aria-label="이전 이미지"
-            onClick={() => go(-1)}
-            className="absolute top-1/2 left-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80 sm:flex"
-          >
-            <ChevronLeftIcon className="size-6" />
-          </button>
-          <button
-            type="button"
-            aria-label="다음 이미지"
-            onClick={() => go(1)}
-            className="absolute top-1/2 right-3 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full bg-dim text-white transition-colors hover:bg-dim/80 sm:flex"
-          >
-            <ChevronRightIcon className="size-6" />
-          </button>
+          {/*
+            desktop: 카운터 + 화살표가 한 알약에 묶인 Table/Carousel Navigation 을 **우하단**에 둔다.
+            (개정 전에는 카운터가 우상단, 화살표가 이미지 좌우 중앙에 따로 떠 있었다 — 시안 499:2806)
+            loop: 모바일 스와이프가 순환하므로 버튼도 같이 순환시킨다.
+          */}
+          <CarouselNavigation
+            page={index + 1}
+            total={total}
+            // 버튼은 한 칸씩만 움직이고 `go` 도 방향(±1)만 받는다.
+            // "다음 쪽 번호"(끝에서는 1로 감김)와 같으면 앞으로, 아니면 뒤로.
+            onPageChange={(next) => go(next === ((index + 1) % total) + 1 ? 1 : -1)}
+            loop
+            prevLabel="이전 이미지"
+            nextLabel="다음 이미지"
+            className="absolute right-4 bottom-4 hidden sm:inline-flex"
+          />
         </>
       ) : null}
 

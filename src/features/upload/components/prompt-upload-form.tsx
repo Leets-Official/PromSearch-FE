@@ -135,7 +135,9 @@ function PromptUploadForm() {
           render={({ field, fieldState }) => (
             <TextField
               title="제목"
-              required
+              // 필수 표기(*)를 붙이지 않는다 — 이 폼은 사실상 전 항목이 필수라
+              // 제목에만 별표가 붙으면 "여기만 필수"로 잘못 읽힌다(디자인 QA).
+              // 검증은 그대로 zod 스키마가 담당한다.
               placeholder="제목을 입력해주세요."
               maxLength={TITLE_MAX}
               value={field.value}

@@ -9,10 +9,12 @@ export function GallerySkeleton({ count = GALLERY_PAGE_SIZE }: { count?: number 
       data-slot="gallery-skeleton"
       aria-busy="true"
       aria-label="프롬프트 불러오는 중"
-      className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+      // 간격·내부 gap 은 GalleryGrid / PromptCard 와 같은 값이어야 한다.
+      // 어긋나면 로딩이 끝나는 순간 카드가 자리를 옮기며 튄다.
+      className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-x-2 sm:gap-y-6 lg:grid-cols-3"
     >
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="flex w-full flex-col gap-4 p-2">
+        <div key={i} className="flex w-full flex-col gap-3 p-2 sm:gap-4">
           <div className="aspect-video w-full animate-pulse rounded-lg bg-bg-secondary" />
           <div className="h-5 w-3/4 animate-pulse rounded bg-bg-secondary" />
           <div className="h-4 w-1/2 animate-pulse rounded bg-bg-secondary" />

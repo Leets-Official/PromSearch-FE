@@ -27,13 +27,21 @@ export function DetailHeader({ detail }: { detail: PromptDetail }) {
           className="size-8 sm:size-11"
         />
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="truncate text-title-2 text-text-secondary">{detail.author.name}</span>
-          {/* 좁아지면 단어(세그먼트) 단위로만 줄바꿈 — 글자 단위로 깨지지 않게 */}
+          {/* 닉네임 + 등급(시안 499:2806 "전업프롬프트업로더 Node").
+              등급은 서버가 아직 안 주는 값이라 없으면 자리 자체를 그리지 않는다. */}
+          <span className="flex min-w-0 items-baseline gap-1 text-title-2">
+            <span className="truncate text-text-secondary">{detail.author.name}</span>
+            {detail.author.grade ? (
+              <span className="shrink-0 text-text-brand">{detail.author.grade}</span>
+            ) : null}
+          </span>
+          {/* 좁아지면 단어(세그먼트) 단위로만 줄바꿈 — 글자 단위로 깨지지 않게.
+              구분자는 `·`(U+00B7). 전각 `・`(U+30FB)는 폭을 크게 먹어 들쭉날쭉해 보인다. */}
           <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-body-3 text-text-secondary">
             <span className="whitespace-nowrap">{formatDetailDate(detail.createdAt)}</span>
-            <span className="text-black">・</span>
+            <span className="text-black">·</span>
             <span className="whitespace-nowrap">조회 {detail.stats.views}</span>
-            <span className="text-black">・</span>
+            <span className="text-black">·</span>
             <span className="whitespace-nowrap">추천 {detail.stats.likes}</span>
           </div>
         </div>
