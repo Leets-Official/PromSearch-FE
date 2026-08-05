@@ -18,6 +18,7 @@ import { MobilePageHeader } from "@/components/layout/mobile-page-header";
 import { LoginModal } from "@/components/modals/login/login-modal";
 import { Button } from "@/components/ui/button";
 import { useAuthStatus } from "@/hooks/use-auth-status";
+import { useToast } from "@/components/ui/toast";
 import { useBookmark } from "@/features/prompt-detail/hooks/use-bookmark";
 import { useAuthGate } from "@/features/prompt-detail/hooks/use-auth-gate";
 import { useDetailTab } from "@/features/prompt-detail/hooks/use-detail-tab";
@@ -46,6 +47,8 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const copy = useRecordCopy(detail.id);
   // 좋아요·북마크·신고·잠금해제는 로그인이 필요하다. 비회원이 누르면 로그인 모달을 연다.
   const gate = useAuthGate();
+  // 버튼 하나로 끝나는 액션들은 결과를 적을 자리가 없어 토스트로 알린다.
+  const { toastSuccess, toastApiError } = useToast();
   const [copied, setCopied] = useState(false);
   // 신고 / 로그인 / 포인트 결제 모달
   const [reportOpen, setReportOpen] = useState(false);
@@ -94,14 +97,17 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
   const handleToggleLike = () =>
     gate.run(() => {
       if (like.isPending) return;
-      like.mutate(detail.liked);
+      like.mutate(detail.liked, { onError: toastApiError });
     });
 
   /** 북마크 토글 — 좋아요와 같은 이유로 요청 중 클릭을 무시한다. */
   const handleToggleBookmark = () =>
     gate.run(() => {
       if (bookmark.isPending) return;
-      bookmark.mutate(detail.bookmarked);
+      bookmark.mutate(detail.bookmarked, {
+        onSuccess: () => toastSuccess(detail.bookmarked ? "북마크를 해제했어요." : "북마크했어요."),
+        onError: toastApiError,
+      });
     });
 
   /** 레시피 잠금 CTA — 비회원은 로그인 모달, 프리미엄은 포인트 결제 모달 */
@@ -254,7 +260,10 @@ export function PromptDetailView({ detail }: { detail: PromptDetail }) {
         requiredPoints={detail.pricePoint}
         onConfirm={() => {
           // 응답이 비어 있어 훅이 상세를 다시 조회한다(열린 본문을 받기 위해).
-          unlock.mutate();
+          unlock.mutate(undefined, {
+            onSuccess: () => toastSuccess("포인트를 사용해 전문을 열었어요."),
+            onError: toastApiError,
+          });
           setPointOpen(false);
         }}
       />

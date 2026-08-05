@@ -55,6 +55,13 @@ type ConfirmModalProps = {
   onCancel?: () => void;
   /** 확인 버튼 비활성(예: 포인트 부족) */
   confirmDisabled?: boolean;
+  /**
+   * 데스크톱에서의 세로 위치. 기본 `top`(시안 1517:8879 — 상단에서 48px).
+   *
+   * `center` 는 내용이 길어 상단 정렬 시 아래로 길게 늘어지는 모달용이다
+   * (예: 신고 모달의 사유 라디오 5개 + 입력창). 모바일은 원래 항상 가운데다.
+   */
+  placement?: "top" | "center";
   className?: string;
 };
 
@@ -69,6 +76,7 @@ function ConfirmModal({
   onConfirm,
   onCancel,
   confirmDisabled,
+  placement = "top",
   className,
 }: ConfirmModalProps) {
   return (
@@ -82,8 +90,11 @@ function ConfirmModal({
         <AlertDialogPrimitive.Popup
           data-slot="confirm-modal"
           className={cn(
-            // 위치 — mobile 화면 중앙 / desktop 시안(1517:8879·1517:8779)은 상단에서 48px
-            "fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2 sm:top-12 sm:translate-y-0",
+            // 위치 — mobile 은 항상 화면 중앙.
+            // desktop 은 시안(1517:8879·1517:8779) 기본이 상단 48px 이고,
+            // 내용이 긴 모달(신고 등)은 placement="center" 로 화면 중앙에 둔다.
+            "fixed top-1/2 left-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
+            placement === "top" && "sm:top-12 sm:translate-y-0",
             // 등장 애니메이션(dialog.tsx 패턴 동일)
             "duration-100 outline-none",
             "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",

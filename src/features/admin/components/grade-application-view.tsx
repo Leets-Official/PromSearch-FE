@@ -26,6 +26,7 @@ import {
   useGradeApplicationList,
 } from "@/features/admin/hooks/use-grade-applications";
 import { useAdminFilters } from "@/features/admin/hooks/use-admin-filters";
+import { useToast } from "@/components/ui/toast";
 
 /**
  * 유저 등급 관리 화면 (시안 1434:5839).
@@ -36,6 +37,7 @@ export function GradeApplicationView() {
   const { query, setTab, setPage } = useAdminFilters(GRADE_TAB_VALUES, "pending");
   const { data, isPending, isError, refetch } = useGradeApplicationList(query);
   const approve = useApproveGradeApplication();
+  const { toastSuccess, toastApiError } = useToast();
 
   return (
     <div className="flex flex-col gap-4">
@@ -86,7 +88,12 @@ export function GradeApplicationView() {
                         tone="brand"
                         disabled={approve.isPending}
                         aria-label={`${item.userId} 등급 승인`}
-                        onClick={() => approve.mutate(item.id)}
+                        onClick={() =>
+                          approve.mutate(item.id, {
+                            onSuccess: () => toastSuccess("등급을 승인했어요."),
+                            onError: toastApiError,
+                          })
+                        }
                       >
                         승인
                       </AdminRowAction>

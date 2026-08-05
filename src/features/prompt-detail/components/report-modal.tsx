@@ -6,6 +6,7 @@ import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { REPORT_REASONS, type ReportTargetType } from "@/features/prompt-detail/api/report";
 import { useCreateReport } from "@/features/prompt-detail/hooks/use-prompt-actions";
 import { getErrorMessage } from "@/lib/api";
+import { useToast } from "@/components/ui/toast";
 import type { ApiReportReason } from "@/features/prompt-detail/api/dto";
 
 /**
@@ -51,6 +52,8 @@ export function ReportModal({
   const [reason, setReason] = useState<ApiReportReason | null>(null);
   const [detail, setDetail] = useState("");
   const report = useCreateReport();
+  // 접수되면 모달이 닫혀 문구를 놓을 자리가 없다 → 토스트로 확인시킨다.
+  const { toastSuccess } = useToast();
 
   // 열릴 때마다 이전 선택을 지운다.
   // effect 가 아니라 **렌더 중 조정**이다 — effect 로 하면 초기화 전 값이 한 번 그려진 뒤
@@ -70,6 +73,8 @@ export function ReportModal({
       open={open}
       onOpenChange={onOpenChange}
       title={`이 ${TARGET_LABEL[target]}을 신고할까요?`}
+      // 사유 라디오 5개 + 입력창이라 상단 정렬하면 아래로 길게 늘어진다
+      placement="center"
       description="신고 내용은 검토 후 운영 정책에 따라 조치됩니다."
       cancelLabel="취소"
       confirmLabel={report.isPending ? "신고 중…" : "신고하기"}
@@ -83,6 +88,7 @@ export function ReportModal({
             onSuccess: () => {
               onOpenChange(false);
               onReported?.();
+              toastSuccess("신고가 접수됐어요. 검토 후 조치할게요.");
             },
             // 실패는 여기서 아무것도 하지 않는다 — 모달을 열어 둔 채 아래에서 문구를 보여 준다.
           },
