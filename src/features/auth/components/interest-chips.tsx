@@ -1,6 +1,6 @@
 "use client";
 
-import { Chip } from "@/components/ui/chip";
+import { ChipGroup } from "@/components/modals/onboarding/chip-group";
 import {
   JOB_OPTIONS,
   TASK_OPTIONS,
@@ -40,42 +40,6 @@ export function InterestChips({ jobs, tasks, onJobsChange, onTasksChange }: Inte
         selected={tasks}
         onToggle={(v) => onTasksChange(toggle(tasks, v, MAX_TASKS))}
       />
-    </div>
-  );
-}
-
-/** 라벨 + 힌트 + 선택 칩 그룹 */
-function ChipGroup({
-  label,
-  hint,
-  options,
-  selected,
-  onToggle,
-}: {
-  label: string;
-  hint: string;
-  options: readonly string[];
-  selected: string[];
-  onToggle: (value: string) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-baseline gap-2">
-        <span className="text-title-3 text-text-primary">{label}</span>
-        <span className="text-caption-1 text-text-brand">{hint}</span>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        {options.map((option) => (
-          <Chip
-            key={option}
-            selected={selected.includes(option)}
-            onClick={() => onToggle(option)}
-            className="w-full"
-          >
-            {option}
-          </Chip>
-        ))}
-      </div>
     </div>
   );
 }

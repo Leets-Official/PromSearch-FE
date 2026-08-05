@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { MyPageTopBar } from "@/features/mypage/components/mypage-top-bar";
 import { MyPageSidebar } from "@/features/mypage/components/mypage-sidebar";
-import { MobileBackHeader } from "@/features/mypage/components/mobile-back-header";
+import { MobilePageHeader } from "@/components/layout/mobile-page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -16,17 +16,15 @@ export default function MyPageLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-bg-primary">
       <div className="mx-auto flex w-full max-w-7xl flex-col">
-        {/* 웹(sm+): 앱 헤더 (햄버거는 헤더 내부에서 lg 미만일 때 노출) */}
+        {/* 모바일: 뒤로가기 헤더 (최상단, 화면 폭 꽉) */}
+        <MobilePageHeader className="mx-0 mt-0" />
+
+        {/* 웹: 앱 헤더 */}
         <div className="hidden sm:block">
           <MyPageTopBar />
         </div>
-        {/* 모바일(sm 미만): 뒤로가기 헤더 */}
-        <div className="sm:hidden">
-          <MobileBackHeader />
-        </div>
 
         <div className="flex gap-8 px-4 py-6 sm:px-20 sm:py-8">
-          {/* 사이드바: lg+ 에서만. sm~lg 구간은 헤더 햄버거가 대신 */}
           <aside className="hidden shrink-0 lg:block">
             <MyPageSidebar />
           </aside>
