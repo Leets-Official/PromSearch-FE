@@ -2,6 +2,9 @@
 
 > 작성: FE | 기준: `develop` (2026-08-04) · PromSearch API v1 Swagger (2026-08-04 시점)
 >
+> 📌 **회신을 반영한 담당자별 최종 정리는 [`api-integration-status.md`](./api-integration-status.md) 를 보세요.**
+> 이 문서는 "무엇을 왜 요청했는가"의 원본 기록입니다.
+>
 > FE에 **화면이 이미 구현되어 있는데 붙일 API가 없거나, 응답에 필요한 필드가 없는 항목**만 정리했습니다.
 > Swagger에 그대로 옮기실 수 있도록 `path` / `parameters` / `requestBody` / `result` 형태로 적었습니다.
 >
