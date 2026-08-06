@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { PostStatusTabs } from "@/features/mypage/components/post-status-tabs";
 import { MyPostsTable } from "@/features/mypage/components/my-posts-table";
 import { useMyProfile } from "@/features/auth/hooks/use-my-profile";
-import { MOCK_POSTS, type PostStatus } from "@/mocks/data/mypage";
+import { useMyPrompts } from "@/features/mypage/hooks/use-my-prompts";
+import { toMyPost } from "@/features/mypage/api/map";
+import { type PostStatus } from "@/mocks/data/mypage";
 import { formatGrade } from "@/lib/grade";
 
 const RECENT_LIMIT = 5;
@@ -27,7 +29,13 @@ export default function MyProfilePage() {
   const [status, setStatus] = useState<PostStatus>("published");
   const { data: profile, isLoading } = useMyProfile();
 
-  const recent = MOCK_POSTS.filter((post) => post.status === status).slice(0, RECENT_LIMIT);
+  /*
+    최근 N개 미리보기 — 전체 목록(`/mypage/posts`)과 **같은 API** 를 첫 페이지만 잘라 쓴다.
+    (예전에는 여기만 목데이터라 "전체보기"를 누르면 다른 목록이 나왔다)
+    서버가 이미 최신순으로 주므로 클라이언트에서 다시 자르지 않고 size 로 끊는다.
+  */
+  const { data: myPrompts } = useMyPrompts(status, 0, RECENT_LIMIT);
+  const recent = (myPrompts?.content ?? []).map((item) => toMyPost(item, status));
 
   if (isLoading || !profile) {
     return <div className="flex flex-col gap-6" aria-busy="true" />; // TODO: 스켈레톤 UI
@@ -100,7 +108,7 @@ export default function MyProfilePage() {
         ))}
       </nav>
 
-      {/* sm+: 내 게시글 미리보기 (표) — 아직 목데이터 (GET /prompts/me 미구현) */}
+      {/* sm+: 내 게시글 미리보기 (표) — GET /prompts/me 의 첫 RECENT_LIMIT 건 */}
       <section className="hidden flex-col gap-4 sm:flex">
         <div className="flex items-end justify-between">
           <div className="flex items-center gap-2">
