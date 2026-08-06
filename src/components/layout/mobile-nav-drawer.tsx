@@ -1,6 +1,7 @@
 "use client";
 
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { UserIcon, XIcon } from "@/components/ui/icons";
@@ -19,12 +20,28 @@ import { formatGrade } from "@/lib/grade";
  * - 패널  : 좌측 고정, 폭 284px, Background/primary, padding 16/12, 세로 gap 16
  * - 구성  : [닫기 X 24px] → [프로필 40px + (등급)/이름 또는 "로그인"] → [구분선] → [메뉴]
  * - 프로필 행: gap 12, py 12. 회원은 등급(Caption 1·brand) 위, 닉네임(Heading 2) 아래 2줄.
+ *              회원은 마이페이지 링크, 비회원은 로그인 모달 트리거(데스크톱 헤더 아바타와 동일).
  *
  * 백드롭·프로필·닫기는 공통이고, 메뉴 내용만 children 으로 주입받는다.
  * (갤러리는 <CategoryNav/>, 마이페이지는 <MyPageSidebar/> 를 넘긴다 — 단일 드로어 재사용)
  * 시안의 드로어는 항목이 패널 여백에 플러시 정렬되고 폭을 꽉 채우므로,
  * 데스크톱용 좌우 패딩(px-3)·고정폭(w-50)만 아래 래퍼에서 무력화한다.
  */
+/** 프로필 행 — 회원(Link)/비회원(button) 두 갈래가 같은 모양이어야 하므로 클래스를 공유한다. */
+const PROFILE_ROW_CLASS =
+  "flex items-center gap-3 rounded-md py-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+
+function ProfileAvatar({ user }: { user: AuthUser | null }) {
+  return (
+    <Avatar size="sm" className="size-10 shrink-0 border border-stroke-primary">
+      {user?.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name} /> : null}
+      <AvatarFallback>
+        {user ? user.name.charAt(0) : <UserIcon className="size-6 text-text-disabled" />}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
 type MobileNavDrawerProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -76,42 +93,46 @@ export function MobileNavDrawer({
 
               {/* 프로필 + 메뉴 — 시안은 한 컨테이너 안에서 항목 간격이 모두 8px */}
               <div className="flex flex-col gap-2">
-                {/* 회원: 등급 + 닉네임 2줄 / 비회원: "로그인"(클릭 시 로그인 모달) */}
-                <button
-                  type="button"
-                  className="flex items-center gap-3 rounded-md py-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                  onClick={() => {
-                    if (!isAuthenticated) {
-                      onOpenChange(false);
-                      onLoginClick?.();
-                    }
-                  }}
-                >
-                  <Avatar size="sm" className="size-10 shrink-0 border border-stroke-primary">
-                    {user?.avatarUrl ? <AvatarImage src={user.avatarUrl} alt={user.name} /> : null}
-                    <AvatarFallback>
-                      {user ? (
-                        user.name.charAt(0)
-                      ) : (
-                        <UserIcon className="size-6 text-text-disabled" />
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
-                  {isAuthenticated && user ? (
+                {/*
+                 * 회원: 등급 + 닉네임 2줄, 누르면 마이페이지로 이동(데스크톱 헤더 아바타와 같은 동작).
+                 * 비회원: "로그인", 누르면 드로어를 닫고 로그인 모달을 연다.
+                 *
+                 * 회원 쪽은 `<button>` 이 아니라 **`<Link>`** 여야 한다 — 위 Popup 의 onClick 이
+                 * `closest("a")` 로 링크 클릭을 감지해 드로어를 닫으므로, 앵커로 두면 닫기가 따라온다.
+                 *
+                 * 분기는 데스크톱과 마찬가지로 **`isAuthenticated` 만** 본다. `user`(GET /users/me)는
+                 * 한 박자 늦게 오는데 그걸 조건에 넣으면 로그인 상태인데 "로그인"이 잠깐 보인다.
+                 */}
+                {isAuthenticated ? (
+                  <Link href="/mypage" aria-label="마이페이지" className={PROFILE_ROW_CLASS}>
+                    <ProfileAvatar user={user} />
                     <span className="flex min-w-0 flex-col">
-                      {user.grade ? (
+                      {user?.grade ? (
                         <span className="text-caption-1 text-text-brand">
                           {formatGrade(user.grade)}
                         </span>
                       ) : null}
-                      <span className="truncate text-heading-2 text-text-primary">{user.name}</span>
+                      {/* 프로필이 아직 안 왔으면 닉네임 자리는 비워 둔다(레이아웃은 유지) */}
+                      <span className="truncate text-heading-2 text-text-primary">
+                        {user?.name ?? ""}
+                      </span>
                     </span>
-                  ) : (
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className={PROFILE_ROW_CLASS}
+                    onClick={() => {
+                      onOpenChange(false);
+                      onLoginClick?.();
+                    }}
+                  >
+                    <ProfileAvatar user={user} />
                     <span className="min-w-0 truncate text-heading-2 text-text-primary">
                       로그인
                     </span>
-                  )}
-                </button>
+                  </button>
+                )}
 
                 <hr className="border-t border-stroke-primary" />
 
