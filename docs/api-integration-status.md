@@ -25,7 +25,7 @@
 | 프롬프트 업로드   | 조혜원 | ✅ 전부 사용 가능                                 |
 | 관리자            | 조혜원 | ✅ **5개 전부 구현 + 요청 필드 반영** (연동 완료) |
 | 로그인 · 회원가입 | 팀원   | ✅ 전부 사용 가능                                 |
-| 마이페이지        | 팀원   | ✅ 프로필·북마크 가능 / ⏳ 게시글 목록 미구현     |
+| 마이페이지        | 팀원   | ✅ 전부 사용 가능 (게시글 목록·인사이트도 구현됨) |
 
 ### 🎉 이번에 새로 들어온 것
 
@@ -279,8 +279,8 @@ DELETE /api/v1/users/me/profile-image              [USER-009] 제거
 | `PATCH /users/me/password`         | ✅                                 |
 | `DELETE /users/me` 탈퇴            | ✅                                 |
 | **`GET /users/me/bookmarks`**      | ✅ **새로 나옴**                   |
-| `GET /prompts/me` 내 게시글        | ⏳ **미구현**                      |
-| `GET /prompts/me/insights`         | ⏳ **미구현**                      |
+| `GET /prompts/me` 내 게시글        | ✅ **구현 완료** (2026-08-06 확인) |
+| `GET /prompts/me/insights`         | ✅ **구현 완료** (2026-08-06 확인) |
 | `DELETE /prompts/{id}` 게시물 삭제 | ✅ **구현 완료** (2026-08-05 회신) |
 | 수익 / 포인트 정책                 | ❌ **MVP 범위 밖** → 목데이터 유지 |
 | 알림 목록 / 읽음 처리 / 알림 설정  | ❌ **MVP 범위 밖** → 목 또는 숨김  |
@@ -302,20 +302,15 @@ DELETE /api/v1/users/me/profile-image              [USER-009] 제거
 - 관심사가 `{tagId, name}` 으로 오니 **뱃지에 `name` 그대로** 쓰시면 됩니다
 - ⚠️ `authProvider` 없음 → **소셜 계정일 때 비밀번호 변경 메뉴를 숨길 근거가 없습니다.** BE 추가 요청 필요
 
-### ⚠️ 북마크 목록 필터가 **단수**입니다
+### 북마크 목록 필터 ✅ **멀티로 바뀌었습니다**
 
 ```
 GET /api/v1/users/me/bookmarks
-  ?taskTagId=7 &aiModelTagId=13 &outputType=IMAGE &page=0 &size=12
+  ?taskTagIds=7,8 &aiModelTagIds=13,14 &outputTypes=IMAGE,TEXT &page=0 &size=12
 ```
 
-**축마다 하나씩만** 받습니다. 그런데 FE 북마크 화면은 갤러리와 같은 **멀티 선택** 필터를 씁니다
-(`src/features/mypage/hooks/use-bookmarks.ts` — `tasks`/`models`/`outputTypes` 배열).
-
-둘 중 하나로 정해야 합니다.
-
-- BE에 **멀티(콤마 구분)로 바꿔달라** 요청 — 홈 통합 API가 이미 콤마 방식이라 일관성도 맞습니다
-- 또는 화면을 **단일 선택**으로 바꾸기 (시안 확인 필요)
+단수(`taskTagId`)였던 게 **복수 + 콤마 구분**으로 바뀌어 홈 통합 API와 일관됩니다.
+FE 북마크 화면의 멀티 선택 필터를 그대로 쓰면 되고, `use-bookmarks.ts` 는 이미 맞춰져 있습니다.
 
 응답(`BookmarkPromptResponse`)은 홈 카드와 필드가 조금 다릅니다 —
 `thumbnailImage`(홈은 `thumbnailImageUrl`), `viewCount`/`likeCount`가 평평하게 옴, `bookmarkedAt` 추가.
@@ -333,13 +328,16 @@ PromptVisibility : PUBLIC | PRIVATE
 | 임시저장 | `status=DRAFT`                         |
 | 비공개   | `status=ACTIVE` + `visibility=PRIVATE` |
 
-**⚠️ 문제 두 가지**
+✅ **`visibility` 파라미터가 추가됐습니다**(`status` 는 여전히 required). 세 탭을 그대로 구분할 수 있고,
+FE 도 이미 위 표대로 보내고 있습니다.
 
-1. **`GET /prompts/me` 에 `visibility` 파라미터가 없습니다.** `status` 만 받습니다
-   (`status` 는 `required`). → 게시완료와 비공개를 **구분할 방법이 없습니다.**
-   BE에 `visibility` 파라미터 추가 요청이 필요합니다.
-2. **비공개 게시물을 만들 경로가 없습니다.** 업로드 폼에 공개범위 선택을 만들지 않기로 했습니다(2026-08-05 결정).
-   → 비공개 탭은 **당분간 항상 비어 있습니다.** 탭·조회 조건은 그대로 두시면 됩니다.
+⚠️ **응답 필드가 전부 nullable 입니다**(`MyPromptSummaryResponse` 에 required 가 하나도 없음).
+특히 `publishedAt` 은 "게시 완료 시각"이라 **임시저장 행에서는 null** 로 옵니다.
+그대로 문자열로 받아 쓰면 화면이 죽습니다(실측: `Cannot read properties of null (reading 'slice')`).
+`title` 도 null 일 수 있습니다.
+
+- 여전히 **비공개 게시물을 만들 경로는 없습니다.** 업로드 폼에 공개범위 선택을 만들지 않기로 했습니다(2026-08-05 결정).
+  → 비공개 탭은 당분간 항상 비어 있습니다.
 
 또 **임시저장은 계정당 1개**라 임시저장 탭은 항상 0~1행입니다(7-6 확정). 탭 유지 여부는 기획 확인이 필요합니다.
 
@@ -348,7 +346,7 @@ PromptVisibility : PUBLIC | PRIVATE
 - **수정** — ❌ **기능 자체를 안 하기로 확정.** 버튼을 제거해 주세요.
   - `src/features/mypage/components/my-posts-table.tsx` — `showActions` 의 수정 버튼 · `onEdit`
   - `src/app/mypage/posts/page.tsx` — `TODO: 게시글 수정 화면으로 이동`
-- **삭제** — API는 있으나 ⏳ 미구현 상태
+- **삭제** — ✅ `DELETE /prompts/{id}` 구현 완료
 
 ### 내 게시글 응답 필드
 
@@ -363,19 +361,16 @@ MyPromptSummaryResponse: { promptId, title, publishedAt, viewCount, recommendCou
 
 # 4. BE에 물어볼 것
 
-| #   | 질문                                                       | 담당   |
-| --- | ---------------------------------------------------------- | ------ |
-| 1   | 어드민 권한 계정 발급 (또는 테스트 계정에 ADMIN role)      | 조혜원 |
-| 2   | `GET /prompts/me` 에 **`visibility` 파라미터** 추가        | 팀원   |
-| 3   | `GET /users/me/bookmarks` 필터를 **멀티(콤마)로** 변경     | 팀원   |
-| 4   | `GET /users/me` 에 **`authProvider`** 추가                 | 팀원   |
-| 5   | `GET /users/me` 의 `username` → `nickname` 통일 여부       | 팀원   |
-| 6   | `PATCH /users/me` 에 남아 있는 **`name` 제거**             | 팀원   |
-| 7   | 소셜 로그인 지원 provider 목록 (`kakao`/`google`?)         | 팀원   |
-| 8   | `PROMPT-010`(내 게시글) · `PROMPT-011`(인사이트) 구현 일정 | 팀원   |
-| 9   | 상세 응답 `likeCount`/`customAiModel` 배포 시점            | 조혜원 |
-| 10  | 이미지 `failureCode` 값 목록 · 워터마크 처리 소요 시간     | 조혜원 |
-| 11  | 어드민 신고 **반려** 상태를 목록에서 어떻게 보여줄지       | 조혜원 |
+| #   | 질문                                                   | 담당   |
+| --- | ------------------------------------------------------ | ------ |
+| 1   | 어드민 권한 계정 발급 (또는 테스트 계정에 ADMIN role)  | 조혜원 |
+| 2   | `GET /users/me` 에 **`authProvider`** 추가             | 팀원   |
+| 3   | `GET /users/me` 의 `username` → `nickname` 통일 여부   | 팀원   |
+| 4   | `PATCH /users/me` 에 남아 있는 **`name` 제거**         | 팀원   |
+| 5   | 소셜 로그인 지원 provider 목록 (`kakao`/`google`?)     | 팀원   |
+| 6   | 상세 응답 `likeCount`/`customAiModel` 배포 시점        | 조혜원 |
+| 7   | 이미지 `failureCode` 값 목록 · 워터마크 처리 소요 시간 | 조혜원 |
+| 8   | 어드민 신고 **반려** 상태를 목록에서 어떻게 보여줄지   | 조혜원 |
 
 # 5. 기획에 확인할 것
 
