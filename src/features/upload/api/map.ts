@@ -48,12 +48,26 @@ export function toWriteRequest(values: Partial<PromptFormValues>): ApiPromptWrit
     promptBody: values.body,
     // 업로드 폼에 공개 범위 선택이 없다(시안에 없음). 전부 공개로 보낸다.
     visibility: "PUBLIC",
-    images: (values.images ?? []).map((image, index) => ({
-      imageId: image.imageId,
-      sortOrder: index,
-      // 첫 장을 대표 이미지로 — 카드 썸네일이 된다.
-      thumbnail: index === 0,
-    })),
+    /*
+      **READY 인 이미지만 보낸다.**
+
+      게시(PROMPT-008)는 스키마 refine 이 이미 막지만, 임시저장은 부분 작성을 허용하느라
+      검증을 거치지 않아 처리 중·실패 이미지가 그대로 실려 나갔다. 그렇게 저장된 imageId 는
+      서버에 워터마크 결과물이 없어서, 다음 복원 때 상태 조회(PROMPT-004)를 통째로 실패시킨다
+      — 그 API 는 하나라도 없거나 남의 것이면 **전체가 실패**한다.
+      결국 오염된 한 장이 나머지 이미지의 미리보기까지 전부 날린다.
+
+      sortOrder·thumbnail 은 **거른 뒤의 순서** 기준이어야 한다(중간이 빠지면 번호가 뜨고,
+      1번이 빠지면 대표 이미지가 사라진다).
+    */
+    images: (values.images ?? [])
+      .filter((image) => image.status === "ready")
+      .map((image, index) => ({
+        imageId: image.imageId,
+        sortOrder: index,
+        // 첫 장을 대표 이미지로 — 카드 썸네일이 된다.
+        thumbnail: index === 0,
+      })),
   };
 }
 
@@ -91,13 +105,19 @@ function toModel(result: ApiDraftResult): AiModel | undefined {
 /**
  * 임시저장 이미지 복원.
  *
- * 초안 응답에는 `imageId` 만 있고 조회용 URL 이 없다. 미리보기는 호출부(`api/upload.ts`)가
- * 상태 API(`PROMPT-004`)를 한 번 더 태워 채운다 — 거기에만 `imageUrl` 이 있다.
- * 여기서는 일단 서버가 보관 중인 이미지이므로 ready 로 두고, 상태 조회가 실제 값으로 덮는다.
+ * 초안 응답에는 `imageId` 만 있고 조회용 URL 도 상태도 없다. 실제 상태와 미리보기는
+ * 호출부(`api/upload.ts`)가 상태 API(`PROMPT-004`)를 한 번 더 태워 채운다 — 거기에만 있다.
+ *
+ * 그래서 여기 값은 **상태 조회가 실패했을 때만 화면에 남는다.** 예전에는 `ready` 로 뒀는데,
+ * 그건 확인한 적 없는 것을 확인했다고 말하는 셈이라 깨진 이미지가 멀쩡한 얼굴로 복원됐다
+ * (그 상태로 게시하면 서버가 "워터마크 처리가 완료되지 않은 이미지입니다" 로 거절한다).
+ *
+ * 검증하지 못했으면 `failed` 다 — 타일에 "실패"가 뜨고 저장·게시가 막히므로,
+ * 사용자가 지우고 다시 올릴 수 있다. 조회가 성공하면 이 값은 실제 상태로 통째로 교체된다.
  */
 function toDraftImages(result: ApiDraftResult): PromptImageValue[] {
   return (result.images ?? [])
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((image) => ({ imageId: image.imageId, status: "ready" as const }));
+    .map((image) => ({ imageId: image.imageId, status: "failed" as const }));
 }

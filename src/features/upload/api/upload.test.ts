@@ -150,7 +150,12 @@ describe("임시저장 이미지 미리보기 (요청서 U-1)", () => {
     const { draft } = await fetchDraft();
 
     expect(draft?.title).toBe("초안");
-    // 미리보기 없이 자리표시 타일로 뜬다
-    expect(draft?.images).toEqual([{ imageId: "img-a", status: "ready" }]);
+    /*
+      미리보기 없이 자리표시 타일로 뜨되, 상태는 **failed** 다.
+      상태를 확인하지 못했는데 ready 라고 하면 깨진 이미지가 멀쩡한 얼굴로 복원되고,
+      그대로 게시하면 서버가 "워터마크 처리가 완료되지 않은 이미지입니다" 로 거절한다.
+      failed 면 타일에 "실패"가 뜨고 저장·게시가 막혀 사용자가 지우고 다시 올릴 수 있다.
+    */
+    expect(draft?.images).toEqual([{ imageId: "img-a", status: "failed" }]);
   });
 });
