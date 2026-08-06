@@ -11,7 +11,7 @@
  * matcher 는 빌드 타임에 정적 분석되어야 해서 이 배열로부터 자동 생성할 수 없다(Next 제약).
  * 예: 마이페이지를 만들면 → 여기에 `"/mypage"`, matcher 에 `"/mypage/:path*"`.
  */
-export const PROTECTED_ROUTES = ["/upload"] as const;
+export const PROTECTED_ROUTES = ["/upload", "/mypage"] as const;
 
 /**
  * 로그인한 사용자는 들어갈 이유가 없는 경로(회원가입 등). 진입 시 홈으로 되돌린다.

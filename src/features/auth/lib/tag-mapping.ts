@@ -6,11 +6,11 @@
  * enum ↔ 라벨 변환은 @/features/gallery/categories 의 라벨 상수(enum → 라벨)를 역으로 뒤집어 사용한다.
  */
 
-import { JOB_CATEGORY_LABEL, TASK_LABEL } from "@/features/gallery/categories";
+import { JOB_CATEGORY_LABEL, TASK_LABEL, AI_MODEL_LABEL } from "@/features/gallery/categories";
 import { JOB_TAG_ID, TASK_TAG_ID } from "@/features/gallery/tag-ids";
-import type { JobCategory, Task } from "@/features/gallery/types";
+import type { AiModel, JobCategory, Task } from "@/features/gallery/types";
 
-function invertLabelMap<K extends string>(record: Record<K, string>): Record<string, K> {
+export function invertLabelMap<K extends string>(record: Record<K, string>): Record<string, K> {
   return Object.fromEntries(Object.entries(record).map(([key, label]) => [label, key])) as Record<
     string,
     K
@@ -18,7 +18,10 @@ function invertLabelMap<K extends string>(record: Record<K, string>): Record<str
 }
 
 const LABEL_TO_JOB = invertLabelMap<JobCategory>(JOB_CATEGORY_LABEL);
-const LABEL_TO_TASK = invertLabelMap<Task>(TASK_LABEL);
+
+// PS-71 이후 bookmarks.ts(toPromptSummary)에서도 태그 이름 → enum 역변환에 재사용한다.
+export const LABEL_TO_TASK = invertLabelMap<Task>(TASK_LABEL);
+export const LABEL_TO_AI_MODEL = invertLabelMap<AiModel>(AI_MODEL_LABEL);
 
 /** 한글 라벨 배열(예: ["학생", "직장인"]) → BE 태그 ID 배열 */
 export function toJobTagIds(labels: string[]): number[] {

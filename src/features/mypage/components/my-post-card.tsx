@@ -40,7 +40,6 @@ function buildTags(post: MyPost): string[] {
 interface MyPostCardProps {
   post: MyPost;
   showActions?: boolean;
-  onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
 }
 
@@ -49,7 +48,7 @@ interface MyPostCardProps {
  * PromptCard 전체 영역이 상세로 가는 링크이므로, 수정/삭제 버튼은 카드 바깥
  * 별도 줄에 둔다(버튼을 <a> 안에 중첩하면 시맨틱이 깨진다).
  */
-export function MyPostCard({ post, showActions = false, onEdit, onDelete }: MyPostCardProps) {
+export function MyPostCard({ post, showActions = false, onDelete }: MyPostCardProps) {
   return (
     <div className="flex flex-col gap-2">
       <PromptCard
@@ -62,13 +61,6 @@ export function MyPostCard({ post, showActions = false, onEdit, onDelete }: MyPo
       />
       {showActions && (
         <div className="flex items-center gap-3 px-2 text-body-3">
-          <button
-            type="button"
-            onClick={() => onEdit?.(post.id)}
-            className="rounded-sm text-text-secondary hover:text-text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-          >
-            수정
-          </button>
           <button
             type="button"
             onClick={() => onDelete?.(post.id)}
