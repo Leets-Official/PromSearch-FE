@@ -52,7 +52,7 @@ export default function MyPostsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-heading-2 text-text-primary">내 게시글</h1>
+      <h1 className="text-heading-1 text-text-primary">내 게시글</h1>
 
       {/* 탭 — 모바일에서 스크롤 시 화면 상단 고정 */}
       <div className="sticky top-0 z-10 -mx-4 bg-bg-primary px-4 py-2 sm:static sm:mx-0 sm:bg-transparent sm:p-0">
