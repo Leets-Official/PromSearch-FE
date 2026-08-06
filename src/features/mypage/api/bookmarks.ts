@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import type { AiModel, OutputType, PromptSummary, Task } from "@/features/gallery/types";
 import { TASK_TAG_ID, AI_MODEL_TAG_ID } from "@/features/gallery/tag-ids";
+import { LABEL_TO_TASK, LABEL_TO_AI_MODEL } from "@/features/auth/lib/tag-mapping"; // PS-71
 
 export interface BookmarkAuthor {
   userId: number;
@@ -85,22 +86,28 @@ export function aiModelsToTagIds(models: AiModel[]): number[] {
  * - outputType 이 대문자("TEXT"/"IMAGE") → 소문자로
  * - viewCount/likeCount 가 평평하게 옴 → stats 객체로 묶음
  * - tags 가 JOB/TASK/AI_MODEL 통합 배열로 옴 → PromptSummary 는 model/tasks/jobCategories 로 분리 요구
- *   → AI_MODEL 태그 하나를 model 로, TASK 태그들을 tasks 로 매핑(JOB 은 카드에 안 쓰이므로 생략 가능)
+ *   → tag-mapping.ts 의 LABEL_TO_AI_MODEL/LABEL_TO_TASK(PS-71)로 태그 이름을 enum 값으로 역변환한다.
+ *   매핑에 없는 이름(BE 신규 태그 등)은 model="etc" 로 폴백하고 원래 이름을 modelEtcName 에 싣는다.
  * - copies(복사 수)는 북마크 응답에 없어 0 으로 채움(카드가 표시에 안 쓰면 무해)
  */
 export function toPromptSummary(bookmark: BookmarkPrompt): PromptSummary {
   const aiModelTag = bookmark.tags.find((t) => t.tagType === "AI_MODEL");
   const taskTags = bookmark.tags.filter((t) => t.tagType === "TASK");
 
+  const model: AiModel = (aiModelTag && LABEL_TO_AI_MODEL[aiModelTag.name]) ?? "etc";
+  const tasks: Task[] = taskTags
+    .map((t) => LABEL_TO_TASK[t.name])
+    .filter((t): t is Task => t != null);
+
   return {
     id: String(bookmark.promptId),
     title: bookmark.title,
     thumbnailUrl: bookmark.thumbnailImage ?? undefined,
     outputType: bookmark.outputType.toLowerCase() as OutputType,
-    // 태그 이름만으로는 AiModel enum 값을 정확히 복원할 수 없어 etc 로 폴백하고 이름을 표시용으로 싣는다.
-    model: "etc",
-    modelEtcName: aiModelTag?.name,
-    tasks: taskTags.length > 0 ? ["etc" as Task] : [],
+    model,
+    // model 이 etc 로 매핑됐을 때만(즉 BE 태그 이름을 역변환하지 못했을 때만) 원본 이름을 표시용으로 싣는다.
+    modelEtcName: model === "etc" ? aiModelTag?.name : undefined,
+    tasks,
     jobCategories: [],
     tier: bookmark.contentType.toLowerCase() as PromptSummary["tier"],
     author: {
