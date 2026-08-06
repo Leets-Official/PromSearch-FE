@@ -14,7 +14,6 @@ import { checkNicknameAvailability } from "@/features/auth/api/profile";
 export function SignUpFormContainer() {
   const router = useRouter();
 
-  // [USER-005] 닉네임 중복 확인
   const { setNickname, status } = useNicknameCheck({ checkNickname: checkNicknameAvailability });
   const {
     mutate: submitSignup,

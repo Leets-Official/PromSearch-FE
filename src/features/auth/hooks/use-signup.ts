@@ -33,7 +33,7 @@ export function useSignup({ onSuccess }: UseSignupOptions = {}) {
           const profileImageUrl = await uploadProfileImage(avatarFile);
           await updateMyProfile({ profileImageUrl });
         } catch {
-          // 이미지 업로드 실패는 조용히 넘어간다.
+          // 이미지 업로드 실패는 조용히 넘어간다 — 가입 자체는 성공으로 처리.
         }
       }
 
