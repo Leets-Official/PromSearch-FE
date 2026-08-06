@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   approveGradeApplication,
   fetchGradeApplications,
+  fetchOriginUsers,
   fetchReports,
   updateReportStatus,
 } from "@/features/admin/api/admin";
@@ -49,7 +50,7 @@ function gradeRequest(overrides: Partial<ApiGradeRequest> = {}): ApiGradeRequest
   return {
     gradeRequestId: 1,
     userId: 5,
-    username: "hanharam",
+    username: "hanharam@example.com",
     currentGrade: "PRIME",
     requestedGrade: "ORIGIN",
     status: "PENDING",
@@ -112,16 +113,6 @@ describe("fetchReports", () => {
     expect(result.totalPages).toBe(4);
   });
 
-  // 요청서 A-1 — 대상 요약이 응답에 없어 표의 두 컬럼을 채울 수 없다
-  it("대상 요약이 없으면 식별자·자리표시로 채운다", async () => {
-    server.use(http.get("/api/v1/admin/reports", () => envelope(page([report()]))));
-
-    const [item] = (await fetchReports("post", query)).items;
-
-    expect(item.content).toBe("#10");
-    expect(item.author).toBe("-");
-  });
-
   it("대상 요약이 오면 그대로 쓴다", async () => {
     server.use(
       http.get("/api/v1/admin/reports", () =>
@@ -141,93 +132,119 @@ describe("fetchReports", () => {
     expect(item.author).toBe("spammer");
   });
 
-  // 요청서 A-3 — 서버에 검색 파라미터가 없어 받아온 목록에서 거른다
-  it("검색어가 있으면 한 번에 받아 클라이언트에서 거른다", async () => {
+  // 대상이 이미 삭제되면 서버가 요약을 못 채운다 — 표가 비지 않게 식별자로 버틴다
+  it("대상 요약이 없으면 식별자·자리표시로 채운다", async () => {
+    server.use(http.get("/api/v1/admin/reports", () => envelope(page([report()]))));
+
+    const [item] = (await fetchReports("post", query)).items;
+
+    expect(item.content).toBe("#10");
+    expect(item.author).toBe("-");
+  });
+
+  // 요청서 A-3 반영 — 검색은 서버가 한다(예전의 100건 받아 클라 필터 경로는 제거)
+  it("검색어를 q 로 넘기고 페이지 크기는 그대로 둔다", async () => {
     let sent: URLSearchParams | null = null;
     server.use(
       http.get("/api/v1/admin/reports", ({ request }) => {
         sent = new URL(request.url).searchParams;
-        return envelope(
-          page([
-            report({
-              reportId: 1,
-              targetSummary: { content: "도배 게시물", authorId: 1, authorNickname: "spammer" },
-            }),
-            report({
-              reportId: 2,
-              targetSummary: { content: "정상 게시물", authorId: 2, authorNickname: "user" },
-            }),
-          ]),
-        );
+        return envelope(page([report()]));
       }),
     );
 
-    const result = await fetchReports("post", { tab: "all", q: "도배", page: 1 });
+    await fetchReports("post", { tab: "all", q: "  도배  ", page: 2 });
 
-    expect(sent!.get("size")).toBe("100");
-    expect(result.items).toHaveLength(1);
-    expect(result.items[0].content).toBe("도배 게시물");
-    expect(result.totalCount).toBe(1);
+    // 앞뒤 공백은 서버에 보내기 전에 턴다
+    expect(sent!.get("q")).toBe("도배");
+    expect(sent!.get("size")).toBe("8");
+    expect(sent!.get("page")).toBe("1");
+  });
+
+  it("검색어가 비어 있으면 q 를 아예 보내지 않는다", async () => {
+    let sent: URLSearchParams | null = null;
+    server.use(
+      http.get("/api/v1/admin/reports", ({ request }) => {
+        sent = new URL(request.url).searchParams;
+        return envelope(page([]));
+      }),
+    );
+
+    await fetchReports("post", { tab: "all", q: "   ", page: 1 });
+
+    expect(sent!.has("q")).toBe(false);
   });
 });
 
 describe("updateReportStatus", () => {
-  it("숨김/유지를 서버 status 로 바꿔 보낸다", async () => {
-    const sent: string[] = [];
+  // targetType 은 필수다 — 게시글·댓글 신고가 별도 테이블이라 reportId 만으로 못 찾는다
+  it("숨김/유지를 서버 status 로 바꾸고 대상 종류를 함께 보낸다", async () => {
+    const sent: unknown[] = [];
     server.use(
       http.patch("/api/v1/admin/reports/:reportId", async ({ request }) => {
-        const body = (await request.json()) as { status: string };
-        sent.push(body.status);
+        sent.push(await request.json());
         return envelope(report());
       }),
     );
 
     await updateReportStatus("post", "1", "hidden");
-    await updateReportStatus("post", "1", "kept");
+    await updateReportStatus("comment", "2", "kept");
 
-    expect(sent).toEqual(["RESOLVED", "REJECTED"]);
+    expect(sent).toEqual([
+      { targetType: "POST", status: "RESOLVED" },
+      { targetType: "COMMENT", status: "REJECTED" },
+    ]);
   });
 });
 
 describe("fetchGradeApplications", () => {
-  it("탭을 서버 status 로 바꾸고 지표 누락은 0 으로 채운다", async () => {
+  it("탭을 서버 status 로 바꾸고 승인 지표를 옮긴다", async () => {
     let sent: URLSearchParams | null = null;
     server.use(
       http.get("/api/v1/admin/grade-requests", ({ request }) => {
         sent = new URL(request.url).searchParams;
-        return envelope(page([gradeRequest()]));
+        return envelope(
+          page([gradeRequest({ nickname: "프롬프트장인", postCount: 8, totalLikeCount: 124 })]),
+        );
       }),
     );
 
     const result = await fetchGradeApplications({ tab: "pending", q: "", page: 1 });
 
     expect(sent!.get("status")).toBe("PENDING");
-    // 요청서 A-2 미반영 — 게시글 수·누적 추천이 응답에 없다
     expect(result.items[0]).toMatchObject({
       id: "1",
       userId: "5",
-      nickname: "hanharam",
+      nickname: "프롬프트장인",
+      postCount: 8,
+      likeCount: 124,
+    });
+  });
+
+  it("nickname 이 없으면 아이디(username)로 대신한다", async () => {
+    server.use(http.get("/api/v1/admin/grade-requests", () => envelope(page([gradeRequest()]))));
+
+    const result = await fetchGradeApplications({ tab: "pending", q: "", page: 1 });
+
+    expect(result.items[0]).toMatchObject({
+      nickname: "hanharam@example.com",
       postCount: 0,
       likeCount: 0,
     });
   });
 
-  it("nickname 이 오면 username 대신 쓴다", async () => {
+  it("검색어를 q 로 넘긴다", async () => {
+    let sent: URLSearchParams | null = null;
     server.use(
-      http.get("/api/v1/admin/grade-requests", () =>
-        envelope(
-          page([gradeRequest({ nickname: "프롬프트장인", postCount: 8, totalLikeCount: 124 })]),
-        ),
-      ),
+      http.get("/api/v1/admin/grade-requests", ({ request }) => {
+        sent = new URL(request.url).searchParams;
+        return envelope(page([]));
+      }),
     );
 
-    const result = await fetchGradeApplications({ tab: "pending", q: "", page: 1 });
+    await fetchGradeApplications({ tab: "approved", q: "장인", page: 1 });
 
-    expect(result.items[0]).toMatchObject({
-      nickname: "프롬프트장인",
-      postCount: 8,
-      likeCount: 124,
-    });
+    expect(sent!.get("status")).toBe("APPROVED");
+    expect(sent!.get("q")).toBe("장인");
   });
 });
 
@@ -244,6 +261,23 @@ describe("approveGradeApplication", () => {
     await approveGradeApplication("1");
 
     expect(sent).toEqual({ decision: "APPROVED" });
+  });
+});
+
+describe("fetchOriginUsers", () => {
+  it("페이지를 0-based 로 보내고 유저를 옮긴다", async () => {
+    let sent: URLSearchParams | null = null;
+    server.use(
+      http.get("/api/v1/admin/origin-users", ({ request }) => {
+        sent = new URL(request.url).searchParams;
+        return envelope(page([{ userId: 7, username: "프롬프트장인" }]));
+      }),
+    );
+
+    const result = await fetchOriginUsers(2);
+
+    expect(sent!.get("page")).toBe("1");
+    expect(result.items[0]).toEqual({ id: "7", nickname: "프롬프트장인" });
   });
 });
 

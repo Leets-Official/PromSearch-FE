@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { validatePassword } from "@/features/auth/lib/validation";
+import {
+  useChangePassword,
+  getChangePasswordErrorMessage,
+} from "@/features/auth/hooks/use-change-password";
 
 export default function PasswordChangePage() {
   const router = useRouter();
@@ -15,10 +19,12 @@ export default function PasswordChangePage() {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const { mutate: changePassword, isPending } = useChangePassword();
+
   // 파생값: 형식/일치 여부 (렌더·활성화·힌트에서 공용)
   const pw = validatePassword(next);
   const mismatch = confirm.length > 0 && next !== confirm;
-  const canSubmit = current.length > 0 && pw.isValid && next === confirm;
+  const canSubmit = current.length > 0 && pw.isValid && next === confirm && !isPending;
 
   const handleSave = () => {
     if (!pw.isValid) {
@@ -30,8 +36,14 @@ export default function PasswordChangePage() {
       return;
     }
     setError(null);
-    // TODO: PATCH /account/password { current, next }
-    router.push("/mypage/settings");
+
+    changePassword(
+      { currentPassword: current, newPassword: next },
+      {
+        onSuccess: () => router.push("/mypage/settings"),
+        onError: (err) => setError(getChangePasswordErrorMessage(err)),
+      },
+    );
   };
 
   return (
@@ -47,6 +59,7 @@ export default function PasswordChangePage() {
             placeholder="현재 비밀번호를 입력해주세요."
             onChange={(e) => setCurrent(e.target.value)}
             autoComplete="current-password"
+            disabled={isPending}
           />
         </label>
 
@@ -59,6 +72,7 @@ export default function PasswordChangePage() {
             onChange={(e) => setNext(e.target.value)}
             autoComplete="new-password"
             aria-invalid={next.length > 0 && !pw.isValid ? true : undefined}
+            disabled={isPending}
           />
           {/* 실시간 형식 힌트: 입력이 있고 아직 형식 미달일 때 */}
           {next.length > 0 && !pw.isValid && (
@@ -77,12 +91,15 @@ export default function PasswordChangePage() {
             onChange={(e) => setConfirm(e.target.value)}
             autoComplete="new-password"
             aria-invalid={mismatch ? true : undefined}
+            disabled={isPending}
           />
           {/* 실시간 불일치 힌트 */}
           {mismatch && (
             <span className="text-body-3 text-text-brand">새 비밀번호가 일치하지 않습니다.</span>
           )}
         </label>
+
+        {error && <span className="text-body-3 text-text-brand">{error}</span>}
 
         <Button
           variant="brand"
@@ -91,7 +108,7 @@ export default function PasswordChangePage() {
           disabled={!canSubmit}
           className="mt-2 w-full"
         >
-          저장하기
+          {isPending ? "변경 중…" : "저장하기"}
         </Button>
       </div>
     </div>

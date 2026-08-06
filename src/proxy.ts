@@ -62,5 +62,5 @@ export function proxy(request: NextRequest) {
  * 그래서 `lib/auth-routes.ts` 의 목록과 수동으로 맞춰 준다 — 새 보호 라우트는 양쪽 모두에 추가.
  */
 export const config = {
-  matcher: ["/upload", "/upload/:path*", "/signup", "/signup/:path*"],
+  matcher: ["/upload", "/upload/:path*", "/signup", "/signup/:path*", "/mypage", "/mypage/:path*"],
 };

@@ -16,6 +16,7 @@ interface OnboardingModalProps {
   onComplete?: (result: OnboardingResult) => void;
   onSkip?: () => void;
   nicknameStatus?: NicknameStatus;
+  nickname?: string;
   onNicknameChange?: (nickname: string) => void;
 }
 
@@ -30,10 +31,12 @@ function OnboardingModal({
   onComplete,
   onSkip,
   nicknameStatus = "idle",
+  nickname: nicknameProp,
   onNicknameChange,
 }: OnboardingModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
-  const [nickname, setNickname] = useState("");
+  const [internalNickname, setInternalNickname] = useState("");
+  const nickname = nicknameProp ?? internalNickname;
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [jobs, setJobs] = useState<string[]>([]);
   const [tasks, setTasks] = useState<string[]>([]);
@@ -41,7 +44,7 @@ function OnboardingModal({
   const handleOpenChange = (next: boolean) => {
     if (!next) {
       setStep(1);
-      setNickname("");
+      setInternalNickname("");
       onNicknameChange?.("");
       setAvatarFile(null);
       setJobs([]);
@@ -51,7 +54,7 @@ function OnboardingModal({
   };
 
   const handleNicknameChange = (value: string) => {
-    setNickname(value);
+    setInternalNickname(value);
     onNicknameChange?.(value);
   };
 

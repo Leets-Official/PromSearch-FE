@@ -4,12 +4,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { useAuthStatus } from "@/hooks/use-auth-status";
 
 /**
- * `isAdmin` 판정.
- *
- * ⚠️ 지금은 **임시로 계정 이름**("admin")으로 연다. 원래는 access token 의 `role` 클레임이
- * 맞는데, 발급되는 어드민 토큰의 role 이 `USER` 라 그걸로는 화면에 들어갈 수가 없다.
- * 서버가 실제로 어떻게 응답하는지 확인하려면 화면은 열려야 해서 임시로 뚫어 둔 것.
- * BE 가 role 을 올려 주면 role 판정으로 되돌리고 이 테스트도 함께 고친다.
+ * `isAdmin` 은 access token 의 `role` 클레임으로 정해진다.
+ * (한때 상수에 `false` 로 박혀 있어 어드민 화면에 아무도 못 들어갔고,
+ *  BE 가 role 을 내려주기 전에는 계정 이름으로 임시 개방해 두기도 했다 — 둘 다 정리됨)
  */
 
 /** 서명 없이 페이로드만 있는 JWT 형태 문자열 — 우리는 검증하지 않고 읽기만 한다. */
@@ -48,21 +45,18 @@ describe("useAuthStatus.isAdmin", () => {
     vi.resetModules();
   });
 
-  it("어드민 계정(admin)이면 어드민이다", async () => {
-    const status = await renderWith(fakeJwt({ userId: 3, role: "USER" }), "admin");
-    expect(status.isAdmin).toBe(true);
+  it("role 이 ADMIN 이면 어드민이다", async () => {
+    expect((await renderWith(fakeJwt({ userId: 3, role: "ADMIN" }))).isAdmin).toBe(true);
   });
 
-  it("일반 계정이면 어드민이 아니다 — 로그인은 되어 있다", async () => {
-    const status = await renderWith(fakeJwt({ userId: 3, role: "USER" }), "프롬프트장인");
-    expect(status.isAdmin).toBe(false);
-    expect(status.isAuthenticated).toBe(true);
-  });
-
-  it("프로필이 아직 안 왔으면 어드민이 아니다(판정 보류)", async () => {
+  it("role 이 USER 면 어드민이 아니다 — 로그인은 되어 있다", async () => {
     const status = await renderWith(fakeJwt({ userId: 3, role: "USER" }));
     expect(status.isAdmin).toBe(false);
     expect(status.isAuthenticated).toBe(true);
+  });
+
+  it("role 클레임이 없어도 죽지 않는다", async () => {
+    expect((await renderWith(fakeJwt({ userId: 3 }))).isAdmin).toBe(false);
   });
 
   it("토큰이 없으면 비회원", async () => {

@@ -5,44 +5,106 @@ import { useState } from "react";
 import { PaginationRoot } from "@/components/ui/pagination";
 import { PostStatusTabs } from "@/features/mypage/components/post-status-tabs";
 import { MyPostsTable } from "@/features/mypage/components/my-posts-table";
-import { MOCK_POSTS, type PostStatus } from "@/mocks/data/mypage";
+import { MyPostCard } from "@/features/mypage/components/my-post-card";
+import { useMyPrompts } from "@/features/mypage/hooks/use-my-prompts";
+import type { PostStatus } from "@/mocks/data/mypage";
 
 const PAGE_SIZE = 8;
+
+/**
+ * 게시일 표시 — "2026.07.12".
+ *
+ * `publishedAt` 은 게시 완료 시각이라 임시저장처럼 게시 전 행에서는 null 로 온다.
+ * 값이 없으면 칸을 비우지 말고 "-" 로 둔다(빈칸은 로딩 실패처럼 보인다).
+ */
+function formatPublishedAt(iso: string | null): string {
+  if (!iso) return "-";
+  return iso.slice(0, 10).replaceAll("-", ".");
+}
 
 export default function MyPostsPage() {
   const [status, setStatus] = useState<PostStatus>("published");
   const [page, setPage] = useState(1);
 
-  const filtered = MOCK_POSTS.filter((post) => post.status === status);
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // API 는 0-based page, 화면 상태는 1-based 로 유지(PaginationRoot 관례와 맞춤)
+  const { data, isLoading } = useMyPrompts(status, page - 1, PAGE_SIZE);
+
+  const pageCount = data ? Math.max(1, data.totalPages) : 1;
+
+  // MyPostsTable/MyPostCard 가 기대하는 MyPost(PromptSummary 확장) 형태로 매핑.
+  // GET /prompts/me 응답엔 썸네일·작성자·태그가 없어 표시용 플레이스홀더로 채운다
+  // (카드형 UI는 이 필드들을 못 채운다는 한계가 있음 — 상세 API로 보강 전까지는 그대로 둔다).
+  const posts =
+    data?.content.map((item) => ({
+      id: String(item.promptId),
+      // 임시저장은 제목 없이 저장될 수 있다 — 빈 줄로 남기지 않는다.
+      title: item.title?.trim() || "제목 없음",
+      date: formatPublishedAt(item.publishedAt),
+      thumbnailUrl: "",
+      outputType: "text" as const,
+      model: "chatgpt" as const,
+      tasks: [],
+      jobCategories: [],
+      tier: "free" as const,
+      author: { name: "" },
+      stats: { views: item.viewCount ?? 0, copies: 0, likes: item.recommendCount ?? 0 },
+      createdAt: item.publishedAt ?? "",
+      status,
+    })) ?? [];
 
   const handleStatusChange = (next: PostStatus) => {
     setStatus(next);
-    setPage(1); // 탭 전환 시 첫 페이지로 리셋
-  };
-
-  const handleEdit = (id: string) => {
-    // TODO: 게시글 수정 화면으로 이동
-    console.log("edit", id);
+    setPage(1);
   };
 
   const handleDelete = (id: string) => {
-    // TODO: 삭제 확인 모달 + 삭제 API
+    // TODO: 삭제 확인 모달 + 삭제 API (DELETE /prompts/{id} — 구현 상태 재확인 필요)
     console.log("delete", id);
   };
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-heading-2 text-text-primary">내 게시글</h1>
+      <h1 className="text-heading-1 text-text-primary">내 게시글</h1>
 
-      <PostStatusTabs value={status} onValueChange={handleStatusChange} />
+      {/* 탭 — 모바일에서 스크롤 시 화면 상단 고정 */}
+      <div className="sticky top-0 z-10 -mx-4 bg-bg-primary px-4 py-2 sm:static sm:mx-0 sm:bg-transparent sm:p-0">
+        <PostStatusTabs value={status} onValueChange={handleStatusChange} />
+      </div>
 
-      <MyPostsTable posts={paged} showActions onEdit={handleEdit} onDelete={handleDelete} />
+      {/* 모바일(sm 미만): 카드 리스트 */}
+      <div className="flex flex-col gap-6 sm:hidden">
+        {isLoading ? (
+          <p className="py-12 text-center text-body-3 text-text-secondary" aria-busy="true" />
+        ) : posts.length === 0 ? (
+          <p className="py-12 text-center text-body-3 text-text-secondary">게시물이 없습니다.</p>
+        ) : (
+          <>
+            <ul className="grid grid-cols-1 gap-8">
+              {posts.map((post) => (
+                <li key={post.id}>
+                  <MyPostCard post={post} showActions onDelete={handleDelete} />
+                </li>
+              ))}
+            </ul>
+            {pageCount > 1 && (
+              <PaginationRoot page={page} pageCount={pageCount} onPageChange={setPage} />
+            )}
+          </>
+        )}
+      </div>
 
-      {pageCount > 1 && (
-        <PaginationRoot page={page} pageCount={pageCount} onPageChange={setPage} className="mt-2" />
-      )}
+      {/* sm+: 기존 표 + 페이지네이션 */}
+      <div className="hidden sm:flex sm:flex-col sm:gap-6">
+        <MyPostsTable posts={posts} showActions onDelete={handleDelete} />
+        {pageCount > 1 && (
+          <PaginationRoot
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+            className="mt-2"
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -5,8 +5,10 @@
  * - 신고 게시글 / 신고 댓글: 같은 표 구조(내용 · 작성자 · 신고 사유 · [숨김][유지])
  * - 유저 등급 관리: 아이디 · 게시글 · 누적 추천 · 신청일자 · [승인]
  *
- * BE 스펙 확정 전이라 MSW 목(`/api/admin/*`)으로 동작한다. 응답 매핑만 `api/admin.ts` 에서 교체한다.
+ * 실 엔드포인트(`/api/v1/admin/*`)에 붙어 있다. 서버 enum·페이지 변환은 `api/map.ts` 담당.
  */
+
+import type { ApiReportReason } from "@/features/admin/api/dto";
 
 /** 신고 처리 상태 — 미처리(pending) / 숨김(hidden) / 유지(kept) */
 export type ModerationStatus = "pending" | "hidden" | "kept";
@@ -24,8 +26,8 @@ export type ReportedItem = {
   content: string;
   /** 작성자 아이디 */
   author: string;
-  /** 신고 사유(BE 에서 코드가 확정되면 라벨 매핑 추가) */
-  reason: string;
+  /** 신고 사유 코드 — 표에는 `REPORT_REASON_LABELS` 로 한글 라벨을 그린다 */
+  reason: ApiReportReason;
   status: ModerationStatus;
   /** 신고 접수 시각(ISO) — 최신순 정렬 기준 */
   reportedAt: string;
@@ -66,5 +68,12 @@ export type AdminListResponse<Item> = {
   totalCount: number;
 };
 
+/** Origin 등급 유저 1행 (ADMIN-GRADE-003) — 서버가 주는 필드가 둘뿐이다 */
+export type OriginUser = {
+  id: string;
+  nickname: string;
+};
+
 export type ReportListResponse = AdminListResponse<ReportedItem>;
 export type GradeListResponse = AdminListResponse<GradeApplication>;
+export type OriginUserListResponse = AdminListResponse<OriginUser>;

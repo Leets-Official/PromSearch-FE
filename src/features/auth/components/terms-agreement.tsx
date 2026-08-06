@@ -52,7 +52,7 @@ export function TermsAgreement({ agreed, onChange }: TermsAgreementProps) {
         </label>
 
         {/* 개별 항목 */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-6">
           {TERMS.map((term) => (
             <div key={term.id} className="flex items-center gap-3">
               <label className="flex flex-1 cursor-pointer items-center gap-2">

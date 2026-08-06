@@ -7,8 +7,10 @@ import type {
   GradeApplication,
   GradeTab,
   ModerationStatus,
+  OriginUser,
   ReportedItem,
   ReportTab,
+  ReportTarget,
 } from "@/features/admin/types";
 
 import { toNumber } from "@/lib/api";
@@ -16,15 +18,28 @@ import type {
   ApiAdminPage,
   ApiGradeRequest,
   ApiGradeRequestStatus,
+  ApiOriginUser,
   ApiReport,
   ApiReportStatus,
+  ApiReportTargetType,
 } from "./dto";
 
+/** 신고 대상 → 서버 targetType. 목록 필터와 처리 요청 본문에 모두 쓰인다. */
+const TARGET_TYPE: Record<ReportTarget, ApiReportTargetType> = {
+  post: "POST",
+  comment: "COMMENT",
+};
+
+export function reportTargetTypeParam(target: ReportTarget): ApiReportTargetType {
+  return TARGET_TYPE[target];
+}
+
 /**
- * 신고 상태 매핑 (요청서 A-1b 로 확인 요청 중인 해석).
+ * 신고 상태 매핑.
  *
  * 표의 액션이 [숨김]/[유지] 두 개라, 신고를 인용해 대상을 감춘 것(RESOLVED)을 "숨김",
  * 기각한 것(REJECTED)을 "유지"로 본다.
+ * (Swagger: RESOLVED 로 바꾸면 대상 게시글/댓글이 실제로 블라인드된다 — 해석이 맞다)
  */
 const REPORT_STATUS_BY_API: Record<ApiReportStatus, ModerationStatus> = {
   PENDING: "pending",
@@ -64,7 +79,7 @@ export function toReportedItem(report: ApiReport): ReportedItem {
 
   return {
     id: String(report.reportId),
-    // 대상 요약이 아직 응답에 없다(요청서 A-1). 그때까지는 식별자만이라도 보여준다.
+    // 대상이 이미 지워졌으면 요약이 비어 올 수 있다 → 식별자만이라도 보여준다.
     content: summary?.content ?? `#${report.targetId}`,
     author: summary?.authorNickname ?? "-",
     reason: report.reason,
@@ -78,11 +93,19 @@ export function toGradeApplication(request: ApiGradeRequest): GradeApplication {
     id: String(request.gradeRequestId),
     userId: String(request.userId),
     nickname: request.nickname ?? request.username,
-    // 승인 판단 지표도 아직 없다(요청서 A-2) → 0 으로 두고 표에 그대로 노출한다.
+    // 지표가 비어 오는 계정(게시글 0개 등)은 0 으로 둔다.
     postCount: toNumber(request.postCount),
     likeCount: toNumber(request.totalLikeCount),
     appliedAt: request.requestedAt,
     status: GRADE_STATUS_BY_API[request.status] ?? "pending",
+  };
+}
+
+export function toOriginUser(user: ApiOriginUser): OriginUser {
+  return {
+    id: String(user.userId),
+    // 필드 이름은 username 이지만 스웨거 설명상 닉네임이다.
+    nickname: user.username,
   };
 }
 

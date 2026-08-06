@@ -12,15 +12,14 @@ export default function BookmarksPage() {
   const { query, setTasks, setModels, setOutputTypes } = useGalleryFilters();
   const { prompts, totalPages, isLoading, isError, refetch } = useBookmarks();
 
-  // 빈 결과 시 필터 초기화 (훅에 reset 이 있으면 그걸 써도 됨)
+  // 빈 결과 시 필터 초기화
   const resetFilters = () => {
     setTasks([]);
     setModels([]);
     setOutputTypes([]);
   };
 
-  // TODO: 실제 로그인 상태로 교체 (북마크는 로그인 필수 경로)
-  const userStatus: UserStatus = "anonymous";
+  const userStatus: UserStatus = "authenticated";
 
   return (
     <div className="flex flex-col gap-4">
