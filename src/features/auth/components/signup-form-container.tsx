@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import { getErrorMessage } from "@/lib/api";
@@ -15,7 +14,6 @@ import { checkNicknameAvailability } from "@/features/auth/api/profile";
 export function SignUpFormContainer() {
   const router = useRouter();
 
-  // [USER-005] 닉네임 중복 확인
   const { setNickname, status } = useNicknameCheck({ checkNickname: checkNicknameAvailability });
   const {
     mutate: submitSignup,
@@ -33,8 +31,9 @@ export function SignUpFormContainer() {
       interestJobTagIds: toJobTagIds(values.jobs),
       interestTaskTagIds: toTaskTagIds(values.tasks),
       agreements: toAgreementsPayload(values.agreedTerms),
-      // TODO: avatarFile → 프로필 이미지 업로드(USER-007~009, src/features/upload/api/image.ts)
-      // 연동 후 presigned 업로드 결과를 profileImageUrl 로 채운다. 이번 범위에서는 미전송.
+      // 프로필 이미지는 인증이 필요한 API(USER-007~008)라 가입+로그인 완료 이후에만 업로드할 수 있다.
+      // 실제 업로드는 useSignup 내부에서 로그인 성공 뒤에 처리한다.
+      avatarFile: values.avatarFile,
     });
   };
 

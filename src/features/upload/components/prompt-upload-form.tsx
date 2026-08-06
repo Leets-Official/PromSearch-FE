@@ -121,16 +121,24 @@ function PromptUploadForm() {
   };
 
   /*
-    이미지가 아직 올라가는(또는 서버에서 워터마크 처리 중인) 동안에는 저장·게시를 막는다.
+    이미지가 READY 가 아닌 동안에는 저장·게시를 막는다.
 
     안 막으면 그 상태로 요청이 나가고 서버가
     `IMAGE-0xx 워터마크 처리가 완료되지 않은 이미지입니다.` 로 거절한다 — 사용자는
     자기가 뭘 잘못했는지 알 수 없다. 준비되지 않은 버튼은 애초에 못 누르게 하는 편이 낫다.
+
+    **실패(failed)도 함께 막아야 한다.** 진행 중인 것만 막으면, 폴링이 타임아웃돼 이미지가
+    failed 로 떨어지는 순간 버튼이 되살아난다. 그때 누른 임시저장이 워터마크가 없는 imageId 를
+    초안에 심어, 다음 복원에서 상태 조회를 통째로 실패시켰다(오염된 한 장이 전부를 망친다).
+
+    진행 중과 실패는 사용자가 할 일이 다르므로(기다린다 / 지우고 다시 올린다) 안내도 나눈다.
   */
   const images = useWatch({ control, name: "images" });
-  const imagesBusy = (images ?? []).some(
+  const imagesPending = (images ?? []).some(
     (image) => image.status === "uploading" || image.status === "processing",
   );
+  const imagesFailed = (images ?? []).some((image) => image.status === "failed");
+  const imagesBusy = imagesPending || imagesFailed;
 
   // 임시저장 — 부분 작성 허용(전체 검증 없이 현재 값 저장)
   const handleTempSave = () => {
@@ -381,9 +389,14 @@ function PromptUploadForm() {
             <p role="alert" className="text-body-3 text-red-500">
               {getErrorMessage(createPrompt.error ?? saveDraft.error)}
             </p>
-          ) : imagesBusy ? (
+          ) : imagesPending ? (
             <p className="text-body-3 text-text-secondary">
               이미지 처리가 끝나면 저장하거나 게시할 수 있어요.
+            </p>
+          ) : imagesFailed ? (
+            /* 실패는 기다린다고 풀리지 않는다 — 지우고 다시 올려야 한다고 명시한다 */
+            <p role="alert" className="text-body-3 text-red-500">
+              실패한 이미지를 삭제한 뒤에 저장하거나 게시할 수 있어요.
             </p>
           ) : saveDraft.isSuccess ? (
             <p role="status" className="text-body-3 text-text-secondary">
@@ -396,7 +409,12 @@ function PromptUploadForm() {
               variant="ghost"
               size="lg"
               onClick={handleTempSave}
-              disabled={saveDraft.isPending || imagesBusy}
+              /*
+                두 버튼은 **서로를 막는다.** 같은 폼 값을 두 요청이 동시에 들고 나가면
+                (임시저장 in-flight 중 게시) 초안이 지워진 뒤 저장이 도착해 유령 초안이 남거나,
+                반대로 방금 게시한 내용이 초안으로 되살아난다.
+              */
+              disabled={saveDraft.isPending || createPrompt.isPending || imagesBusy}
             >
               {saveDraft.isPending ? <Spinner className="h-5 w-14" /> : <SaveIcon />}
               임시저장
@@ -405,7 +423,7 @@ function PromptUploadForm() {
               type="submit"
               variant="brand"
               size="lg"
-              disabled={createPrompt.isPending || imagesBusy}
+              disabled={createPrompt.isPending || saveDraft.isPending || imagesBusy}
             >
               {createPrompt.isPending ? <Spinner className="h-5 w-14" /> : <PencilIcon />}
               게시하기

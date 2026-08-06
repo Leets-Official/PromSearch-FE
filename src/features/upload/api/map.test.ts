@@ -46,6 +46,43 @@ describe("toWriteRequest", () => {
     ]);
   });
 
+  /*
+    임시저장은 스키마 검증을 거치지 않아 처리 중·실패 이미지가 그대로 실려 나갔다.
+    그렇게 저장된 imageId 는 워터마크 결과물이 없어서, 복원 때 상태 조회를 통째로 실패시킨다.
+  */
+  it("READY 가 아닌 이미지는 요청에서 뺀다", () => {
+    const request = toWriteRequest(
+      values({
+        images: [
+          { imageId: "a", status: "ready" },
+          { imageId: "b", status: "processing" },
+          { imageId: "c", status: "failed" },
+          { imageId: "d", status: "uploading" },
+        ],
+      }),
+    );
+
+    expect(request.images).toEqual([{ imageId: "a", sortOrder: 0, thumbnail: true }]);
+  });
+
+  it("걸러낸 뒤의 순서로 sortOrder·대표를 다시 매긴다", () => {
+    const request = toWriteRequest(
+      values({
+        images: [
+          // 첫 장이 실패했으므로 대표는 그다음 성공한 이미지가 되어야 한다
+          { imageId: "a", status: "failed" },
+          { imageId: "b", status: "ready" },
+          { imageId: "c", status: "ready" },
+        ],
+      }),
+    );
+
+    expect(request.images).toEqual([
+      { imageId: "b", sortOrder: 0, thumbnail: true },
+      { imageId: "c", sortOrder: 1, thumbnail: false },
+    ]);
+  });
+
   // BE 가 단수 전환을 배포하기 전이라 양쪽 이름을 함께 보낸다(요청서 7-4)
   it("AI 모델 태그를 단수·복수 두 이름으로 함께 보낸다", () => {
     const request = toWriteRequest(values({ model: "claude" }));
@@ -108,10 +145,14 @@ describe("toPromptDraft", () => {
     });
   });
 
-  it("이미지는 sortOrder 순으로 복원한다(미리보기 URL 은 응답에 없다 — 요청서 U-1)", () => {
+  /*
+    초안 응답에는 상태가 없다. 이 값은 상태 조회(PROMPT-004)가 실패했을 때만 화면에 남으므로,
+    확인하지 못한 이미지를 ready 라고 말하면 안 된다 — 깨진 이미지가 멀쩡한 얼굴로 복원된다.
+  */
+  it("이미지는 sortOrder 순으로 복원하고, 확인 전이므로 failed 로 둔다", () => {
     expect(toPromptDraft(draft()).images).toEqual([
-      { imageId: "a", status: "ready" },
-      { imageId: "b", status: "ready" },
+      { imageId: "a", status: "failed" },
+      { imageId: "b", status: "failed" },
     ]);
   });
 

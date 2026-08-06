@@ -7,20 +7,10 @@ import { PostStatusTabs } from "@/features/mypage/components/post-status-tabs";
 import { MyPostsTable } from "@/features/mypage/components/my-posts-table";
 import { MyPostCard } from "@/features/mypage/components/my-post-card";
 import { useMyPrompts } from "@/features/mypage/hooks/use-my-prompts";
+import { toMyPost } from "@/features/mypage/api/map";
 import type { PostStatus } from "@/mocks/data/mypage";
 
 const PAGE_SIZE = 8;
-
-/**
- * 게시일 표시 — "2026.07.12".
- *
- * `publishedAt` 은 게시 완료 시각이라 임시저장처럼 게시 전 행에서는 null 로 온다.
- * 값이 없으면 칸을 비우지 말고 "-" 로 둔다(빈칸은 로딩 실패처럼 보인다).
- */
-function formatPublishedAt(iso: string | null): string {
-  if (!iso) return "-";
-  return iso.slice(0, 10).replaceAll("-", ".");
-}
 
 export default function MyPostsPage() {
   const [status, setStatus] = useState<PostStatus>("published");
@@ -31,26 +21,8 @@ export default function MyPostsPage() {
 
   const pageCount = data ? Math.max(1, data.totalPages) : 1;
 
-  // MyPostsTable/MyPostCard 가 기대하는 MyPost(PromptSummary 확장) 형태로 매핑.
-  // GET /prompts/me 응답엔 썸네일·작성자·태그가 없어 표시용 플레이스홀더로 채운다
-  // (카드형 UI는 이 필드들을 못 채운다는 한계가 있음 — 상세 API로 보강 전까지는 그대로 둔다).
-  const posts =
-    data?.content.map((item) => ({
-      id: String(item.promptId),
-      // 임시저장은 제목 없이 저장될 수 있다 — 빈 줄로 남기지 않는다.
-      title: item.title?.trim() || "제목 없음",
-      date: formatPublishedAt(item.publishedAt),
-      thumbnailUrl: "",
-      outputType: "text" as const,
-      model: "chatgpt" as const,
-      tasks: [],
-      jobCategories: [],
-      tier: "free" as const,
-      author: { name: "" },
-      stats: { views: item.viewCount ?? 0, copies: 0, likes: item.recommendCount ?? 0 },
-      createdAt: item.publishedAt ?? "",
-      status,
-    })) ?? [];
+  // 마이페이지 프로필의 미리보기와 **같은 변환**을 쓴다(features/mypage/api/map.ts).
+  const posts = (data?.content ?? []).map((item) => toMyPost(item, status));
 
   const handleStatusChange = (next: PostStatus) => {
     setStatus(next);
