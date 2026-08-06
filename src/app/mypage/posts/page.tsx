@@ -11,6 +11,17 @@ import type { PostStatus } from "@/mocks/data/mypage";
 
 const PAGE_SIZE = 8;
 
+/**
+ * 게시일 표시 — "2026.07.12".
+ *
+ * `publishedAt` 은 게시 완료 시각이라 임시저장처럼 게시 전 행에서는 null 로 온다.
+ * 값이 없으면 칸을 비우지 말고 "-" 로 둔다(빈칸은 로딩 실패처럼 보인다).
+ */
+function formatPublishedAt(iso: string | null): string {
+  if (!iso) return "-";
+  return iso.slice(0, 10).replaceAll("-", ".");
+}
+
 export default function MyPostsPage() {
   const [status, setStatus] = useState<PostStatus>("published");
   const [page, setPage] = useState(1);
@@ -26,8 +37,9 @@ export default function MyPostsPage() {
   const posts =
     data?.content.map((item) => ({
       id: String(item.promptId),
-      title: item.title,
-      date: item.publishedAt.slice(0, 10).replaceAll("-", "."),
+      // 임시저장은 제목 없이 저장될 수 있다 — 빈 줄로 남기지 않는다.
+      title: item.title?.trim() || "제목 없음",
+      date: formatPublishedAt(item.publishedAt),
       thumbnailUrl: "",
       outputType: "text" as const,
       model: "chatgpt" as const,
@@ -35,8 +47,8 @@ export default function MyPostsPage() {
       jobCategories: [],
       tier: "free" as const,
       author: { name: "" },
-      stats: { views: item.viewCount, copies: 0, likes: item.recommendCount },
-      createdAt: item.publishedAt,
+      stats: { views: item.viewCount ?? 0, copies: 0, likes: item.recommendCount ?? 0 },
+      createdAt: item.publishedAt ?? "",
       status,
     })) ?? [];
 

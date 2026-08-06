@@ -1,12 +1,19 @@
 import { api } from "@/lib/api";
 import type { PostStatus } from "@/mocks/data/mypage";
 
+/**
+ * [PROMPT-010] 응답 1행.
+ *
+ * 스웨거 `MyPromptSummaryResponse` 는 **required 가 하나도 없다.** 특히 `publishedAt` 은
+ * "게시 완료 시각"이라 임시저장(DRAFT)처럼 아직 게시 전인 행에서는 null 로 온다.
+ * 그대로 문자열로 받으면 표를 그리다 죽는다(실측: Cannot read properties of null).
+ */
 export interface MyPromptSummary {
   promptId: number;
-  title: string;
-  publishedAt: string;
-  viewCount: number;
-  recommendCount: number;
+  title: string | null;
+  publishedAt: string | null;
+  viewCount: number | null;
+  recommendCount: number | null;
 }
 
 interface MyPromptsPage {
