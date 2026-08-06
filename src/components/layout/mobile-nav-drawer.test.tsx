@@ -50,16 +50,21 @@ describe("MobileNavDrawer", () => {
     expect(onLoginClick).toHaveBeenCalledOnce();
   });
 
-  it("회원이면 이름을 보여주고 로그인 모달을 열지 않는다", async () => {
+  it("회원이면 이름을 보여주고, 프로필은 마이페이지 링크다", async () => {
     const user = userEvent.setup();
-    const { onLoginClick } = renderDrawer({
+    const { onOpenChange, onLoginClick } = renderDrawer({
       isAuthenticated: true,
       user: { name: "홍길동" },
     });
 
-    const profile = await screen.findByRole("button", { name: /홍길동/ });
+    const profile = await screen.findByRole("link", { name: "마이페이지" });
+    expect(profile).toHaveAttribute("href", "/mypage");
+    expect(screen.getByText("홍길동")).toBeInTheDocument();
+
     await user.click(profile);
 
+    // 링크라 드로어가 닫히고, 로그인 모달은 뜨지 않는다
+    expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(onLoginClick).not.toHaveBeenCalled();
   });
 
